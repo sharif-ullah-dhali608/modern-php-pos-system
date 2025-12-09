@@ -28,6 +28,7 @@ unset($_SESSION['error_field']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< Updated upstream
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POS Terminal Login</title>
@@ -91,6 +92,51 @@ unset($_SESSION['error_field']);
 
 
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-5">
+=======
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure Access - Velocity POS Suite</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+/* Custom animations for the background and modal */
+@keyframes slideInDown {
+from { opacity: 0; transform: translateY(-10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.animate-slideInDown { animation: slideInDown 0.3s ease-out; }
+
+@keyframes fadeSlideIn {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeSlideIn { animation: fadeSlideIn 0.3s ease-out; }
+
+@keyframes fadeSlideOut {
+from { opacity: 1; transform: translateY(0); }
+to { opacity: 0; transform: translateY(20px); }
+}
+.animate-fadeSlideOut { animation: fadeSlideOut 0.3s ease-out forwards; }
+
+.btn-primary {
+@apply bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500 focus:ring-2 focus:ring-offset-2;
+}
+.btn-primary:disabled {
+@apply bg-teal-300 cursor-not-allowed;
+}
+.text-error {
+@apply text-red-600;
+}
+.modal-overlay {
+@apply bg-gray-900/50 backdrop-blur-sm;
+}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4 sm:px-0">
+
+<div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-5">
+>>>>>>> Stashed changes
 <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
 <defs>
 <pattern id="dot-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -116,7 +162,11 @@ unset($_SESSION['error_field']);
 <i class="fas fa-chart-line text-orange-300"></i>
 <span class="text-white font-semibold">Accelerate</span> your growth
 </span>
+<<<<<<< Updated upstream
 with the *Velocity POS Suite* that delivers
+=======
+with the **Velocity POS Suite** that delivers
+>>>>>>> Stashed changes
 <span class="text-orange-200">real-time sales data</span>,
 <span class="text-orange-200">smarter inventory control</span>, and
 <span class="text-orange-200">effortless operation</span>.
@@ -147,6 +197,7 @@ Join <span class="font-bold text-orange-200">12,000+</span> businesses achieving
 </div>
 </div>
 </div>
+<<<<<<< Updated upstream
 
 
         <div class="w-full md:w-7/12 bg-white/60 relative flex flex-col h-full">
@@ -256,6 +307,53 @@ Join <span class="font-bold text-orange-200">12,000+</span> businesses achieving
             </div>
         </div>
     </div>
+=======
+<script>
+// --- Client-Side JS Logic (Retained and Updated) ---
+
+const emailInput = document.getElementById("email");
+emailInput.focus();
+const passwordInput = document.getElementById("password");
+const submitBtn = document.querySelector("button[type='submit']");
+const emailError = document.getElementById("emailError");
+const passwordError = document.getElementById("passwordError");
+
+function validateInputs() {
+    // Reset classes
+    emailInput.classList.remove("border-red-500", "focus:ring-indigo-500");
+    passwordInput.classList.remove("border-red-500", "focus:ring-indigo-500");
+    emailInput.classList.add("focus:ring-teal-500");
+    passwordInput.classList.add("focus:ring-teal-500");
+
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value.trim();
+
+    // Email error message
+    if (!emailVal && emailInput === document.activeElement) {
+        emailInput.classList.add("border-red-500");
+        emailError.textContent = "Please enter your Store Manager Email";
+        emailError.classList.add("animate-slideInDown");
+        emailError.style.opacity = "1";
+    } else {
+        emailError.classList.remove("animate-slideInDown");
+        emailError.style.opacity = "0";
+    }
+
+    // Password error message
+    if (!passwordVal && passwordInput === document.activeElement) {
+        passwordInput.classList.add("border-red-500");
+        passwordError.textContent = "Please enter your password";
+        passwordError.classList.add("animate-slideInDown");
+        passwordError.style.opacity = "1";
+    } else {
+        passwordError.classList.remove("animate-slideInDown");
+        passwordError.style.opacity = "0";
+    }
+
+    // Enable submit button
+    submitBtn.disabled = !(emailVal && passwordVal);
+}
+>>>>>>> Stashed changes
 
     <script>
         // 1. LIVE CLOCK (Updated IDs)
@@ -267,6 +365,7 @@ Join <span class="font-bold text-orange-200">12,000+</span> businesses achieving
         setInterval(updateClock, 1000);
         updateClock();
 
+<<<<<<< Updated upstream
         // 2. VALIDATION & UI LOGIC
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
@@ -368,5 +467,125 @@ Join <span class="font-bold text-orange-200">12,000+</span> businesses achieving
             document.getElementById('realSubmitBtn').click();
         }
     </script>
+=======
+function togglePassword() {
+    const pwd = document.getElementById("password");
+    const icon = document.getElementById("toggleIcon");
+    const isPassword = pwd.type === "password";
+    pwd.type = isPassword ? "text" : "password";
+    icon.classList.toggle("fa-eye", !isPassword);
+    icon.classList.toggle("fa-eye-slash", isPassword);
+}
+
+// --- Modal Functions ---
+function openForgotModal() {
+    const modal = document.getElementById("forgotModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex", "animate-fadeSlideIn");
+}
+
+function closeForgotModal() {
+    const modal = document.getElementById("forgotModal");
+    modal.classList.remove("animate-fadeSlideIn");
+    modal.classList.add("animate-fadeSlideOut");
+
+    modal.addEventListener('animationend', () => {
+        modal.classList.remove("flex", "animate-fadeSlideOut");
+        modal.classList.add("hidden");
+    }, { once: true });
+}
+
+// --- Forgot Password Form Logic ---
+const resetEmailInput = document.getElementById("resetEmail");
+const forgotSubmitBtn = document.querySelector("#forgotPasswordForm button[type='submit']");
+forgotSubmitBtn.disabled = true;
+
+resetEmailInput.addEventListener("input", () => {
+    const emailVal = resetEmailInput.value.trim();
+    forgotSubmitBtn.disabled = !emailVal || !resetEmailInput.checkValidity();
+});
+
+document.getElementById("forgotPasswordForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    forgotSubmitBtn.disabled = true;
+    forgotSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Sending...`;
+
+    setTimeout(() => {
+        Swal.fire({
+            icon: 'success',
+            text: 'If the account exists, a reset link has been sent to ' + resetEmailInput.value,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+
+        forgotSubmitBtn.disabled = false;
+        forgotSubmitBtn.innerHTML = 'Send Reset Link';
+        document.getElementById("forgotPasswordForm").reset();
+        closeForgotModal();
+    }, 2000);
+});
+
+// --- Main Login Form Logic ---
+document.querySelector("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Authenticating...`;
+
+    setTimeout(() => {
+        const emailVal = emailInput.value.trim();
+        const passwordVal = passwordInput.value.trim();
+
+        // Dummy validation - accept only email "admin@email.com" and password "password"
+        if (emailVal === "admin@email.com" && passwordVal === "password") {
+            // Success: Redirect
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Login Successful!',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
+                background: '#f0fdf4',
+                color: '#16a34a'
+            }).then(() => {
+                window.location.href = "/dashboard";
+            });
+        } else {
+            // Error: Show toast and error messages
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: 'Invalid Credentials',
+                text: 'Please check your email and password.',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#fef2f2',
+                color: '#b91c1c'
+            });
+
+            // Set visual errors
+            emailInput.classList.add("border-red-500");
+            passwordInput.classList.add("border-red-500");
+            emailError.textContent = "Invalid email or password";
+            emailError.style.opacity = "1";
+            passwordError.textContent = "Invalid email or password";
+            passwordError.style.opacity = "1";
+
+            // Restore button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fas fa-lock mr-2"></i> Secure Sign In`;
+        }
+    }, 2000);
+});
+</script>
+>>>>>>> Stashed changes
 </body>
 </html>
