@@ -1,0 +1,35 @@
+RewriteEngine On
+RewriteBase /pos
+
+# 1. URL Cleanup: Removes trailing slash if request is not for a directory
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [R=301,L]
+
+# --- Custom/Specific Rewrites ---
+
+# 2. LOGIN URL: Map the clean 'login' URL to the authentication file
+# Maps /IMS/login to /IMS/authentication/login_process.php
+# RewriteRule ^login$ signin.php [L]
+
+# 3. DASHBOARD URL: Map the ROOT URL and 'dashboard' keyword to the dashboard file
+# Maps /IMS/ or /IMS/index.php or /IMS/dashboard to /IMS/admin/dashboard.php
+# RewriteRule ^(index\.php|dashboard)?$ admin/dashboard.php [L]
+
+# 4. USER LIST URL: Map the clean 'users' URL to the user list file
+# Maps /IMS/users to /IMS/admin/user_list.php
+# RewriteRule ^users$ admin/user_list.php [L] 
+
+# --- Generic Admin Resource Mapping ---
+
+# 5. Generic Admin Mapping: This handles URLs like /IMS/stores, /IMS/invoices etc.
+# Checks if the requested segment (e.g., 'stores') exists as a PHP file inside the 'admin/' folder.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/IMS/admin/$1.php -f
+RewriteRule ^([a-z0-9-]+)/?$ /$1.php [L]
+
+# --- Fallback Rules ---
+
+# 6. Handle Legacy HTML Links (Maps *.html to *.php)
+RewriteRule ^(.*)\.html$ $1.php [L]
+RewriteRule ^php/(.*\.php)$ php/$1 [L]
