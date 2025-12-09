@@ -58,7 +58,7 @@ if(isset($_POST['login_btn']))
         {
             // --- WRONG PASSWORD ---
             // Email was correct, but password failed.
-            $_SESSION['message'] = "Invalid Password!";
+            $_SESSION['message'] = "Invalid Email & Password!";
             $_SESSION['input_email'] = $email;    // Keep the email in the input
             $_SESSION['error_field'] = "password"; // Triggers Red Border on Password Field only
             
