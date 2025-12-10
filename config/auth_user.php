@@ -19,7 +19,7 @@ if(isset($_POST['login_btn']))
         $_SESSION['message'] = "Incorrect Captcha Code!";
         $_SESSION['input_email'] = $email; // Save email so user doesn't type it again
         // No specific error field for captcha, or you could set 'captcha' if you had logic for it
-        header("Location: ../signIn.php");
+        header("Location: ../signin.php");
         exit(0);
     }
 
@@ -51,7 +51,7 @@ if(isset($_POST['login_btn']))
             unset($_SESSION['input_email']);
             unset($_SESSION['error_field']);
 
-            header("Location: ../index.php");
+            header("Location: /pos");
             exit(0);
         }
         else
@@ -62,7 +62,7 @@ if(isset($_POST['login_btn']))
             $_SESSION['input_email'] = $email;    // Keep the email in the input
             $_SESSION['error_field'] = "password"; // Triggers Red Border on Password Field only
             
-            header("Location: ../signIn.php");
+            header("Location: /pos/login");
             exit(0);
         }
     }
@@ -74,14 +74,14 @@ if(isset($_POST['login_btn']))
         $_SESSION['input_email'] = $email;    // Keep the typo so user can fix it
         $_SESSION['error_field'] = "email";   // Triggers Red Border on Email Field only
         
-        header("Location: ../signIn.php");
+        header("Location: /pos/login");
         exit(0);
     }
 }
 else
 {
     $_SESSION['message'] = "You are not allowed to access this file";
-    header("Location: ../signIn.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
