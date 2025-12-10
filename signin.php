@@ -9,7 +9,7 @@ if(isset($_SESSION['auth'])){
 $old_email = isset($_SESSION['input_email']) ? $_SESSION['input_email'] : '';
 $old_password = isset($_SESSION['input_password']) ? $_SESSION['input_password'] : ''; 
 $error_field = isset($_SESSION['error_field']) ? $_SESSION['error_field'] : '';
-$captcha_error = isset($_SESSION['captcha_error']) ? $_SESSION['captcha_error'] : ''; // Added for Captcha Error
+$captcha_error = isset($_SESSION['captcha_error']) ? $_SESSION['captcha_error'] : ''; 
 
 // 2. CHECK ERROR STATUS
 $is_error = !empty($error_field); 
@@ -17,12 +17,12 @@ $is_error = !empty($error_field);
 // 3. INPUT CLASSES
 $base_input = "w-full rounded-lg px-4 py-2.5 md:py-3 outline-none transition-all duration-200 border text-sm font-medium";
 
-// Logic: Error hole Border Red, nahole Normal. Background always White.
+
 $input_style = $is_error 
     ? $base_input . ' border-red-500 bg-white text-slate-800 focus:ring-2 focus:ring-red-500' 
     : $base_input . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
 
-// 4. LABEL CLASSES (No Change)
+// 4. LABEL CLASSES (Always Normal)
 $label_style = "block text-xs font-bold mb-1 uppercase tracking-wide text-slate-700";
 
 // 5. ERROR MESSAGE VISIBILITY
@@ -32,7 +32,7 @@ $error_msg_display = $is_error ? '' : 'hidden';
 unset($_SESSION['input_email']);
 unset($_SESSION['input_password']); 
 unset($_SESSION['error_field']);
-unset($_SESSION['captcha_error']); // Clear Captcha Error
+unset($_SESSION['captcha_error']); 
 ?>
 
 <!DOCTYPE html>
@@ -62,7 +62,26 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
             100% { background-position: 0% 50%; }
         }
 
-        /* === 2. FLOATING ANIMATIONS === */
+        /* === 2. GENERATIVE TEXT ANIMATION (Buttery Smooth Loop) === */
+        .gen-char {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(15px);
+            /* Infinite loop: 6s cycle */
+            animation: butterLoop 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        /* Logic: Enter (0-15%), Stay (15-75%), Exit (75-90%), Wait (90-100%) */
+        @keyframes butterLoop {
+            0% { opacity: 0; filter: blur(10px); transform: translateY(15px); }
+            15% { opacity: 1; filter: blur(0); transform: translateY(0); }
+            75% { opacity: 1; filter: blur(0); transform: translateY(0); }
+            90% { opacity: 0; filter: blur(5px); transform: translateY(-10px); }
+            100% { opacity: 0; filter: blur(10px); transform: translateY(15px); }
+        }
+
+        /* === 3. FLOATING ANIMATIONS === */
         .float-slow { animation: float 8s ease-in-out infinite; }
         .float-medium { animation: float 6s ease-in-out infinite; }
         .float-fast { animation: float 4s ease-in-out infinite; }
@@ -158,9 +177,8 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
                 <div class="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
 
                 <div class="relative z-10 space-y-8 mt-4">
-                    <h2 class="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white">
-                        Velocity. <br/> Clarity. <br/> <span class="text-teal-300">Success.</span>
-                    </h2>
+                    <h2 id="genText" class="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight text-white min-h-[100px]">
+                        </h2>
                     
                     <p class="text-lg text-teal-50/90 leading-relaxed font-light">
                         <span class="font-semibold text-white">Accelerate your growth</span> with the 
@@ -170,7 +188,7 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
                         <span class="text-teal-200 font-medium">effortless operation</span>.
                     </p>
 
-                    <div class="flex items-center space-x-5 pt-4">
+                    <div class="flex items-center space-x-5 pt-12">
                         <a href="/faq" class="tooltip-group w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all border border-white/10">
                             <i class="fas fa-question text-teal-100"></i><span class="tooltip">FAQ</span>
                         </a>
@@ -210,8 +228,8 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
             <div class="w-full md:w-1/2 bg-white relative flex flex-col h-full">
                 
                 <div class="absolute top-6 right-8 text-right z-20 hidden md:block">
-                    <div class="text-xl font-bold text-slate-800 font-mono tracking-tight">09:49:48</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">WED, DEC 10</div>
+                    <div id="liveTime" class="text-xl font-bold text-slate-800 font-mono tracking-tight">--:--:--</div>
+                    <div id="liveDate" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">---, --- --</div>
                 </div>
 
                 <div class="flex-1 flex flex-col justify-center px-6 md:px-16 py-6 md:py-0">
@@ -317,7 +335,6 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
 
 
         function checkInputs() {
-            // Logic to check input validity (No Change)
             if(openModalBtn.innerHTML.includes('fa-spinner') || openModalBtn.innerHTML.includes('fa-circle-notch')) return;
 
             const emailVal = emailInput.value.trim();
@@ -325,7 +342,6 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const isEmailValid = emailRegex.test(emailVal);
             
-            // Client side logic sudhu button enable/disable korbe
             if(isEmailValid && passVal) { openModalBtn.disabled = false; } else { openModalBtn.disabled = true; }
         }
         
@@ -341,11 +357,11 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
         function openModal() {
              modal.classList.remove('hidden');
              refreshCaptcha();
-             setTimeout(() => { 
-                 backdrop.classList.remove('opacity-0'); 
-                 content.classList.remove('scale-95', 'opacity-0'); 
-                 content.classList.add('scale-100', 'opacity-100'); 
-                 document.getElementById('modalCaptchaInput').focus(); 
+             setTimeout(() => { 
+                 backdrop.classList.remove('opacity-0'); 
+                 content.classList.remove('scale-95', 'opacity-0'); 
+                 content.classList.add('scale-100', 'opacity-100'); 
+                 document.getElementById('modalCaptchaInput').focus(); 
              }, 10);
          }
 
@@ -379,12 +395,10 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
         }
 
         function refreshCaptcha() {
-             // IMPORTANT: Added root path /pos/ to fix 404 issue
             document.getElementById('captchaImage').src = '/pos/config/captcha.php?' + new Date().getTime();
             document.getElementById('modalCaptchaInput').value = '';
         }
         
-        // ** NEW FUNCTION: AJAX call to verify CAPTCHA first **
         function submitFormWithCaptcha() {
             const code = document.getElementById('modalCaptchaInput').value.trim();
             const originalContent = confirmBtn.innerHTML;
@@ -397,15 +411,12 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
             confirmBtn.disabled = true;
             confirmBtn.classList.add('cursor-not-allowed', 'opacity-80');
 
-            // Send CAPTCHA verification request via fetch/AJAX
             fetch('/pos/config/auth_user.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                // Send only CAPTCHA and action type
                 body: `captcha_code=${code}&action_type=captcha_verify` 
             })
             .then(response => {
-                 // Check for 404/500 first
                 if (!response.ok) {
                     throw new Error('Server connectivity issue (404/500)');
                 }
@@ -413,12 +424,9 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
             })
             .then(data => {
                 if (data.status === 'success') {
-                    // CAPTCHA IS CORRECT! Submit the main form.
-                    // This will submit the email, password, and correct captcha code to PHP.
                     hiddenCaptchaInput.value = code;
-                    realSubmitBtn.click(); // Trigger PHP form submission
+                    realSubmitBtn.click(); 
                 } else {
-                    // CAPTCHA IS INCORRECT! Show error, stay in modal, refresh CAPTCHA.
                     Swal.fire({
                         icon: 'error',
                         title: 'Invalid Captcha',
@@ -427,28 +435,82 @@ unset($_SESSION['captcha_error']); // Clear Captcha Error
                         background: '#1e293b', color: '#fff'
                     });
                     
-                    refreshCaptcha(); // Get a new CAPTCHA image
+                    refreshCaptcha(); 
                     
-                    // Reset button
                     confirmBtn.innerHTML = originalContent;
                     confirmBtn.disabled = false;
                     confirmBtn.classList.remove('cursor-not-allowed', 'opacity-80');
                 }
             })
             .catch(error => {
-                // Handle fetch failure or JSON parse error
                 Swal.fire({
                     icon: 'error',
                     title: 'System Error',
                     text: 'Could not submit captcha: ' + error.message,
                     toast: true, position: 'top-end', showConfirmButton: false, timer: 4000
                 });
-                refreshCaptcha(); // Refresh captcha after error
+                refreshCaptcha(); 
                 confirmBtn.innerHTML = originalContent;
                 confirmBtn.disabled = false;
                 confirmBtn.classList.remove('cursor-not-allowed', 'opacity-80');
             });
         }
+
+        /* === NEW: REAL-TIME DATE & CLOCK LOGIC === */
+        function updateClock() {
+            const now = new Date();
+            // Time: 09:49:48 (24h format)
+            const timeString = now.toLocaleTimeString('en-GB', { hour12: false });
+            // Date: WED, DEC 10
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            const dateString = now.toLocaleDateString('en-US', options).toUpperCase();
+            
+            const timeEl = document.getElementById('liveTime');
+            const dateEl = document.getElementById('liveDate');
+            
+            if(timeEl) timeEl.innerText = timeString;
+            if(dateEl) dateEl.innerText = dateString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Run immediately on load
+
+        /* === NEW: BUTTERY SMOOTH GENERATIVE TEXT LOGIC === */
+        const textPhrase = "Sync your business  - anytime & anywhere";
+        const textContainer = document.getElementById('genText');
+        textContainer.innerHTML = ''; // Clear initial content
+
+        // Generate spans with staggered delays
+        let delay = 0;
+        let htmlContent = '';
+        
+        // Split logical parts for layout (Break at the hyphen)
+        const parts = textPhrase.split('-'); 
+        // Part 1: "keep your business synced "
+        // Part 2: " anytime & anywhere"
+
+        // Helper to wrap chars
+        function wrapChars(str, isTeal = false) {
+            let result = '';
+            str.split('').forEach(char => {
+                delay += 0.05; // 50ms delay per char for smooth generation
+                
+                let classes = 'gen-char';
+                if(isTeal) classes += ' text-teal-300';
+                
+                if (char === ' ') {
+                    result += `<span style="display:inline-block; width:0.3em;"></span>`; // Handle space
+                } else {
+                    result += `<span class="${classes}" style="animation-delay: ${delay}s">${char}</span>`;
+                }
+            });
+            return result;
+        }
+
+        htmlContent += wrapChars(parts[0].trim()); // First line (White)
+        htmlContent += '<br/>'; // Visual break
+        htmlContent += wrapChars(parts[1].trim(), true); // Second line (Teal)
+
+        textContainer.innerHTML = htmlContent;
 
         emailInput.focus();
         checkInputs();
