@@ -5,28 +5,29 @@ if(isset($_SESSION['auth'])){
     exit();
 }
 
-// 1. SESSION DATA
+// 1. SESSION DATA RECOVERY
 $old_email = isset($_SESSION['input_email']) ? $_SESSION['input_email'] : '';
-
-// --- FIXED: PASSWORD RETAIN LOGIC ---
-// Session theke password ana hocche. Jodi backend set kore thake, tahole ekhane pabe.
 $old_password = isset($_SESSION['input_password']) ? $_SESSION['input_password'] : ''; 
-
 $error_field = isset($_SESSION['error_field']) ? $_SESSION['error_field'] : '';
 
-// 2. INPUT CLASSES
-$base_classes = "w-full rounded-lg px-4 py-2.5 md:py-3 outline-none transition-all duration-200 border text-sm font-medium";
+// 2. CHECK ERROR STATUS (Any error triggers red border on both)
+$is_error = !empty($error_field); 
 
-$email_class = ($error_field == 'email' || $error_field == 'both') 
-    ? $base_classes . ' border-red-500 text-red-900 placeholder-red-300 focus:ring-2 focus:ring-red-500 bg-red-50' 
-    : $base_classes . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
+// 3. INPUT CLASSES
+$base_input = "w-full rounded-lg px-4 py-2.5 md:py-3 outline-none transition-all duration-200 border text-sm font-medium";
 
-$pass_class = ($error_field == 'password' || $error_field == 'both') 
-    ? $base_classes . ' border-red-500 text-red-900 placeholder-red-300 focus:ring-2 focus:ring-red-500 bg-red-50' 
-    : $base_classes . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
+// Logic: Error hole Border Red, nahole Normal. Background always White.
+$input_style = $is_error 
+    ? $base_input . ' border-red-500 bg-white text-slate-800 focus:ring-2 focus:ring-red-500' 
+    : $base_input . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
 
-// 3. CLEAR SESSION (Flash Data)
-// Variable e data neyar por session clear kora hocche jate refresh korle data chole jay
+// 4. LABEL CLASSES (Always Normal)
+$label_style = "block text-xs font-bold mb-1 uppercase tracking-wide text-slate-700";
+
+// 5. ERROR MESSAGE VISIBILITY (Show on BOTH fields if any error exists)
+$error_msg_display = $is_error ? '' : 'hidden';
+
+// 6. CLEAR SESSION
 unset($_SESSION['input_email']);
 unset($_SESSION['input_password']); 
 unset($_SESSION['error_field']);
@@ -207,19 +208,23 @@ unset($_SESSION['error_field']);
 
                     <form action="/pos/config/auth_user.php" method="POST" id="loginForm" class="space-y-3 md:space-y-5 w-full">
                         <div>
-                            <label for="email" class="block text-xs font-bold mb-1 text-slate-700 uppercase tracking-wide">Email Address</label>
-                            <input type="email" name="email" id="email" value="<?= htmlspecialchars($old_email); ?>" class="<?= $email_class; ?>" placeholder="name@store.com" required autofocus>
-                            <p id="emailError" class="text-xs mt-1 text-red-500 hidden font-medium">Invalid email format</p>
+                            <label for="email" class="<?= $label_style; ?>">Email Address</label>
+                            
+                            <input type="email" name="email" id="email" value="<?= htmlspecialchars($old_email); ?>" class="<?= $input_style; ?>" placeholder="name@store.com" required autofocus>
+                            
+                            <p id="emailError" class="text-xs mt-1 text-red-500 font-medium <?= $error_msg_display; ?>">Invalid email or password</p>
                         </div>
 
                         <div>
-                            <label for="password" class="block text-xs font-bold mb-1 text-slate-700 uppercase tracking-wide">Password</label>
+                            <label for="password" class="<?= $label_style; ?>">Password</label>
                             <div class="relative">
-                                <input type="password" name="password" id="password" value="<?= htmlspecialchars($old_password); ?>" class="<?= $pass_class; ?> pr-10" placeholder="••••••••" required>
+                                <input type="password" name="password" id="password" value="<?= htmlspecialchars($old_password); ?>" class="<?= $input_style; ?> pr-10" placeholder="••••••••" required>
                                 <button type="button" onclick="togglePassword()" class="absolute right-3 top-2.5 md:top-3 text-gray-400 hover:text-teal-600 transition">
                                     <i id="eyeIcon" class="fas fa-eye text-sm"></i>
                                 </button>
                             </div>
+                            
+                            <p id="passwordError" class="text-xs mt-1 text-red-500 font-medium <?= $error_msg_display; ?>">Invalid email or password</p>
                         </div>
 
                         <input type="hidden" name="captcha_code" id="hiddenCaptchaInput">
@@ -281,16 +286,17 @@ unset($_SESSION['error_field']);
         const passwordInput = document.getElementById('password');
         const openModalBtn = document.getElementById('openModalBtn');
         const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
 
         function checkInputs() {
-            // Only re-enable if NOT in loading state
             if(openModalBtn.innerHTML.includes('fa-spinner') || openModalBtn.innerHTML.includes('fa-circle-notch')) return;
 
             const emailVal = emailInput.value.trim();
             const passVal = passwordInput.value.trim();
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const isEmailValid = emailRegex.test(emailVal);
-            if(emailVal && !isEmailValid) { emailError.classList.remove('hidden'); } else { emailError.classList.add('hidden'); }
+            
+            // Client side logic sudhu button enable/disable korbe
             if(isEmailValid && passVal) { openModalBtn.disabled = false; } else { openModalBtn.disabled = true; }
         }
         
@@ -307,7 +313,6 @@ unset($_SESSION['error_field']);
         const backdrop = document.getElementById('modalBackdrop');
         const content = document.getElementById('modalContent');
 
-        // Added Loader for Initial Button
         openModalBtn.addEventListener('click', () => {
             const originalContent = openModalBtn.innerHTML;
             openModalBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Please wait...';
@@ -325,7 +330,6 @@ unset($_SESSION['error_field']);
                     document.getElementById('modalCaptchaInput').focus(); 
                 }, 10);
 
-                // Reset Button State
                 openModalBtn.innerHTML = originalContent;
                 openModalBtn.classList.remove('cursor-not-allowed', 'opacity-75');
                 checkInputs(); 
@@ -357,9 +361,8 @@ unset($_SESSION['error_field']);
             document.getElementById('realSubmitBtn').click();
         }
 
-        // Ensuring email is focused on load and initial check runs to enable button if values persist
         emailInput.focus();
-        checkInputs(); // Run immediately to enable button if password exists
+        checkInputs(); 
     </script>
 </body>
 </html>
