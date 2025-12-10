@@ -19,7 +19,7 @@ if(isset($_POST['login_btn']))
         $_SESSION['message'] = "Incorrect Captcha Code!";
         $_SESSION['input_email'] = $email; // Save email so user doesn't type it again
         // No specific error field for captcha, or you could set 'captcha' if you had logic for it
-        header("Location: ../signin.php");
+        header("Location: /pos/login");
         exit(0);
     }
 
