@@ -9,8 +9,9 @@ if(isset($_SESSION['auth'])){
 $old_email = isset($_SESSION['input_email']) ? $_SESSION['input_email'] : '';
 $old_password = isset($_SESSION['input_password']) ? $_SESSION['input_password'] : ''; 
 $error_field = isset($_SESSION['error_field']) ? $_SESSION['error_field'] : '';
+$captcha_error = isset($_SESSION['captcha_error']) ? $_SESSION['captcha_error'] : ''; // Added for Captcha Error
 
-// 2. CHECK ERROR STATUS (Any error triggers red border on both)
+// 2. CHECK ERROR STATUS
 $is_error = !empty($error_field); 
 
 // 3. INPUT CLASSES
@@ -21,16 +22,17 @@ $input_style = $is_error
     ? $base_input . ' border-red-500 bg-white text-slate-800 focus:ring-2 focus:ring-red-500' 
     : $base_input . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
 
-// 4. LABEL CLASSES (Always Normal)
+// 4. LABEL CLASSES (No Change)
 $label_style = "block text-xs font-bold mb-1 uppercase tracking-wide text-slate-700";
 
-// 5. ERROR MESSAGE VISIBILITY (Show on BOTH fields if any error exists)
+// 5. ERROR MESSAGE VISIBILITY
 $error_msg_display = $is_error ? '' : 'hidden';
 
-// 6. CLEAR SESSION
+// 6. CLEAR SESSION (Flash Data)
 unset($_SESSION['input_email']);
 unset($_SESSION['input_password']); 
 unset($_SESSION['error_field']);
+unset($_SESSION['captcha_error']); // Clear Captcha Error
 ?>
 
 <!DOCTYPE html>
@@ -128,6 +130,24 @@ unset($_SESSION['error_field']);
         });
     </script>
     <?php unset($_SESSION['message']); endif; ?>
+    
+    <?php if(!empty($captcha_error)): ?>
+    <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            // Display Swal, then reopen modal and refresh captcha
+            Swal.fire({
+                icon: 'error',
+                title: 'Captcha Error',
+                text: '<?= $captcha_error; ?>',
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, 
+                background: '#dc2626', color: '#fff' // Red background for distinction
+            });
+            // Reopen the modal immediately after showing the error
+            openModal(); 
+        });
+    </script>
+    <?php endif; ?>
+
 
     <div class="relative z-10 w-full max-w-5xl md:h-[600px] flex animate-slide-up px-4 md:px-0">
 
@@ -228,6 +248,7 @@ unset($_SESSION['error_field']);
                         </div>
 
                         <input type="hidden" name="captcha_code" id="hiddenCaptchaInput">
+                        <input type="hidden" name="action_type" value="verify_login">
 
                         <div class="flex items-center justify-between mt-1">
                             <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -264,7 +285,7 @@ unset($_SESSION['error_field']);
                 <p class="text-sm text-slate-500 mt-2 mb-6">Please match the captcha code below.</p>
                 
                 <div class="mb-6 flex items-center justify-center gap-4">
-                    <img src="config/captcha.php" id="captchaImage" alt="Code" class="h-16 rounded mix-blend-multiply">
+                    <img src="/pos/config/captcha.php" id="captchaImage" alt="Code" class="h-16 rounded mix-blend-multiply">
                     <button onclick="refreshCaptcha()" class="text-slate-400 hover:text-teal-600 transition p-2 rotate-0 hover:rotate-180 duration-500 text-lg" type="button">
                         <i class="fas fa-sync-alt"></i>
                     </button>
@@ -273,7 +294,7 @@ unset($_SESSION['error_field']);
                        class="w-full text-center text-3xl font-mono font-bold tracking-[0.5em] text-slate-800 border-b-2 border-slate-200 focus:border-teal-500 outline-none py-2 bg-transparent placeholder-slate-200 transition-colors" 
                        placeholder="•••••" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);">
                 
-                <button type="button" id="confirmBtn" onclick="verifyAndLogin()" 
+                <button type="button" id="confirmBtn" onclick="submitFormWithCaptcha()" 
                     class="w-full mt-8 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center gap-2 hover:shadow-lg transition-all">
                     <span>Access Dashboard</span> <i class="fas fa-check"></i>
                 </button>
@@ -287,8 +308,16 @@ unset($_SESSION['error_field']);
         const openModalBtn = document.getElementById('openModalBtn');
         const emailError = document.getElementById('emailError');
         const passwordError = document.getElementById('passwordError');
+        const hiddenCaptchaInput = document.getElementById('hiddenCaptchaInput');
+        const realSubmitBtn = document.getElementById('realSubmitBtn');
+        const modal = document.getElementById('captchaModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const content = document.getElementById('modalContent');
+        const confirmBtn = document.getElementById('confirmBtn');
+
 
         function checkInputs() {
+            // Logic to check input validity (No Change)
             if(openModalBtn.innerHTML.includes('fa-spinner') || openModalBtn.innerHTML.includes('fa-circle-notch')) return;
 
             const emailVal = emailInput.value.trim();
@@ -309,9 +338,17 @@ unset($_SESSION['error_field']);
             if(pwd.type === 'password') { pwd.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); } else { pwd.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
         }
 
-        const modal = document.getElementById('captchaModal');
-        const backdrop = document.getElementById('modalBackdrop');
-        const content = document.getElementById('modalContent');
+        function openModal() {
+             modal.classList.remove('hidden');
+             refreshCaptcha();
+             setTimeout(() => { 
+                 backdrop.classList.remove('opacity-0'); 
+                 content.classList.remove('scale-95', 'opacity-0'); 
+                 content.classList.add('scale-100', 'opacity-100'); 
+                 document.getElementById('modalCaptchaInput').focus(); 
+             }, 10);
+         }
+
 
         openModalBtn.addEventListener('click', () => {
             const originalContent = openModalBtn.innerHTML;
@@ -320,16 +357,14 @@ unset($_SESSION['error_field']);
             openModalBtn.disabled = true;
 
             setTimeout(() => {
-                modal.classList.remove('hidden');
-                refreshCaptcha();
-                
-                setTimeout(() => { 
-                    backdrop.classList.remove('opacity-0'); 
-                    content.classList.remove('scale-95', 'opacity-0'); 
-                    content.classList.add('scale-100', 'opacity-100'); 
-                    document.getElementById('modalCaptchaInput').focus(); 
-                }, 10);
+                // Remove error state classes before opening modal
+                emailInput.classList.remove('border-red-500', 'bg-white', 'focus:ring-red-500');
+                passwordInput.classList.remove('border-red-500', 'bg-white', 'focus:ring-red-500');
+                document.getElementById('emailError').classList.add('hidden');
+                document.getElementById('passwordError').classList.add('hidden');
 
+                openModal();
+                
                 openModalBtn.innerHTML = originalContent;
                 openModalBtn.classList.remove('cursor-not-allowed', 'opacity-75');
                 checkInputs(); 
@@ -344,25 +379,79 @@ unset($_SESSION['error_field']);
         }
 
         function refreshCaptcha() {
-            document.getElementById('captchaImage').src = 'config/captcha.php?' + new Date().getTime();
+             // IMPORTANT: Added root path /pos/ to fix 404 issue
+            document.getElementById('captchaImage').src = '/pos/config/captcha.php?' + new Date().getTime();
             document.getElementById('modalCaptchaInput').value = '';
         }
-
-        function verifyAndLogin() {
+        
+        // ** NEW FUNCTION: AJAX call to verify CAPTCHA first **
+        function submitFormWithCaptcha() {
             const code = document.getElementById('modalCaptchaInput').value.trim();
-            if(!code) { content.classList.add('animate-bounce'); setTimeout(()=> content.classList.remove('animate-bounce'), 500); return; }
-            document.getElementById('hiddenCaptchaInput').value = code;
+            const originalContent = confirmBtn.innerHTML;
             
-            const btn = document.getElementById('confirmBtn');
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Verifying...';
-            btn.disabled = true;
-            btn.classList.add('cursor-not-allowed', 'opacity-80');
+            if(!code) { 
+                content.classList.add('animate-bounce'); setTimeout(()=> content.classList.remove('animate-bounce'), 500); return; 
+            }
+            
+            confirmBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Checking...';
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('cursor-not-allowed', 'opacity-80');
 
-            document.getElementById('realSubmitBtn').click();
+            // Send CAPTCHA verification request via fetch/AJAX
+            fetch('/pos/config/auth_user.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                // Send only CAPTCHA and action type
+                body: `captcha_code=${code}&action_type=captcha_verify` 
+            })
+            .then(response => {
+                 // Check for 404/500 first
+                if (!response.ok) {
+                    throw new Error('Server connectivity issue (404/500)');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // CAPTCHA IS CORRECT! Submit the main form.
+                    // This will submit the email, password, and correct captcha code to PHP.
+                    hiddenCaptchaInput.value = code;
+                    realSubmitBtn.click(); // Trigger PHP form submission
+                } else {
+                    // CAPTCHA IS INCORRECT! Show error, stay in modal, refresh CAPTCHA.
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Captcha',
+                        text: 'Please try the new code.',
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+                        background: '#1e293b', color: '#fff'
+                    });
+                    
+                    refreshCaptcha(); // Get a new CAPTCHA image
+                    
+                    // Reset button
+                    confirmBtn.innerHTML = originalContent;
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('cursor-not-allowed', 'opacity-80');
+                }
+            })
+            .catch(error => {
+                // Handle fetch failure or JSON parse error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Error',
+                    text: 'Could not submit captcha: ' + error.message,
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 4000
+                });
+                refreshCaptcha(); // Refresh captcha after error
+                confirmBtn.innerHTML = originalContent;
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('cursor-not-allowed', 'opacity-80');
+            });
         }
 
         emailInput.focus();
-        checkInputs(); 
+        checkInputs();
     </script>
 </body>
 </html>
