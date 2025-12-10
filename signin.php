@@ -137,6 +137,71 @@ unset($_SESSION['error_field']);
     <?php unset($_SESSION['message']); endif; ?>
 
     <div class="relative z-10 w-full max-w-5xl h-[90vh] md:h-[600px] flex animate-slide-up px-4 md:px-0">
+<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+<defs>
+<pattern id="dot-pattern" width="10" height="10" patternUnits="userSpaceOnUse">
+<circle cx="1" cy="1" r="1" fill="#0d9488" />
+</pattern>
+</defs>
+<rect width="100%" height="100%" fill="url(#dot-pattern)" />
+</svg>
+</div>
+
+<div class="w-full max-w-6xl flex flex-col md:flex-row bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-100">
+
+<div class="hidden md:flex flex-col justify-between w-full md:w-1/2 bg-gradient-to-br from-teal-700 via-teal-800 to-cyan-900 text-white p-14 space-y-10 relative overflow-hidden">
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full animate-pulse-slow"></div>
+<div class="absolute bottom-10 -left-10 w-24 h-24 bg-white/10 rounded-full animate-bounce-slow"></div>
+
+<div class="relative z-10 space-y-6">
+<h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight text-white drop-shadow-lg">
+<span class="bg-clip-text">Velocity. Clarity. Success.</span>
+</h2>
+<p class="text-lg text-white/90 max-w-xl leading-relaxed font-medium">
+<span class="inline-flex items-center gap-2">
+<i class="fas fa-chart-line text-orange-300"></i>
+<span class="text-white font-semibold">Accelerate</span> your growth
+</span>
+with the *Velocity POS Suite* that delivers
+<span class="text-orange-200">real-time sales data</span>,
+<span class="text-orange-200">smarter inventory control</span>, and
+<span class="text-orange-200">effortless operation</span>.
+</p>
+</div>
+<nav class="flex space-x-6 text-white/90 font-medium text-sm">
+<a href="/faq" class="flex items-center gap-2 hover:text-orange-300 transition">
+<i class="fas fa-question-circle text-orange-400 text-xl"></i> FAQ
+</a>
+<a href="/support" class="flex items-center gap-2 hover:text-orange-300 transition">
+<i class="fas fa-ticket-alt text-orange-400 text-xl"></i> Support
+</a>
+<a href="mailto:support@possaas.com" class="flex items-center gap-2 hover:text-orange-300 transition">
+<i class="fas fa-envelope text-orange-400 text-xl"></i> Email
+</a>
+</nav>
+<div class="relative z-10 max-w-lg space-y-6">
+<hr class="border-t border-white/30" />
+<div class="flex items-center space-x-3">
+<div class="flex -space-x-3">
+<img src="https://i.pravatar.cc/40?img=21" class="rounded-full w-10 h-10 border-2 border-white shadow-lg" alt="User Avatar 1"/>
+<img src="https://i.pravatar.cc/40?img=22" class="rounded-full w-10 h-10 border-2 border-white shadow-lg" alt="User Avatar 2"/>
+<img src="https://i.pravatar.cc/40?img=23" class="rounded-full w-10 h-10 border-2 border-white shadow-lg" alt="User Avatar 3"/>
+</div>
+<p class="text-sm sm:text-base text-white font-sm ml-8">
+Join <span class="font-bold text-orange-200">12,000+</span> businesses achieving <span class="font-semibold text-white">Peak Performance</span>.
+</p>
+</div>
+</div>
+</div>
+
+
+
+        <div class="w-full md:w-7/12 bg-white/60 relative flex flex-col h-full">
+            
+            <div class="absolute top-6 right-8 text-right z-20">
+                <div id="clock" class="text-2xl font-bold text-slate-800 font-mono tracking-tight">00:00:00</div>
+                <div id="date" class="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Loading...</div>
+            </div>
 
         <div class="w-full flex flex-col md:flex-row bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl overflow-hidden border border-white/40">
 
@@ -275,6 +340,53 @@ unset($_SESSION['error_field']);
             </div>
         </div>
     </div>
+=======
+<script>
+// --- Client-Side JS Logic (Retained and Updated) ---
+
+const emailInput = document.getElementById("email");
+emailInput.focus();
+const passwordInput = document.getElementById("password");
+const submitBtn = document.querySelector("button[type='submit']");
+const emailError = document.getElementById("emailError");
+const passwordError = document.getElementById("passwordError");
+
+function validateInputs() {
+    // Reset classes
+    emailInput.classList.remove("border-red-500", "focus:ring-indigo-500");
+    passwordInput.classList.remove("border-red-500", "focus:ring-indigo-500");
+    emailInput.classList.add("focus:ring-teal-500");
+    passwordInput.classList.add("focus:ring-teal-500");
+
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value.trim();
+
+    // Email error message
+    if (!emailVal && emailInput === document.activeElement) {
+        emailInput.classList.add("border-red-500");
+        emailError.textContent = "Please enter your Store Manager Email";
+        emailError.classList.add("animate-slideInDown");
+        emailError.style.opacity = "1";
+    } else {
+        emailError.classList.remove("animate-slideInDown");
+        emailError.style.opacity = "0";
+    }
+
+    // Password error message
+    if (!passwordVal && passwordInput === document.activeElement) {
+        passwordInput.classList.add("border-red-500");
+        passwordError.textContent = "Please enter your password";
+        passwordError.classList.add("animate-slideInDown");
+        passwordError.style.opacity = "1";
+    } else {
+        passwordError.classList.remove("animate-slideInDown");
+        passwordError.style.opacity = "0";
+    }
+
+    // Enable submit button
+    submitBtn.disabled = !(emailVal && passwordVal);
+}
+
 
     <script>
         function updateClock() {
@@ -284,6 +396,7 @@ unset($_SESSION['error_field']);
         }
         setInterval(updateClock, 1000); updateClock();
 
+        // 2. VALIDATION & UI LOGIC
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const openModalBtn = document.getElementById('openModalBtn');
@@ -339,5 +452,124 @@ unset($_SESSION['error_field']);
             document.getElementById('realSubmitBtn').click();
         }
     </script>
+
+function togglePassword() {
+    const pwd = document.getElementById("password");
+    const icon = document.getElementById("toggleIcon");
+    const isPassword = pwd.type === "password";
+    pwd.type = isPassword ? "text" : "password";
+    icon.classList.toggle("fa-eye", !isPassword);
+    icon.classList.toggle("fa-eye-slash", isPassword);
+}
+
+// --- Modal Functions ---
+function openForgotModal() {
+    const modal = document.getElementById("forgotModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex", "animate-fadeSlideIn");
+}
+
+function closeForgotModal() {
+    const modal = document.getElementById("forgotModal");
+    modal.classList.remove("animate-fadeSlideIn");
+    modal.classList.add("animate-fadeSlideOut");
+
+    modal.addEventListener('animationend', () => {
+        modal.classList.remove("flex", "animate-fadeSlideOut");
+        modal.classList.add("hidden");
+    }, { once: true });
+}
+
+// --- Forgot Password Form Logic ---
+const resetEmailInput = document.getElementById("resetEmail");
+const forgotSubmitBtn = document.querySelector("#forgotPasswordForm button[type='submit']");
+forgotSubmitBtn.disabled = true;
+
+resetEmailInput.addEventListener("input", () => {
+    const emailVal = resetEmailInput.value.trim();
+    forgotSubmitBtn.disabled = !emailVal || !resetEmailInput.checkValidity();
+});
+
+document.getElementById("forgotPasswordForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    forgotSubmitBtn.disabled = true;
+    forgotSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Sending...`;
+
+    setTimeout(() => {
+        Swal.fire({
+            icon: 'success',
+            text: 'If the account exists, a reset link has been sent to ' + resetEmailInput.value,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+
+        forgotSubmitBtn.disabled = false;
+        forgotSubmitBtn.innerHTML = 'Send Reset Link';
+        document.getElementById("forgotPasswordForm").reset();
+        closeForgotModal();
+    }, 2000);
+});
+
+// --- Main Login Form Logic ---
+document.querySelector("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Authenticating...`;
+
+    setTimeout(() => {
+        const emailVal = emailInput.value.trim();
+        const passwordVal = passwordInput.value.trim();
+
+        // Dummy validation - accept only email "admin@email.com" and password "password"
+        if (emailVal === "admin@email.com" && passwordVal === "password") {
+            // Success: Redirect
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Login Successful!',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
+                background: '#f0fdf4',
+                color: '#16a34a'
+            }).then(() => {
+                window.location.href = "/dashboard";
+            });
+        } else {
+            // Error: Show toast and error messages
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: 'Invalid Credentials',
+                text: 'Please check your email and password.',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#fef2f2',
+                color: '#b91c1c'
+            });
+
+            // Set visual errors
+            emailInput.classList.add("border-red-500");
+            passwordInput.classList.add("border-red-500");
+            emailError.textContent = "Invalid email or password";
+            emailError.style.opacity = "1";
+            passwordError.textContent = "Invalid email or password";
+            passwordError.style.opacity = "1";
+
+            // Restore button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fas fa-lock mr-2"></i> Secure Sign In`;
+        }
+    }, 2000);
+});
+</script>
 </body>
 </html>
