@@ -1,91 +1,142 @@
 <?php
 session_start();
+include('config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/login");
+    header("Location: /pos/signin.php");
     exit(0);
 }
+
+$page_title = "Dashboard - Velocity POS";
+include('includes/header.php');
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
-<body class="bg-slate-50 min-h-screen">
+<div class="flex">
+    <?php include('includes/sidebar.php'); ?>
+    
+    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen">
+        <?php include('includes/navbar.php'); ?>
+        
+        <div class="p-6">
+            <!-- Dashboard Header -->
+            <div class="mb-8 slide-in">
+                <h1 class="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
+                <div class="flex items-center gap-2 text-sm text-white/60">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span>Welcome back, <?= isset($_SESSION['auth_user']['name']) ? htmlspecialchars($_SESSION['auth_user']['name']) : 'Admin'; ?></span>
+                </div>
+            </div>
 
-    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold text-lg">V</div>
-            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Velocity POS</h1>
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stores Card -->
+                <div class="glass-card rounded-xl p-6 slide-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                            <i class="fas fa-store text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white/60">Total</span>
+                    </div>
+                    <?php
+                    $stores_query = "SELECT COUNT(*) as total FROM stores";
+                    $stores_result = mysqli_query($conn, $stores_query);
+                    $stores_data = mysqli_fetch_assoc($stores_result);
+                    ?>
+                    <h3 class="text-3xl font-bold text-white mb-1"><?= $stores_data['total']; ?></h3>
+                    <p class="text-sm text-white/60">Active Stores</p>
+                    <a href="stores/store_list.php" class="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block">View all →</a>
+                </div>
+
+                <!-- Currency Card -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.1s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                            <i class="fas fa-dollar-sign text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white/60">Total</span>
+                    </div>
+                    <?php
+                    $currency_query = "SELECT COUNT(*) as total FROM currencies";
+                    $currency_result = mysqli_query($conn, $currency_query);
+                    $currency_data = mysqli_fetch_assoc($currency_result);
+                    ?>
+                    <h3 class="text-3xl font-bold text-white mb-1"><?= $currency_data['total']; ?></h3>
+                    <p class="text-sm text-white/60">Currencies</p>
+                    <a href="currency/currency_list.php" class="text-xs text-purple-400 hover:text-purple-300 mt-2 inline-block">View all →</a>
+                </div>
+
+                <!-- Users Card -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.2s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white shadow-lg">
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white/60">Total</span>
+                    </div>
+                    <?php
+                    $users_query = "SELECT COUNT(*) as total FROM users";
+                    $users_result = mysqli_query($conn, $users_query);
+                    $users_data = mysqli_fetch_assoc($users_result);
+                    ?>
+                    <h3 class="text-3xl font-bold text-white mb-1"><?= $users_data['total'] ?? 0; ?></h3>
+                    <p class="text-sm text-white/60">Users</p>
+                    <a href="#" class="text-xs text-green-400 hover:text-green-300 mt-2 inline-block">View all →</a>
+                </div>
+
+                <!-- Sales Card -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.3s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white shadow-lg">
+                            <i class="fas fa-chart-line text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white/60">Today</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white mb-1">৳ 0</h3>
+                    <p class="text-sm text-white/60">Total Sales</p>
+                    <a href="#" class="text-xs text-orange-400 hover:text-orange-300 mt-2 inline-block">View report →</a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a href="stores/add_store.php" class="glass-card rounded-xl p-6 hover:scale-105 transition-transform slide-in group cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-shadow">
+                            <i class="fas fa-plus text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">Add New Store</h3>
+                            <p class="text-sm text-white/60">Create new branch</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="currency/add_currency.php" class="glass-card rounded-xl p-6 hover:scale-105 transition-transform slide-in group cursor-pointer" style="animation-delay: 0.1s;">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-shadow">
+                            <i class="fas fa-dollar-sign text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">Add Currency</h3>
+                            <p class="text-sm text-white/60">Manage currencies</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="stores/store_list.php" class="glass-card rounded-xl p-6 hover:scale-105 transition-transform slide-in group cursor-pointer" style="animation-delay: 0.2s;">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-shadow">
+                            <i class="fas fa-list text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">View All Stores</h3>
+                            <p class="text-sm text-white/60">Browse stores</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
         
-        <a href="logout.php" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-500 hover:text-white transition-all duration-300 border border-red-100 group">
-            <span>Logout</span>
-            <i class="fas fa-sign-out-alt group-hover:translate-x-1 transition-transform"></i>
-        </a>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-6 py-10">
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
-                <p class="text-slate-500 text-sm mt-1">Welcome back, Admin</p>
-            </div>
-            <div class="text-right hidden sm:block">
-                <p class="text-2xl font-bold text-slate-800" id="clock">00:00</p>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest" id="date">Date</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            
-            <a href="stores/add_store.php" class="group block p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <i class="fas fa-plus-circle text-8xl text-teal-600 transform rotate-12 group-hover:scale-110 transition-transform duration-500"></i>
-                </div>
-                
-                <div class="relative z-10">
-                    <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-2xl mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-sm">
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-teal-700 transition-colors">Add New Store</h3>
-                    <p class="text-sm text-slate-500">Create new branch configuration</p>
-                </div>
-            </a>
-
-            <a href="stores/store_list.php" class="group block p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-indigo-500/50 transition-all duration-300 cursor-pointer relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <i class="fas fa-list-ul text-8xl text-indigo-600 transform rotate-12 group-hover:scale-110 transition-transform duration-500"></i>
-                </div>
-                
-                <div class="relative z-10">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 shadow-sm">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-indigo-700 transition-colors">All Stores</h3>
-                    <p class="text-sm text-slate-500">View and manage store list</p>
-                </div>
-            </a>
-
-        </div>
-    </div>
-
-    <script>
-        // Simple Clock Script
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit'});
-            document.getElementById('date').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
-</body>
-</html>
+        <?php include('includes/footer.php'); ?>
+    </main>
+</div>
