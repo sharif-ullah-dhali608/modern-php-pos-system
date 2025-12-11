@@ -17,7 +17,7 @@ $is_error = !empty($error_field);
 // 3. INPUT CLASSES
 $base_input = "w-full rounded-lg px-4 py-2.5 md:py-3 outline-none transition-all duration-200 border text-sm font-medium";
 
-
+// Logic: Error hole Border Red, nahole Normal. Background always White.
 $input_style = $is_error 
     ? $base_input . ' border-red-500 bg-white text-slate-800 focus:ring-2 focus:ring-red-500' 
     : $base_input . ' border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white';
@@ -58,7 +58,7 @@ unset($_SESSION['captcha_error']);
         }
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            50% { background-position: 100% 1%; }
             100% { background-position: 0% 50%; }
         }
 
