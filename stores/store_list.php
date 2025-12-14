@@ -4,250 +4,269 @@ include('../config/dbcon.php');
 
 // 1. SECURITY CHECK
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/login");
+    // Corrected login path to standard signin/login
+    header("Location: /pos/signin.php"); 
     exit(0);
 }
 
-// 2. FETCH DATA FROM DATABASE
+// 2. FETCH DATA (Using the safe query that works)
 $query = "SELECT * FROM stores ORDER BY id DESC";
 $query_run = mysqli_query($conn, $query);
+$page_title = "Store List - Velocity POS";
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Store List - Velocity POS</title>
+<?php include('../includes/header.php'); ?>
+
+<div class="flex">
+    <?php include('../includes/sidebar.php'); ?>
     
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-        /* === 1. EXACT BACKGROUND (FIXED) === */
-        .fixed-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -50;
-            background: linear-gradient(-45deg, #ccfbf1, #5eead4, #0f766e, #115e59, #99f6e4);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            will-change: background-position;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* === 2. FLOATING SHAPES === */
-        .shape-container { position: fixed; inset: 0; z-index: -40; pointer-events: none; overflow: hidden; }
-        .float-slow { animation: float 8s ease-in-out infinite; }
-        .float-medium { animation: float 6s ease-in-out infinite; }
-        .float-fast { animation: float 4s ease-in-out infinite; }
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-30px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-        }
-        .shape-shadow { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1); }
-        .icon-shadow { filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.25)); }
-
-        /* === 3. UI ANIMATIONS === */
-        .slide-in { animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(30px); }
-        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
-
-        /* === 4. GLASS CARD STYLE === */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: rgba(13, 148, 136, 0.5); /* Teal border on hover */
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #0f766e; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #115e59; }
-    </style>
-</head>
-
-<body class="min-h-screen text-slate-800 selection:bg-teal-200 selection:text-teal-900">
-
-    <div class="fixed-bg"></div>
-    <div class="shape-container">
-        <div class="absolute top-10 left-[5%] w-32 h-32 bg-teal-900/20 rounded-3xl shape-shadow float-slow backdrop-blur-sm border border-white/10"></div>
-        <div class="absolute bottom-20 right-[5%] w-48 h-48 bg-emerald-900/15 rounded-full shape-shadow float-medium delay-1000 backdrop-blur-sm"></div>
-        <div class="absolute top-[40%] left-[10%] w-16 h-16 bg-teal-800/20 rounded-xl shape-shadow float-fast delay-2000 rotate-12"></div>
-    </div>
-
-    <?php if(isset($_SESSION['message'])): ?>
-    <script>
-        Swal.fire({
-            icon: '<?= $_SESSION['msg_type']; ?>',
-            title: '<?= $_SESSION['msg_type'] == "success" ? "Success!" : "Notice"; ?>',
-            text: '<?= $_SESSION['message']; ?>',
-            confirmButtonColor: '#0f766e',
-            timer: 3000
-        });
-    </script>
-    <?php unset($_SESSION['message']); unset($_SESSION['msg_type']); endif; ?>
-
-    <nav class="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/40 px-6 py-4 shadow-sm transition-all">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="/pos/index.php" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-slate-500 hover:text-teal-700 hover:shadow-md transition-all duration-300 group">
-                    <i class="fas fa-arrow-left transform group-hover:-translate-x-1 transition-transform"></i>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Store List</h1>
-                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-teal-600 animate-pulse"></span>
-                        Branch Overview
-                    </div>
-                </div>
-            </div>
-            
-            <a href="add_store.php" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-teal-700 text-white font-bold text-sm hover:bg-teal-800 hover:shadow-lg transition-all transform active:scale-95 group">
-                <i class="fas fa-plus bg-white/20 rounded-full p-1 w-5 h-5 flex items-center justify-center text-[10px]"></i>
-                <span>Add Store</span>
-            </a>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen transition-all duration-300">
+        <?php include('../includes/navbar.php'); ?>
         
-        <?php if(mysqli_num_rows($query_run) > 0): ?>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <?php 
-                $delay = 0;
-                while($row = mysqli_fetch_assoc($query_run)): 
-                    $delay += 0.1; // Staggered animation delay
-                    $status_color = $row['status'] == 1 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200';
-                    $status_text = $row['status'] == 1 ? 'Active' : 'Inactive';
-                    $status_icon = $row['status'] == 1 ? 'fa-check-circle' : 'fa-times-circle';
-                ?>
-                
-                <div class="glass-card rounded-3xl p-6 relative group slide-in" style="animation-delay: <?= $delay; ?>s;">
-                    
-                    <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <a href="add_store.php?id=<?= $row['id']; ?>" class="w-8 h-8 rounded-full bg-white text-blue-500 hover:bg-blue-500 hover:text-white flex items-center justify-center shadow-sm border border-slate-200 transition-colors" title="Edit">
-                            <i class="fas fa-pencil-alt text-xs"></i>
-                        </a>
-                        <button onclick="confirmDelete(<?= $row['id']; ?>)" class="w-8 h-8 rounded-full bg-white text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center shadow-sm border border-slate-200 transition-colors" title="Delete">
-                            <i class="fas fa-trash text-xs"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-50 to-teal-100 text-teal-600 flex items-center justify-center text-xl shadow-inner border border-white">
-                                <i class="fas fa-store"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-lg leading-tight group-hover:text-teal-700 transition-colors">
-                                    <?= htmlspecialchars($row['store_name']); ?>
-                                </h3>
-                                <span class="text-xs font-mono text-slate-400 uppercase tracking-wide bg-slate-100 px-1.5 py-0.5 rounded">
-                                    <?= htmlspecialchars($row['store_code']); ?>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3 mb-6">
-                        <div class="flex items-center gap-3 text-sm text-slate-600">
-                            <span class="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-xs"><i class="fas fa-phone"></i></span>
-                            <span class="font-medium"><?= $row['phone'] ? htmlspecialchars($row['phone']) : 'N/A'; ?></span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm text-slate-600">
-                            <span class="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-xs"><i class="fas fa-map-marker-alt"></i></span>
-                            <span class="truncate max-w-[200px]"><?= $row['city_zip'] ? htmlspecialchars($row['city_zip']) : 'Location N/A'; ?></span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm text-slate-600">
-                            <span class="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-xs"><i class="fas fa-tag"></i></span>
-                            <span><?= htmlspecialchars($row['business_type']); ?></span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 <?= $status_color; ?>">
-                            <i class="fas <?= $status_icon; ?>"></i> <?= $status_text; ?>
-                        </span>
-                        
-                        <div class="text-right">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Target</p>
-                            <p class="text-sm font-bold text-slate-700 font-mono">৳ <?= number_format($row['daily_target'], 2); ?></p>
-                        </div>
-                    </div>
-
+        <div class="p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Store List</h1>
+                    <p class="text-slate-500 font-medium text-sm mt-1">Manage your business locations</p>
                 </div>
-                <?php endwhile; ?>
-            </div>
-
-        <?php else: ?>
-            
-            <div class="flex flex-col items-center justify-center h-[60vh] text-center slide-in">
-                <div class="w-24 h-24 bg-white/50 rounded-full flex items-center justify-center mb-6 shadow-sm backdrop-blur-sm">
-                    <i class="fas fa-store-slash text-4xl text-slate-300"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-700">No Stores Found</h2>
-                <p class="text-slate-500 mt-2 mb-8 max-w-xs mx-auto">It looks like you haven't added any branches yet. Start by creating your first store.</p>
-                <a href="add_store.php" class="px-8 py-3 rounded-xl bg-teal-600 text-white font-bold shadow-lg hover:bg-teal-700 hover:shadow-teal-500/30 transition-all">
-                    Create First Store
+                <a href="add_store.php" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl hover:bg-purple-700 transition-all">
+                    <i class="fas fa-plus"></i> <span>Add New Store</span>
                 </a>
             </div>
 
-        <?php endif; ?>
+            <?php if(mysqli_num_rows($query_run) > 0): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <?php 
+                    while($row = mysqli_fetch_assoc($query_run)): 
+                        $isActive = $row['status'] == 1;
+                        // Light Mode Colors
+                        $border_color = $isActive ? 'bg-emerald-600' : 'bg-rose-600';
+                        $icon_bg = $isActive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600';
+                        $jsonData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                    ?>
+                    
+                    <div onclick="openStoreModal(<?= $jsonData ?>)" class="group relative w-full rounded-2xl shadow-lg border border-slate-200 bg-white hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 <?= $border_color; ?>"></div>
+                        <div class="p-6 pl-8"> 
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex gap-4 items-center">
+                                    <div class="w-12 h-12 rounded-2xl <?= $icon_bg; ?> flex items-center justify-center text-lg shadow-sm"><i class="fas fa-store"></i></div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-800 text-lg leading-tight group-hover:text-purple-600 transition-colors"><?= htmlspecialchars($row['store_name']); ?></h3>
+                                        <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-500 border border-slate-200">#<?= htmlspecialchars($row['store_code']); ?></span>
+                                    </div>
+                                </div>
+                                <a href="add_store.php?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-purple-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-5 pt-4 border-t border-slate-100 border-dashed">
+                                <div><p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Phone</p><p class="font-semibold text-slate-700 truncate"><?= $row['phone'] ?: 'N/A'; ?></p></div>
+                                <div><p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Location</p><p class="font-semibold text-slate-700 truncate"><?= substr($row['city_zip'], 0, 15); ?>..</p></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between bg-purple-50 rounded-xl p-3 border border-purple-100 group-hover:bg-purple-100 transition-colors">
+                                <span class="text-xs font-bold text-purple-600 uppercase">Target</span>
+                                <span class="text-lg font-extrabold text-purple-700 font-mono"><span class="text-xs text-purple-500 mr-0.5">৳</span><?= number_format($row['daily_target']); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 shadow-inner">
+                    <h2 class="text-xl font-bold text-slate-800">No Stores Found</h2>
+                    <a href="add_store.php" class="mt-4 px-6 py-2.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition">Create First Store</a>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php include('../includes/footer.php'); ?>
+     </main>
+     
+</div>
 
+<div id="storeModal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop" onclick="closeStoreModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all opacity-0 scale-95 flex flex-col max-h-[90vh] bg-white border border-slate-300" id="modalPanel">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between rounded-t-2xl z-20">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-purple-600/10 text-purple-600 flex items-center justify-center text-lg shadow-sm"><i class="fas fa-store"></i></div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 leading-tight" id="m_storeName"></h3>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <span class="font-mono bg-slate-100 px-1.5 rounded" id="m_storeCode"></span>
+                            <span id="m_status"></span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeStoreModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scroll bg-white">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 rounded-xl p-4 text-white shadow-lg shadow-indigo-600/40">
+                        <p class="text-[10px] font-bold text-white/50 uppercase">Daily Target</p>
+                        <h4 class="text-2xl font-bold font-mono mt-1" id="m_target"></h4>
+                    </div>
+                    <div class="rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col justify-center bg-slate-50">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Operating Hours</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <h4 class="text-lg font-bold text-slate-700"><span id="m_openTime"></span> - <span id="m_closeTime"></span></h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-700">
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase border-b border-slate-200 pb-1">Contact Details</h4>
+                        <div class="flex items-start gap-3"><i class="fas fa-phone text-xs mt-1 text-slate-400"></i><p class="text-sm font-semibold text-slate-700" id="m_phone"></p></div>
+                        <div class="flex items-start gap-3"><i class="fas fa-envelope text-xs mt-1 text-slate-400"></i><p class="text-sm font-semibold text-slate-700" id="m_email"></p></div>
+                        <div class="flex items-start gap-3"><i class="fas fa-map-pin text-xs mt-1 text-slate-400"></i><p class="text-sm font-semibold text-slate-700" id="m_address"></p></div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase border-b border-slate-200 pb-1">Configuration</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Max Disc</p>
+                                <p class="text-sm font-bold text-purple-700 mt-0.5"><span id="m_invDisc"></span>%</p>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Low Stock</p>
+                                <p class="text-sm font-bold text-rose-600 mt-0.5" id="m_lowStock"></p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between">
+                            <p class="text-xs font-semibold text-slate-700">Overselling</p>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase" id="m_overselling"></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span id="m_manualPriceBadge"></span>
+                            <span id="m_backdateBadge"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 sm:gap-0 rounded-b-2xl">
+                <button onclick="confirmDeleteFromModal()" class="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-2 transition"><i class="fas fa-trash"></i> Delete Store</button>
+                <div class="flex gap-3">
+                    <a href="#" id="m_editBtn" class="px-6 py-2 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm hover:bg-purple-700 shadow-lg shadow-purple-900/30 transition flex items-center gap-2">
+                        <span>Edit Details</span> <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#cbd5e1',
-                confirmButtonText: 'Yes, delete it!',
-                background: '#fff',
-                color: '#334155'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    var form = document.createElement("form");
-                    form.method = "POST";
-                    form.action = "save_store.php";
+<?php if(isset($_SESSION['message'])): ?>
+<script>
+    // SweetAlert colors adjusted for Light Mode appearance (assuming footer script handles overall style)
+    Swal.fire({ title: '<?= $_SESSION['msg_type'] == "success" ? "Success!" : "Notice"; ?>', text: "<?= $_SESSION['message']; ?>", icon: '<?= $_SESSION['msg_type']; ?>', confirmButtonColor: '#7c3aed', timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' });
+</script>
+<?php unset($_SESSION['message']); unset($_SESSION['msg_type']); endif; ?>
 
-                    var inputId = document.createElement("input");
-                    inputId.type = "hidden";
-                    inputId.name = "delete_id";
-                    inputId.value = id;
-                    form.appendChild(inputId);
+<script>
+    // Modal & Badge Functions
+    const modal = document.getElementById('storeModal');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalPanel = document.getElementById('modalPanel');
+    let currentStoreId = null;
 
-                    var inputBtn = document.createElement("input");
-                    inputBtn.type = "hidden";
-                    inputBtn.name = "delete_store_btn";
-                    inputBtn.value = true;
-                    form.appendChild(inputBtn);
-
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            })
+    function openStoreModal(data) {
+        currentStoreId = data.id;
+        document.getElementById('m_storeName').textContent = data.store_name;
+        document.getElementById('m_storeCode').textContent = data.store_code;
+        const statusEl = document.getElementById('m_status');
+        // Status colors adjusted for Light Mode
+        statusEl.textContent = data.status == 1 ? 'ACTIVE' : 'INACTIVE';
+        statusEl.className = data.status == 1 ? 'font-bold text-emerald-600' : 'font-bold text-red-600';
+        
+        const formatter = new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        document.getElementById('m_target').textContent = formatter.format(data.daily_target);
+        document.getElementById('m_openTime').textContent = formatTime(data.open_time);
+        document.getElementById('m_closeTime').textContent = formatTime(data.close_time);
+        document.getElementById('m_phone').textContent = data.phone || 'N/A';
+        document.getElementById('m_email').textContent = data.email || 'N/A';
+        document.getElementById('m_address').textContent = (data.address || '') + ' ' + (data.city_zip || '');
+        document.getElementById('m_invDisc').textContent = data.max_inv_disc || 0;
+        document.getElementById('m_lowStock').textContent = data.low_stock || 0;
+        
+        const oversellEl = document.getElementById('m_overselling');
+        let oversellText = 'STRICT';
+        // Oversell badge colors adjusted for Light Mode
+        let oversellClass = 'bg-rose-100 text-rose-700'; 
+        if (data.overselling === 'allow') {
+            oversellText = 'ALLOWED';
+            oversellClass = 'bg-emerald-100 text-emerald-700';
+        } else if (data.overselling === 'warning') {
+            oversellText = 'WARNING';
+            oversellClass = 'bg-amber-100 text-amber-700';
         }
-    </script>
+        oversellEl.textContent = oversellText;
+        oversellEl.className = `text-[10px] font-bold px-2 py-0.5 rounded uppercase ${oversellClass}`;
 
-</body>
-</html>
+        updateBadge('m_manualPriceBadge', data.allow_manual_price, 'Manual Price');
+        updateBadge('m_backdateBadge', data.allow_backdate, 'Backdate');
+        document.getElementById('m_editBtn').href = 'add_store.php?id=' + data.id;
+        modal.classList.remove('hidden');
+        setTimeout(() => { modalBackdrop.classList.remove('opacity-0'); modalPanel.classList.remove('opacity-0', 'scale-95'); modalPanel.classList.add('modal-enter'); }, 10);
+    }
+
+    function updateBadge(id, value, text) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        // Quick Rules Badge colors adjusted for Light Mode
+        if(value == 1) { 
+            el.className = "px-2 py-1 rounded border border-purple-200 bg-purple-100 text-purple-700 text-[10px] font-bold"; 
+            el.style.opacity = "1"; 
+        } 
+        else { 
+            el.className = "px-2 py-1 rounded border border-slate-200 bg-slate-100 text-slate-500 text-[10px] font-bold line-through opacity-70"; 
+        }
+    }
+
+    function closeStoreModal() {
+        modalBackdrop.classList.add('opacity-0');
+        modalPanel.classList.remove('modal-enter');
+        modalPanel.classList.add('modal-exit');
+        setTimeout(() => { modal.classList.add('hidden'); modalPanel.classList.remove('modal-exit'); modalPanel.classList.add('opacity-0', 'scale-95'); }, 200);
+    }
+
+    function formatTime(time) {
+        if(!time) return '--:--';
+        const [h, m] = time.split(':');
+        const hour = parseInt(h, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12;
+        return `${formattedHour}:${m} ${ampm}`;
+    }
+
+    function confirmDeleteFromModal() { if(currentStoreId) confirmDelete(event, currentStoreId); }
+
+    function confirmDelete(e, id) {
+        if(e) e.stopPropagation();
+        Swal.fire({ 
+            title: 'Are you sure?', 
+            text: "You won't be able to revert this!", 
+            icon: 'warning', 
+            showCancelButton: true, 
+            confirmButtonColor: '#ef4444', 
+            confirmButtonText: 'Yes, delete it!',
+            // Custom styles for consistency with light mode theme
+            background: '#ffffff',
+            color: '#1e293b',
+            customClass: {
+                popup: 'border border-slate-200'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form'); form.method = 'POST'; form.action = 'save_store.php';
+                const input = document.createElement('input'); input.type = 'hidden'; input.name = 'delete_id'; input.value = id;
+                const btn = document.createElement('input'); btn.type = 'hidden'; btn.name = 'delete_store_btn'; btn.value = true;
+                form.appendChild(input); form.appendChild(btn); document.body.appendChild(form); form.submit();
+            }
+        })
+    }
+</script>

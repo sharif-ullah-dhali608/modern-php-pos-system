@@ -148,6 +148,15 @@ $menu_items = [
             top: 50%;
             transform: translateY(-50%);
         }
+        .active-submenu-bg {
+            /* Teal-600 with 30% opacity */
+            background-color: rgba(13, 148, 136, 0.3); 
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.1), 0 2px 4px -2px rgba(13, 148, 136, 0.1);
+        }
+        .active-submenu-bg:hover {
+            background-color: rgba(13, 148, 136, 0.45);
+        }
     </style>
 <aside class="sidebar w-64 border-r border-white/10 min-h-screen fixed left-0 top-0 z-40 transition-all duration-300 -translate-x-full lg:translate-x-0" id="sidebar">
     
@@ -180,7 +189,7 @@ $menu_items = [
             $is_active = $item['active'];
             $has_submenu = isset($item['submenu']);
             // Check if the current item is active, and use the purple color from the screenshot
-            $link_classes = $is_active ? 'bg-purple-600 text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
+            $link_classes = $is_active ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
             ?>
             <div class="mb-1">
                 <a 
@@ -208,9 +217,10 @@ $menu_items = [
                             <?php 
                             $sub_active = (basename($_SERVER['PHP_SELF']) == basename($subitem['link'])) || uri_has($subitem['link'], $current_uri);
                             ?>
+                            
                             <a 
                                 href="<?= $subitem['link']; ?>" 
-                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 <?= $sub_active ? 'bg-purple-600/50 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'; ?>"
+                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 <?= $sub_active ? 'active-submenu-bg text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'; ?>"
                             >
                                 <i class="fas fa-circle text-[6px] shrink-0"></i>
                                 <span class="link-text"><?= $subitem['title']; ?></span>
@@ -262,30 +272,6 @@ $menu_items = [
         // Toggle the visibility of the chevron icons in the toggle button
         iconOpen.classList.toggle('hidden', isCollapsed);
         iconClosed.classList.toggle('hidden', !isCollapsed);
-
-
-    // document.addEventListener('DOMContentLoaded', () => {
-    //     const sidebar = document.getElementById('sidebar');
-    //     const toggleButton = document.getElementById('sidebar-toggle');
-    //     // Assuming main content element exists outside the provided snippet
-    //     const mainContent = document.getElementById('main-content'); 
-    //     const iconOpen = document.getElementById('toggle-icon-open');
-    //     const iconClosed = document.getElementById('toggle-icon-closed');
-        
-    //     toggleButton.addEventListener('click', () => {
-    //         const isCollapsed = sidebar.classList.toggle('collapsed');
-            
-    //         // Adjust margin-left of the main content to match the sidebar's width
-    //         if (mainContent) {
-    //              // 256px (w-64) is the expanded width, 80px is the collapsed width
-    //              mainContent.style.marginLeft = isCollapsed ? '80px' : '256px'; 
-    //         }
-
-    //         // Toggle the visibility of the chevron icons in the toggle button
-    //         iconOpen.classList.toggle('hidden', isCollapsed);
-    //         iconClosed.classList.toggle('hidden', !isCollapsed);
-
-            // Close all open dropdowns when collapsing the sidebar
             if (isCollapsed) {
                 document.querySelectorAll('.submenu:not(.hidden)').forEach(submenu => {
                     submenu.classList.add('hidden');
