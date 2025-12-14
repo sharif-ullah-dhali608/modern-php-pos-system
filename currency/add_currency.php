@@ -4,7 +4,8 @@ include('../config/dbcon.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/login");
+    // Corrected signin path assumption based on previous context
+    header("Location: /pos/signin.php"); 
     exit(0);
 }
 
@@ -70,19 +71,18 @@ include('../includes/header.php');
 <div class="flex">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main class="flex-1 ml-64 main-content min-h-screen">
+    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen">
         <?php include('../includes/navbar.php'); ?>
         
         <div class="p-6">
-            <!-- Page Header -->
             <div class="mb-6 slide-in">
                 <div class="flex items-center gap-4 mb-4">
-                    <a href="/pos/index.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all">
+                    <a href="/pos/currency/currency_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <div>
-                        <h1 class="text-3xl font-bold text-white mb-2"><?= $page_title; ?></h1>
-                        <div class="flex items-center gap-2 text-sm text-white/60">
+                        <h1 class="text-3xl font-bold text-slate-800 mb-2"><?= $page_title; ?></h1>
+                        <div class="flex items-center gap-2 text-sm text-slate-500">
                             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                             <span><?= $mode == 'create' ? 'Create New Currency' : 'Update Currency Information'; ?></span>
                         </div>
@@ -90,7 +90,6 @@ include('../includes/header.php');
                 </div>
             </div>
             
-            <!-- Form Card -->
             <div class="glass-card rounded-xl p-8 slide-in">
                 <form action="save_currency.php" method="POST" id="currencyForm">
                     <?php if($mode == 'edit'): ?>
@@ -98,115 +97,109 @@ include('../includes/header.php');
                     <?php endif; ?>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Column -->
                         <div class="lg:col-span-2 space-y-6">
-                            <!-- Currency Name -->
                             <div>
-                                <label class="block text-sm font-semibold text-white mb-2">
-                                    Currency Name <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Currency Name <span class="text-red-600">*</span>
                                 </label>
                                 <div class="relative">
                                     <input 
                                         type="text" 
                                         name="currency_name" 
                                         value="<?= htmlspecialchars($d['currency_name']); ?>" 
-                                        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                         placeholder="e.g., United States Dollar"
                                         required
                                     >
-                                    <i class="fas fa-money-bill-wave absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40"></i>
+                                    <i class="fas fa-money-bill-wave absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                 </div>
                             </div>
                             
-                            <!-- Code -->
                             <div>
-                                <label class="block text-sm font-semibold text-white mb-2">
-                                    Code <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Code <span class="text-red-600">*</span>
                                 </label>
                                 <div class="relative">
                                     <input 
                                         type="text" 
                                         name="code" 
                                         value="<?= htmlspecialchars($d['code']); ?>" 
-                                        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all uppercase"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all uppercase"
                                         placeholder="e.g., USD"
                                         maxlength="3"
                                         required
                                     >
-                                    <i class="fas fa-barcode absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40"></i>
+                                    <i class="fas fa-barcode absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                 </div>
                             </div>
                             
-                            <!-- Symbols -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-white mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">
                                         Symbol Left
                                     </label>
                                     <input 
                                         type="text" 
                                         name="symbol_left" 
                                         value="<?= htmlspecialchars($d['symbol_left']); ?>" 
-                                        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                         placeholder="e.g., $"
                                     >
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-white mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">
                                         Symbol Right
                                     </label>
                                     <input 
                                         type="text" 
                                         name="symbol_right" 
                                         value="<?= htmlspecialchars($d['symbol_right']); ?>" 
-                                        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                         placeholder="e.g., €"
                                     >
                                 </div>
                             </div>
                             
-                            <!-- Decimal Place -->
                             <div>
-                                <label class="block text-sm font-semibold text-white mb-2">
-                                    Decimal Place <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Decimal Place <span class="text-red-600">*</span>
                                 </label>
                                 <input 
                                     type="number" 
                                     name="decimal_place" 
                                     value="<?= htmlspecialchars($d['decimal_place']); ?>" 
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                     min="0"
                                     max="4"
                                     required
                                 >
                             </div>
                             
-                            <!-- Stores Multi-Select -->
                             <div>
-                                <label class="block text-sm font-semibold text-white mb-2">
-                                    Store <span class="text-red-500">*</span>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Store <span class="text-red-600">*</span>
                                 </label>
-                                <div class="bg-white/10 border border-white/20 rounded-lg p-4 max-h-48 overflow-y-auto">
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 max-h-48 overflow-y-auto">
                                     <div class="mb-3">
                                         <input 
                                             type="text" 
                                             id="storeSearch" 
                                             placeholder="Search stores..." 
-                                            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
                                             onkeyup="filterStores()"
                                         >
                                     </div>
                                     <div class="space-y-2" id="storeList">
                                         <?php foreach($all_stores as $store): ?>
-                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer">
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 cursor-pointer text-slate-700">
                                                 <input 
                                                     type="checkbox" 
                                                     name="stores[]" 
                                                     value="<?= $store['id']; ?>"
                                                     <?= in_array($store['id'], $selected_stores) ? 'checked' : ''; ?>
-                                                    class="w-4 h-4 rounded accent-purple-600"
+                                                    class="w-4 h-4 rounded accent-purple-600 border-slate-400"
                                                 >
-                                                <span class="text-white/80"><?= htmlspecialchars($store['store_name']); ?></span>
+                                                <span><?= htmlspecialchars($store['store_name']); ?></span>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>
@@ -214,16 +207,14 @@ include('../includes/header.php');
                             </div>
                         </div>
                         
-                        <!-- Right Column -->
                         <div class="space-y-6">
-                            <!-- Status -->
-                            <div class="glass-card rounded-lg p-6">
-                                <label class="block text-sm font-semibold text-white mb-4">
-                                    Status <span class="text-red-500">*</span>
+                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
+                                <label class="block text-sm font-semibold text-slate-700 mb-4">
+                                    Status <span class="text-red-600">*</span>
                                 </label>
                                 <select 
                                     name="status" 
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                     required
                                 >
                                     <option value="1" <?= $d['status'] == '1' ? 'selected' : ''; ?>>Active</option>
@@ -231,27 +222,25 @@ include('../includes/header.php');
                                 </select>
                             </div>
                             
-                            <!-- Sort Order -->
-                            <div class="glass-card rounded-lg p-6">
-                                <label class="block text-sm font-semibold text-white mb-4">
-                                    Sort Order <span class="text-red-500">*</span>
+                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
+                                <label class="block text-sm font-semibold text-slate-700 mb-4">
+                                    Sort Order <span class="text-red-600">*</span>
                                 </label>
                                 <input 
                                     type="number" 
                                     name="sort_order" 
                                     value="<?= htmlspecialchars($d['sort_order']); ?>" 
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
                                     min="0"
                                     required
                                 >
                             </div>
                             
-                            <!-- Action Buttons -->
                             <div class="space-y-3">
                                 <button 
                                     type="submit" 
                                     name="<?= $btn_name; ?>" 
-                                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+                                    class="w-full bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg shadow-lg transition-all transform hover:scale-[1.01]"
                                 >
                                     <i class="fas fa-save mr-2"></i>
                                     <?= $btn_text; ?>
@@ -259,7 +248,7 @@ include('../includes/header.php');
                                 
                                 <a 
                                     href="currency_list.php" 
-                                    class="block w-full bg-white/10 text-white font-semibold py-3 rounded-lg text-center hover:bg-white/20 transition-all"
+                                    class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all"
                                 >
                                     <i class="fas fa-times mr-2"></i>
                                     Cancel
@@ -280,16 +269,19 @@ function filterStores() {
     const input = document.getElementById('storeSearch');
     const filter = input.value.toLowerCase();
     const storeList = document.getElementById('storeList');
-    const labels = storeList.getElementsByTagName('label');
+    // Change selector to target the labels within storeList
+    const labels = storeList.querySelectorAll('label'); 
     
     for (let i = 0; i < labels.length; i++) {
-        const text = labels[i].textContent || labels[i].innerText;
+        // Get the text content from the label, excluding the checkbox value if possible
+        const span = labels[i].querySelector('span');
+        const text = span ? span.textContent || span.innerText : labels[i].textContent || labels[i].innerText;
+        
         if (text.toLowerCase().indexOf(filter) > -1) {
-            labels[i].style.display = '';
+            labels[i].style.display = 'flex'; // Use 'flex' since the Tailwind class implies flex
         } else {
             labels[i].style.display = 'none';
         }
     }
 }
 </script>
-

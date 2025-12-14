@@ -39,10 +39,10 @@ include('../includes/header.php');
 <div class="flex">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main class="flex-1 ml-64 main-content min-h-screen">
+    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen">
         <?php include('../includes/navbar.php'); ?>
         
-        <div class="p-6">
+        <div class="p-12">
             <?php include('../includes/reusable_list.php'); ?>
             <?php renderReusableList($list_config); ?>
         </div>

@@ -39,7 +39,7 @@ include('../includes/header.php');
 <div class="flex">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main class="flex-1 ml-64 main-content min-h-screen">
+    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen">
         <?php include('../includes/navbar.php'); ?>
         
         <div class="p-6">
