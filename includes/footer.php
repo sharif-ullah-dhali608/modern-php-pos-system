@@ -16,7 +16,7 @@
     
     <button 
         onclick="openSettings()" 
-        class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform z-50"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-teal-500 to-indigo-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform z-50"
         title="Settings"
     >
         <i class="fas fa-cog text-xl"></i>
@@ -76,12 +76,12 @@
                 
                 // --- DataTables Light Mode Styling Fixes ---
                 // Apply light mode text/background styles to DataTables elements
-                const dt_styles = 'bg-white border-slate-300 text-slate-700 placeholder-slate-400 focus:ring-purple-500';
+                const dt_styles = 'bg-white border-slate-300 text-slate-700 placeholder-slate-400 focus:ring-teal-500';
                 
                 $('.dataTables_wrapper .dataTables_filter input').addClass(dt_styles);
                 $('.dataTables_wrapper select').addClass(dt_styles);
                 $('.dataTables_wrapper .dataTables_paginate .paginate_button').addClass('text-slate-600 hover:bg-slate-100');
-                $('.dataTables_wrapper .dataTables_paginate .current').addClass('bg-purple-600 text-white');
+                $('.dataTables_wrapper .dataTables_paginate .current').addClass('bg-teal-600 text-white');
                 $('.dataTables_wrapper .dataTables_length').find('label').addClass('text-slate-600');
                 $('.dataTables_wrapper .dataTables_info').addClass('text-slate-600');
             }

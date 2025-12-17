@@ -107,7 +107,7 @@ include('../includes/header.php');
                                         type="text" 
                                         name="currency_name" 
                                         value="<?= htmlspecialchars($d['currency_name']); ?>" 
-                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                         placeholder="e.g., United States Dollar"
                                         required
                                     >
@@ -124,7 +124,7 @@ include('../includes/header.php');
                                         type="text" 
                                         name="code" 
                                         value="<?= htmlspecialchars($d['code']); ?>" 
-                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all uppercase"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all uppercase"
                                         placeholder="e.g., USD"
                                         maxlength="3"
                                         required
@@ -142,7 +142,7 @@ include('../includes/header.php');
                                         type="text" 
                                         name="symbol_left" 
                                         value="<?= htmlspecialchars($d['symbol_left']); ?>" 
-                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                         placeholder="e.g., $"
                                     >
                                 </div>
@@ -154,7 +154,7 @@ include('../includes/header.php');
                                         type="text" 
                                         name="symbol_right" 
                                         value="<?= htmlspecialchars($d['symbol_right']); ?>" 
-                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                         placeholder="e.g., €"
                                     >
                                 </div>
@@ -168,59 +168,31 @@ include('../includes/header.php');
                                     type="number" 
                                     name="decimal_place" 
                                     value="<?= htmlspecialchars($d['decimal_place']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                     min="0"
                                     max="4"
                                     required
                                 >
                             </div>
                             
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                    Store <span class="text-red-600">*</span>
-                                </label>
-                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 max-h-48 overflow-y-auto">
-                                    <div class="mb-3">
-                                        <input 
-                                            type="text" 
-                                            id="storeSearch" 
-                                            placeholder="Search stores..." 
-                                            class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
-                                            onkeyup="filterStores()"
-                                        >
-                                    </div>
-                                    <div class="space-y-2" id="storeList">
-                                        <?php foreach($all_stores as $store): ?>
-                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 cursor-pointer text-slate-700">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="stores[]" 
-                                                    value="<?= $store['id']; ?>"
-                                                    <?= in_array($store['id'], $selected_stores) ? 'checked' : ''; ?>
-                                                    class="w-4 h-4 rounded accent-purple-600 border-slate-400"
-                                                >
-                                                <span><?= htmlspecialchars($store['store_name']); ?></span>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                            </div>
+                            <?php 
+                                $store_label = "Currency Active Branches"; 
+                                $search_placeholder = "Search branches for currency...";
+                                include('../includes/store_select_component.php'); 
+                            ?>
                         </div>
                         
                         <div class="space-y-6">
-                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-slate-700 mb-4">
-                                    Status <span class="text-red-600">*</span>
-                                </label>
-                                <select 
-                                    name="status" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
-                                    required
-                                >
-                                    <option value="1" <?= $d['status'] == '1' ? 'selected' : ''; ?>>Active</option>
-                                    <option value="0" <?= $d['status'] == '0' ? 'selected' : ''; ?>>Inactive</option>
-                                </select>
-                            </div>
+                            <?php 
+                                $current_status = $d['status'];  
+                                $status_title = "Currency";      
+                                $card_id = "status-card";
+                                $label_id = "status-label";
+                                $input_id = "status_input";
+                                $toggle_id = "status_toggle";
+
+                                include('../includes/status_card.php'); 
+                            ?>
                             
                             <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
                                 <label class="block text-sm font-semibold text-slate-700 mb-4">
@@ -230,7 +202,7 @@ include('../includes/header.php');
                                     type="number" 
                                     name="sort_order" 
                                     value="<?= htmlspecialchars($d['sort_order']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                     min="0"
                                     required
                                 >

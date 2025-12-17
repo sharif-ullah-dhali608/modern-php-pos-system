@@ -162,7 +162,7 @@ $menu_items = [
     
     <div class="p-6 border-b border-white/10 relative h-20"> 
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shrink-0">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shrink-0">
                 <i class="fas fa-cash-register"></i>
             </div>
             <div>
@@ -188,7 +188,7 @@ $menu_items = [
             <?php 
             $is_active = $item['active'];
             $has_submenu = isset($item['submenu']);
-            // Check if the current item is active, and use the purple color from the screenshot
+            // Check if the current item is active, and use the teal color from the screenshot
             $link_classes = $is_active ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
             ?>
             <div class="mb-1">

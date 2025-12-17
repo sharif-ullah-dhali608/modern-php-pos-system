@@ -95,7 +95,7 @@ include('../includes/header.php');
                                         type="file" 
                                         name="thumbnail" 
                                         id="thumbnail-upload" 
-                                        class="w-full text-slate-700 border border-slate-300 rounded-lg bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-br file:from-teal-900 file:via-teal-800 file:to-emerald-900 file:text-white hover:file:from-teal-800 hover:file:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                                        class="w-full text-slate-700 border border-slate-300 rounded-lg bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-br file:from-teal-900 file:via-teal-800 file:to-emerald-900 file:text-white hover:file:from-teal-800 hover:file:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"
                                         onchange="readURL(this);" 
                                         accept="image/*"
                                     >
@@ -106,35 +106,37 @@ include('../includes/header.php');
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Name <span class="text-red-600">*</span></label>
                                 <input type="text" name="name" value="<?= htmlspecialchars($d['name']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Code Name <span class="text-red-600">*</span></label>
                                 <input type="text" name="code" value="<?= htmlspecialchars($d['code']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all uppercase" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all uppercase" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Details</label>
                                 <textarea name="details" rows="3" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"><?= htmlspecialchars($d['details']); ?></textarea>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"><?= htmlspecialchars($d['details']); ?></textarea>
                             </div>
                         </div>
 
                         <div class="space-y-6">
                             
-                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Status <span class="text-red-600">*</span></label>
-                                <select name="status" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
-                                    <option value="1" <?= $d['status']=='1'?'selected':''; ?>>Active</option>
-                                    <option value="0" <?= $d['status']=='0'?'selected':''; ?>>Inactive</option>
-                                </select>
-                            </div>
+                            <?php 
+                                $current_status = $d['status'];  
+                                $status_title = "Brand";      
+                                $card_id = "status-card";
+                                $label_id = "status-label";
+                                $input_id = "status_input";
+                                $toggle_id = "status_toggle";
+
+                                include('../includes/status_card.php'); 
+                            ?>
 
                             <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
                                 <label class="block text-sm font-semibold text-slate-700 mb-3">Sort Order <span class="text-red-600">*</span></label>
                                 <input type="number" name="sort_order" value="<?= htmlspecialchars($d['sort_order']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all" required>
                             </div>
 
                             <div class="space-y-3 mt-8">

@@ -24,7 +24,7 @@ function renderReusableList($config) {
             </div>
             <a 
                 href="<?= $add_url; ?>" 
-                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold rounded-lg shadow-lg hover:from-teal-700 hover:to-indigo-700 transition-all transform hover:scale-105"
             >
                 <i class="fas fa-plus"></i>
                 <span>Add New</span>
@@ -105,7 +105,7 @@ function renderReusableList($config) {
                                         elseif($type == 'badge'):
                                             // Render custom badge (Colors are kept vibrant)
                                             $badge_value = isset($row[$key]) ? $row[$key] : '';
-                                            $badge_class = isset($col['badge_class']) ? $col['badge_class'] : 'bg-purple-500/20 text-purple-600'; // Adjusted text color for visibility
+                                            $badge_class = isset($col['badge_class']) ? $col['badge_class'] : 'bg-teal-500/20 text-teal-600'; // Adjusted text color for visibility
                                             ?>
                                             <span class="status-badge <?= $badge_class; ?>">
                                                 <?= htmlspecialchars($badge_value); ?>
@@ -153,7 +153,7 @@ function renderReusableList($config) {
                 <p class="text-slate-500 mb-6">Get started by adding your first item.</p>
                 <a 
                     href="<?= $add_url; ?>" 
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold rounded-lg shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold rounded-lg shadow-lg hover:from-teal-700 hover:to-indigo-700 transition-all"
                 >
                     <i class="fas fa-plus"></i>
                     <span>Add New Item</span>

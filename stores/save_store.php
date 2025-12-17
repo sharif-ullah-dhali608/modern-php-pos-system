@@ -19,7 +19,13 @@ if(isset($_POST['save_store_btn']))
     $approval_disc = mysqli_real_escape_string($conn, $_POST['approval_disc']);
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
     $low_stock = mysqli_real_escape_string($conn, $_POST['low_stock']);
+    
+    // FIX: Convert empty daily_target to '0' to avoid MySQL error
     $daily_target = mysqli_real_escape_string($conn, $_POST['daily_target']);
+    if (empty($daily_target)) {
+        $daily_target = '0'; 
+    }
+    
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
 
@@ -69,7 +75,13 @@ if(isset($_POST['update_store_btn']))
     $approval_disc = mysqli_real_escape_string($conn, $_POST['approval_disc']);
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
     $low_stock = mysqli_real_escape_string($conn, $_POST['low_stock']);
+    
+    // FIX: Convert empty daily_target to '0' to avoid MySQL error
     $daily_target = mysqli_real_escape_string($conn, $_POST['daily_target']);
+    if (empty($daily_target)) {
+        $daily_target = '0'; 
+    }
+    
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
 
@@ -78,7 +90,6 @@ if(isset($_POST['update_store_btn']))
     $allow_backdate = isset($_POST['allow_backdate']) ? 1 : 0;
 
     // Check Duplicate Code (Exclude Current ID)
-    // This ensures we don't get an error for our own code, but catch if we try to use another store's code
     $check = mysqli_query($conn, "SELECT id FROM stores WHERE store_code='$store_code' AND id != '$store_id'");
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Store Code already exists in another branch!";

@@ -5,7 +5,7 @@ include('../config/dbcon.php');
 // 1. SECURITY CHECK
 if(!isset($_SESSION['auth'])){
     // Corrected login path to standard signin/login
-    header("Location: /pos/signin.php"); 
+    header("Location: /pos/login"); 
     exit(0);
 }
 
@@ -17,19 +17,19 @@ $page_title = "Store List - Velocity POS";
 
 <?php include('../includes/header.php'); ?>
 
-<div class="flex">
+<div class="flex flex-1">
     <?php include('../includes/sidebar.php'); ?>
     
     <main id="main-content" class="flex-1 ml-64 main-content min-h-screen transition-all duration-300">
         <?php include('../includes/navbar.php'); ?>
         
-        <div class="p-6">
+        <div class="p-12">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Store List</h1>
                     <p class="text-slate-500 font-medium text-sm mt-1">Manage your business locations</p>
                 </div>
-                <a href="add_store.php" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl hover:bg-purple-700 transition-all">
+                <a href="add_store.php" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl hover:bg-teal-700 transition-all">
                     <i class="fas fa-plus"></i> <span>Add New Store</span>
                 </a>
             </div>
@@ -52,11 +52,11 @@ $page_title = "Store List - Velocity POS";
                                 <div class="flex gap-4 items-center">
                                     <div class="w-12 h-12 rounded-2xl <?= $icon_bg; ?> flex items-center justify-center text-lg shadow-sm"><i class="fas fa-store"></i></div>
                                     <div>
-                                        <h3 class="font-bold text-slate-800 text-lg leading-tight group-hover:text-purple-600 transition-colors"><?= htmlspecialchars($row['store_name']); ?></h3>
+                                        <h3 class="font-bold text-slate-800 text-lg leading-tight group-hover:text-teal-600 transition-colors"><?= htmlspecialchars($row['store_name']); ?></h3>
                                         <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-500 border border-slate-200">#<?= htmlspecialchars($row['store_code']); ?></span>
                                     </div>
                                 </div>
-                                <a href="add_store.php?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-purple-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
+                                <a href="add_store.php?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
                             </div>
                             
                             <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-5 pt-4 border-t border-slate-100 border-dashed">
@@ -64,9 +64,9 @@ $page_title = "Store List - Velocity POS";
                                 <div><p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Location</p><p class="font-semibold text-slate-700 truncate"><?= substr($row['city_zip'], 0, 15); ?>..</p></div>
                             </div>
                             
-                            <div class="flex items-center justify-between bg-purple-50 rounded-xl p-3 border border-purple-100 group-hover:bg-purple-100 transition-colors">
-                                <span class="text-xs font-bold text-purple-600 uppercase">Target</span>
-                                <span class="text-lg font-extrabold text-purple-700 font-mono"><span class="text-xs text-purple-500 mr-0.5">৳</span><?= number_format($row['daily_target']); ?></span>
+                            <div class="flex items-center justify-between bg-teal-50 rounded-xl p-3 border border-teal-100 group-hover:bg-teal-100 transition-colors">
+                                <span class="text-xs font-bold text-teal-600 uppercase">Target</span>
+                                <span class="text-lg font-extrabold text-teal-700 font-mono"><span class="text-xs text-teal-500 mr-0.5">৳</span><?= number_format($row['daily_target']); ?></span>
                             </div>
                         </div>
                     </div>
@@ -75,7 +75,7 @@ $page_title = "Store List - Velocity POS";
             <?php else: ?>
                 <div class="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 shadow-inner">
                     <h2 class="text-xl font-bold text-slate-800">No Stores Found</h2>
-                    <a href="add_store.php" class="mt-4 px-6 py-2.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition">Create First Store</a>
+                    <a href="add_store.php" class="mt-4 px-6 py-2.5 rounded-lg bg-teal-600 text-white font-bold hover:bg-teal-700 transition">Create First Store</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -90,7 +90,7 @@ $page_title = "Store List - Velocity POS";
         <div class="relative w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all opacity-0 scale-95 flex flex-col max-h-[90vh] bg-white border border-slate-300" id="modalPanel">
             <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between rounded-t-2xl z-20">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-purple-600/10 text-purple-600 flex items-center justify-center text-lg shadow-sm"><i class="fas fa-store"></i></div>
+                    <div class="w-10 h-10 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center text-lg shadow-sm"><i class="fas fa-store"></i></div>
                     <div>
                         <h3 class="text-lg font-bold text-slate-800 leading-tight" id="m_storeName"></h3>
                         <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -130,7 +130,7 @@ $page_title = "Store List - Velocity POS";
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
                                 <p class="text-[10px] text-slate-400 font-bold uppercase">Max Disc</p>
-                                <p class="text-sm font-bold text-purple-700 mt-0.5"><span id="m_invDisc"></span>%</p>
+                                <p class="text-sm font-bold text-teal-700 mt-0.5"><span id="m_invDisc"></span>%</p>
                             </div>
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
                                 <p class="text-[10px] text-slate-400 font-bold uppercase">Low Stock</p>
@@ -151,7 +151,7 @@ $page_title = "Store List - Velocity POS";
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 sm:gap-0 rounded-b-2xl">
                 <button onclick="confirmDeleteFromModal()" class="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-2 transition"><i class="fas fa-trash"></i> Delete Store</button>
                 <div class="flex gap-3">
-                    <a href="#" id="m_editBtn" class="px-6 py-2 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm hover:bg-purple-700 shadow-lg shadow-purple-900/30 transition flex items-center gap-2">
+                    <a href="#" id="m_editBtn" class="px-6 py-2 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm hover:bg-teal-700 shadow-lg shadow-teal-900/30 transition flex items-center gap-2">
                         <span>Edit Details</span> <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>
@@ -219,7 +219,7 @@ $page_title = "Store List - Velocity POS";
         el.textContent = text;
         // Quick Rules Badge colors adjusted for Light Mode
         if(value == 1) { 
-            el.className = "px-2 py-1 rounded border border-purple-200 bg-purple-100 text-purple-700 text-[10px] font-bold"; 
+            el.className = "px-2 py-1 rounded border border-teal-200 bg-teal-100 text-teal-700 text-[10px] font-bold"; 
             el.style.opacity = "1"; 
         } 
         else { 
