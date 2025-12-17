@@ -21,7 +21,6 @@ $d = [
     'sort_order' => '0'
 ];
 
-// Array to hold the IDs of stores linked to this payment method
 $selected_stores = []; 
 
 if(isset($_GET['id'])) {
@@ -37,8 +36,7 @@ if(isset($_GET['id'])) {
     if(mysqli_num_rows($result) > 0){
         $d = mysqli_fetch_array($result);
         
-        // **Fetching Stores linked to the Payment Method (Assuming a mapping table: payment_store_map)**
-        // NOTE: If you have a different table (e.g., store_payment_method), adjust the query below.
+        // Fetching mapped stores from the pivot table
         $map_query = "SELECT store_id FROM payment_store_map WHERE payment_method_id='$id'";
         $map_result = mysqli_query($conn, $map_query);
         while($map_row = mysqli_fetch_assoc($map_result)) {
@@ -52,12 +50,11 @@ if(isset($_GET['id'])) {
     }
 }
 
-// Fetch all active stores for multi-select checkboxes
+// Fetch active stores
 $stores_query = "SELECT id, store_name FROM stores WHERE status=1 ORDER BY store_name ASC";
 $stores_result = mysqli_query($conn, $stores_query);
 $all_stores = [];
 while($store = mysqli_fetch_assoc($stores_result)) { $all_stores[] = $store; }
-
 
 include('../includes/header.php');
 ?>
@@ -85,7 +82,7 @@ include('../includes/header.php');
             </div>
 
             <div class="glass-card rounded-xl p-8 slide-in">
-                <form action="save_payment_method.php" method="POST">
+                <form action="save_payment_method.php" method="POST" id="paymentForm">
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="payment_id" value="<?= $d['id']; ?>">
                     <?php endif; ?>
@@ -96,67 +93,48 @@ include('../includes/header.php');
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Name <span class="text-red-600">*</span></label>
                                 <input type="text" name="name" value="<?= htmlspecialchars($d['name']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all" required>
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Code Name <span class="text-red-600">*</span></label>
                                 <input type="text" name="code" value="<?= htmlspecialchars($d['code']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all uppercase" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all uppercase" required>
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Details</label>
                                 <textarea name="details" rows="3" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"><?= htmlspecialchars($d['details']); ?></textarea>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all"><?= htmlspecialchars($d['details']); ?></textarea>
                             </div>
 
-                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Available in Stores <span class="text-red-600">*</span></label>
-                                <div class="space-y-3 max-h-48 overflow-y-auto custom-scroll">
-                                    <?php if(count($all_stores) > 0): ?>
-                                        <?php foreach($all_stores as $store): ?>
-                                            <?php 
-                                            $checked = in_array($store['id'], $selected_stores) ? 'checked' : '';
-                                            ?>
-                                            <label class="flex items-center space-x-3 text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="stores[]" 
-                                                    value="<?= $store['id']; ?>" 
-                                                    class="form-checkbox text-purple-600 border-slate-300 rounded focus:ring-purple-500"
-                                                    <?= $checked; ?>
-                                                    required
-                                                >
-                                                <span class="text-sm font-medium"><?= htmlspecialchars($store['store_name']); ?></span>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <p class="text-sm text-slate-500">No active stores found. Please create a store first.</p>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
+                            <?php 
+                                $store_label = "Payment Available In"; 
+                                $search_placeholder = "Search branches for payment...";
+                                include('../includes/store_select_component.php'); 
+                            ?>
                         </div>
 
                         <div class="space-y-6">
-                            
-                            <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Status <span class="text-red-600">*</span></label>
-                                <select name="status" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
-                                    <option value="1" <?= $d['status']=='1'?'selected':''; ?>>Active</option>
-                                    <option value="0" <?= $d['status']=='0'?'selected':''; ?>>Inactive</option>
-                                </select>
-                            </div>
+                            <?php 
+                                $current_status = $d['status']; 
+                                $status_title = "Payment"; // Dynamic title set korlam
+                                $card_id = "status-card";
+                                $label_id = "status-label";
+                                $input_id = "status_input";
+                                $toggle_id = "status_toggle";
+
+                                include('../includes/status_card.php'); 
+                            ?>
 
                             <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm">
                                 <label class="block text-sm font-semibold text-slate-700 mb-3">Sort Order <span class="text-red-600">*</span></label>
                                 <input type="number" name="sort_order" value="<?= htmlspecialchars($d['sort_order']); ?>" 
-                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all" required>
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all" required>
                             </div>
 
                             <div class="space-y-3 mt-8">
-                                <button type="submit" name="<?= $btn_name; ?>" 
+                                <button type="submit" name="<?= $btn_name; ?>" id="submitBtn"
                                     class="w-full bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg shadow-lg transition-all transform hover:scale-[1.01]"> <?= $btn_text; ?> </button>
                                 
                                 <a href="payment_method_list.php" 
@@ -171,3 +149,56 @@ include('../includes/header.php');
         <?php include('../includes/footer.php'); ?>
     </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Select All & Validation Logic
+    const selectAll = document.getElementById('selectAllStores');
+    const storeCheckboxes = document.querySelectorAll('.store-checkbox');
+    const paymentForm = document.getElementById('paymentForm');
+    const storeError = document.getElementById('store-error');
+
+    // Select All Functionality
+    selectAll.addEventListener('change', function() {
+        storeCheckboxes.forEach(cb => { cb.checked = this.checked; });
+        validateCheckboxes();
+    });
+
+    // Check individual boxes and sync "Select All"
+    storeCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const allChecked = Array.from(storeCheckboxes).every(c => c.checked);
+            selectAll.checked = allChecked;
+            validateCheckboxes();
+        });
+    });
+
+    // Ensure at least one is selected for browser validation
+    function validateCheckboxes() {
+        const isOneChecked = Array.from(storeCheckboxes).some(cb => cb.checked);
+        if(isOneChecked) {
+            storeError.classList.add('hidden');
+            storeCheckboxes.forEach(cb => cb.removeAttribute('required'));
+        } else {
+            // Re-apply required to the first checkbox if none are checked
+            if(storeCheckboxes.length > 0) {
+                storeCheckboxes[0].setAttribute('required', 'required');
+            }
+        }
+    }
+
+    // Custom submit check for store selection
+    paymentForm.addEventListener('submit', function(e) {
+        const isOneChecked = Array.from(storeCheckboxes).some(cb => cb.checked);
+        if(!isOneChecked) {
+            e.preventDefault();
+            storeError.classList.remove('hidden');
+            storeError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    // Initial run for Edit mode
+    validateCheckboxes();
+});
+</script>

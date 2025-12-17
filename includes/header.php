@@ -49,9 +49,9 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
 
         :root {
             /* Sidebar remains dark for high contrast navigation */
-            --sidebar-bg: #0b1221;
-            --sidebar-hover: #131b2c;
-            --sidebar-active: #7c3aed;
+            --sidebar-bg: #008080;
+            --sidebar-hover: #008080;
+            --sidebar-active: #008080;
             
             /* Light Mode Variables */
             --main-bg: transparent; 

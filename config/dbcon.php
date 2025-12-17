@@ -16,6 +16,8 @@ if(!$conn)
  * Runs lightweight CREATE TABLE IF NOT EXISTS statements so it is safe to call on every request.
  */
 function ensure_core_tables(mysqli $conn) {
+    // --- 1. Core Tables ---
+
     // Stores table
     $storesSql = "CREATE TABLE IF NOT EXISTS stores (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -47,7 +49,7 @@ function ensure_core_tables(mysqli $conn) {
     // Currencies table
     $currencySql = "CREATE TABLE IF NOT EXISTS currencies (
         id INT(11) NOT NULL AUTO_INCREMENT,
-        currency_name VARCHAR(255) NOT NULL,
+        currency_name VARCHAR(255) NOT NUll,
         code VARCHAR(3) NOT NULL UNIQUE,
         symbol_left VARCHAR(10) DEFAULT NULL,
         symbol_right VARCHAR(10) DEFAULT NULL,
@@ -58,25 +60,7 @@ function ensure_core_tables(mysqli $conn) {
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-    // Store-currency pivot
-    $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        store_id INT(11) NOT NULL,
-        currency_id INT(11) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        UNIQUE KEY store_currency_unique (store_id, currency_id),
-        KEY store_id (store_id),
-        KEY currency_id (currency_id),
-        CONSTRAINT store_currency_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE,
-        CONSTRAINT store_currency_currency_fk FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-    mysqli_query($conn, $storesSql);
-    mysqli_query($conn, $currencySql);
-    mysqli_query($conn, $storeCurrencySql);
-
+    
     // Payment Methods
     $paymentSql = "CREATE TABLE IF NOT EXISTS payment_methods (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -89,7 +73,7 @@ function ensure_core_tables(mysqli $conn) {
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
+    
     // Units
     $unitsSql = "CREATE TABLE IF NOT EXISTS units (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -129,11 +113,51 @@ function ensure_core_tables(mysqli $conn) {
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // --- 2. Pivot Tables (Junction Tables) ---
 
+    // Store-currency pivot (already present)
+    $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        currency_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY store_currency_unique (store_id, currency_id),
+        KEY store_id (store_id),
+        KEY currency_id (currency_id),
+        CONSTRAINT store_currency_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE,
+        CONSTRAINT store_currency_currency_fk FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // Payment-Store pivot (MISSING TABLE - Fixes the previous fatal error)
+    $paymentStoreMapSql = "CREATE TABLE IF NOT EXISTS payment_store_map (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        payment_method_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY payment_store_unique (payment_method_id, store_id),
+        KEY payment_method_id (payment_method_id),
+        KEY store_id (store_id),
+        CONSTRAINT payment_store_payment_fk FOREIGN KEY (payment_method_id) REFERENCES payment_methods (id) ON DELETE CASCADE,
+        CONSTRAINT payment_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
+    // --- 3. Execute Queries ---
+    
+    // Core tables
+    mysqli_query($conn, $storesSql);
+    mysqli_query($conn, $currencySql);
     mysqli_query($conn, $paymentSql);
     mysqli_query($conn, $unitsSql);
     mysqli_query($conn, $brandsSql);
     mysqli_query($conn, $taxSql);
+    
+    // Pivot tables (must run after core tables are created)
+    mysqli_query($conn, $storeCurrencySql);
+    mysqli_query($conn, $paymentStoreMapSql); // NEW: Execution of the missing table
 }
 
 ensure_core_tables($conn);

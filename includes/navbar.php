@@ -14,7 +14,7 @@
                         <input 
                             type="text" 
                             placeholder="Search [CTRL + K]" 
-                            class="w-full bg-slate-100 border border-slate-300 rounded-lg px-4 py-2 pl-10 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
+                            class="w-full bg-slate-100 border border-slate-300 rounded-lg px-4 py-2 pl-10 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all"
                         >
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                     </div>
@@ -42,7 +42,7 @@
                 <div class="relative group">
                     <button class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all">
                         <div class="relative">
-                            <span class="absolute inset-0 rounded-full border border-purple-400/60 animate-pulse"></span>
+                            <span class="absolute inset-0 rounded-full border border-teal-400/60 animate-pulse"></span>
                             <img 
                                 src="https://ui-avatars.com/api/?name=<?= urlencode(isset($_SESSION['auth_user']['name']) ? $_SESSION['auth_user']['name'] : 'User'); ?>&background=667eea&color=fff&size=128" 
                                 alt="Profile" 
