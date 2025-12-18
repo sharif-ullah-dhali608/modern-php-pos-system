@@ -4,9 +4,8 @@
             <div class="flex items-center gap-3 flex-1">
                 <button 
                     class="lg:hidden w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all"
-                    onclick="toggleSidebarMobile()"
-                    aria-label="Toggle sidebar"
-                >
+                    onclick="toggleSidebarMobile()" 
+                    type="button">
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="flex-1 max-w-md">

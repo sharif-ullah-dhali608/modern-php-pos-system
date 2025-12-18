@@ -1,7 +1,6 @@
 <?php
 // Get current page to highlight active menu item
 $current_page = basename($_SERVER['PHP_SELF']);
-$current_dir = basename(dirname($_SERVER['PHP_SELF']));
 $current_uri = $_SERVER['REQUEST_URI'];
 
 // Helper to check if current uri matches
@@ -9,14 +8,12 @@ function uri_has($needle, $uri) {
     return strpos($uri, $needle) !== false;
 }
 
-// Menu items configuration with Clean URLs as per .htaccess rules
+// Menu items configuration
 $menu_items = [
     [
         'title' => 'Dashboards',
         'icon' => 'fa-tachometer-alt', 
-        'link' => '/pos', // Clean URL
-        'badge' => '5',
-        'badge_color' => 'bg-red-500',
+        'link' => '/pos',
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
     [
@@ -36,8 +33,8 @@ $menu_items = [
         'icon' => 'fa-store',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Store', 'link' => '/pos/stores/add'], // Clean URL
-            ['title' => 'Store List', 'link' => '/pos/stores/list'] // Clean URL
+            ['title' => 'Add Store', 'link' => '/pos/stores/add'],
+            ['title' => 'Store List', 'link' => '/pos/stores/list']
         ],
         'active' => (uri_has('/stores/', $current_uri))
     ],
@@ -117,113 +114,133 @@ $menu_items = [
 ];
 ?>
 
+
+
 <style>
-        /* Custom styles for the collapsed state and smooth transitions */
-        .sidebar {
-            width: 256px; /* Expanded width (Tailwind w-64) */
-            transition: width 300ms ease-in-out;
-            /* Use the transparent dark color that matches the screenshot */
-            background-color: rgba(15, 23, 42, 0.9); /* Equivalent to bg-slate-900/90 */
-            backdrop-filter: blur(8px); /* Equivalent to backdrop-blur-xl */
-        }
-        .sidebar.collapsed {
-            width: 80px; /* Collapsed width */
-        }
-        /* Elements that should fade/hide when collapsed */
-        .sidebar .link-text, .sidebar .search-input, .sidebar .logo-text, .sidebar .logo-subtitle {
-            opacity: 1;
-            transition: opacity 300ms ease-in-out, visibility 300ms ease-in-out;
-        }
-        .sidebar.collapsed .link-text, .sidebar.collapsed .search-input, .sidebar.collapsed .logo-text, .sidebar.collapsed .logo-subtitle {
-            opacity: 0;
-            visibility: hidden;
-            width: 0; 
-            overflow: hidden; /* Ensure text doesn't flow outside icon */
-        }
-        
-        /* Positioning the toggle button */
-        #sidebar-toggle-container {
-            position: absolute; 
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        .active-submenu-bg {
-            /* Teal-600 with 30% opacity */
-            background-color: rgba(13, 148, 136, 0.3); 
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.1), 0 2px 4px -2px rgba(13, 148, 136, 0.1);
-        }
-        .active-submenu-bg:hover {
-            background-color: rgba(13, 148, 136, 0.45);
-        }
-    </style>
-<aside class="sidebar w-64 border-r border-white/10 min-h-screen fixed left-0 top-0 z-40 transition-all duration-300 -translate-x-full lg:translate-x-0" id="sidebar">
+/* --- Sidebar Base Styles --- */
+.sidebar {
+    width: 256px;
+    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 300ms ease-in-out;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 1000; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+}
+
+.sidebar.collapsed { width: 80px; }
+
+/* Desktop Hidden Elements */
+@media (min-width: 1024px) {
+    .sidebar.collapsed .link-text, 
+    .sidebar.collapsed .logo-text-container,
+    .sidebar.collapsed .fa-chevron-right {
+        opacity: 0 !important;
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .sidebar.collapsed .menu-group:hover .submenu {
+        display: block !important;
+        position: absolute;
+        left: 70px;
+        top: 0;
+        width: 200px;
+        background: #0f172a;
+        border-radius: 0 8px 8px 0;
+        padding: 10px;
+        z-index: 1100;
+        box-shadow: 10px 0 15px rgba(0,0,0,0.3);
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1023px) {
+    #sidebar-toggle-container { display: none !important; } 
+    .sidebar { transform: translateX(-100%); width: 256px !important; }
+    .sidebar.sidebar-open { transform: translateX(0) !important; }
     
-    <div class="p-6 border-b border-white/10 relative h-20"> 
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shrink-0">
-                <i class="fas fa-cash-register"></i>
-            </div>
-            <div>
-                <h1 class="logo-text text-xl font-bold text-white">POS</h1>
-                <p class="logo-subtitle text-xs text-white/60">Inventory System</p>
-            </div>
+   
+    .sidebar .link-text, .sidebar .logo-text-container {
+        opacity: 1 !important;
+        display: block !important;
+        visibility: visible !important;
+        width: auto !important;
+    }
+}
+
+/* Mobile Overlay */
+#sidebar-overlay {
+    display: none; 
+    position: fixed;
+    inset: 0; 
+    background: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(2px);
+    z-index: 900; 
+}
+#sidebar-overlay.active { display: block !important; }
+
+#sidebar-toggle-container { position: absolute; right: -12px; top: 25px; }
+
+.active-submenu-bg {
+    background-color: rgba(13, 148, 136, 0.3); 
+    color: white;
+    border-left: 4px solid #0d9488;
+}
+
+.rotate-90 { transform: rotate(90deg); }
+.rotate-180 { transform: rotate(180deg); }
+
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+</style>
+
+<div id="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
+
+<aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-all duration-300">
+    <div class="p-6 border-b border-white/10 relative h-20 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg p-1 shrink-0">
+            <img src="/pos/assets/images/logo-fav.jpeg" alt="Logo" class="w-10 h-full object-contain" />
+        </div>
+        <div class="logo-text-container overflow-hidden">
+            <h1 class="logo-text text-xl font-bold text-white whitespace-nowrap">POS</h1>
+            <p class="logo-subtitle text-[10px] text-white/60 uppercase">Inventory System</p>
         </div>
         
         <div id="sidebar-toggle-container">
-            <button id="sidebar-toggle" class="p-1 rounded transition duration-200 text-white/70 hover:text-white hover:bg-white/10">
-                <svg id="toggle-icon-open" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                <svg id="toggle-icon-closed" class="w-5 h-5 transition-transform duration-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
+            <button id="sidebar-toggle" class="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-teal-500">
+                <i class="fas fa-chevron-left text-[10px]" id="toggle-icon"></i>
             </button>
         </div>
     </div>
     
-    <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-160px)]">
+    <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)] custom-scroll">
         <?php foreach($menu_items as $item): ?>
             <?php 
-            $is_active = $item['active'];
             $has_submenu = isset($item['submenu']);
-            // Check if the current item is active, and use the teal color from the screenshot
-            $link_classes = $is_active ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
+            $link_classes = $item['active'] ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
             ?>
-            <div class="mb-1">
-                <a 
-                    href="<?= $has_submenu ? '#' : $item['link']; ?>" 
-                    class="flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group <?= $link_classes; ?>"
-                    <?= $has_submenu ? 'onclick="event.preventDefault(); toggleSubmenu(this);"' : ''; ?>
-                >
+            <div class="mb-1 relative menu-group">
+                <a href="<?= $has_submenu ? '#' : $item['link']; ?>" 
+                   class="flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group <?= $link_classes; ?>"
+                   <?= $has_submenu ? 'onclick="toggleSubmenu(this); event.preventDefault();"' : ''; ?>>
                     <div class="flex items-center gap-3">
-                        <i class="fas <?= $item['icon']; ?> w-5 shrink-0"></i>
-                        <span class="link-text font-medium whitespace-nowrap"><?= $item['title']; ?></span>
+                        <i class="fas <?= $item['icon']; ?> w-5 shrink-0 text-center"></i>
+                        <span class="link-text font-medium text-sm whitespace-nowrap"><?= $item['title']; ?></span>
                     </div>
-                    <?php if(isset($item['badge'])): ?>
-                        <span class="link-text px-2 py-0.5 rounded-full text-xs font-bold <?= $item['badge_color']; ?> text-white shrink-0">
-                            <?= $item['badge']; ?>
-                        </span>
-                    <?php endif; ?>
                     <?php if($has_submenu): ?>
-                        <i class="link-text fas fa-chevron-right text-xs transition-transform duration-200 shrink-0 <?= $is_active ? 'rotate-90' : ''; ?>"></i>
+                        <i class="link-text fas fa-chevron-right text-[10px] transition-transform duration-200 <?= $item['active'] ? 'rotate-90' : ''; ?>"></i>
                     <?php endif; ?>
                 </a>
                 
                 <?php if($has_submenu): ?>
-                    <div class="link-text ml-4 mt-1 space-y-1 submenu <?= $is_active ? '' : 'hidden'; ?>">
-                        <?php foreach($item['submenu'] as $subitem): ?>
-                            <?php 
-                            $sub_active = (basename($_SERVER['PHP_SELF']) == basename($subitem['link'])) || uri_has($subitem['link'], $current_uri);
-                            ?>
-                            
-                            <a 
-                                href="<?= $subitem['link']; ?>" 
-                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 <?= $sub_active ? 'active-submenu-bg text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'; ?>"
-                            >
-                                <i class="fas fa-circle text-[6px] shrink-0"></i>
-                                <span class="link-text"><?= $subitem['title']; ?></span>
+                    <div class="submenu ml-4 mt-1 space-y-1 <?= $item['active'] ? '' : 'hidden'; ?>">
+                        <?php foreach($item['submenu'] as $sub): ?>
+                            <a href="<?= $sub['link']; ?>" class="flex items-center gap-3 px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
+                                <i class="fas fa-circle text-[4px] shrink-0"></i>
+                                <span class="link-text"><?= $sub['title']; ?></span>
                             </a>
                         <?php endforeach; ?>
                     </div>
@@ -231,60 +248,75 @@ $menu_items = [
             </div>
         <?php endforeach; ?>
     </nav>
-    
 </aside>
+
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const toggleIcon = document.getElementById('toggle-icon');
+        const mainContent = document.getElementById('main-content');
+        let isLocked = false; 
 
-        // ... (rest of the logic for closing submenus) ...
+       
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth >= 1024 && !isLocked) {
+                sidebar.classList.remove('collapsed');
+                if(mainContent) mainContent.style.marginLeft = '256px';
+                toggleIcon.classList.remove('rotate-180');
+            }
+        });
 
-    // Handles the toggling of submenu dropdowns
-    function toggleSubmenu(element) {
-        // Toggle the submenu block
-        const submenu = element.nextElementSibling;
-        if (submenu && submenu.classList.contains('submenu')) {
-            submenu.classList.toggle('hidden');
+       
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth >= 1024 && !isLocked) {
+                sidebar.classList.add('collapsed');
+                if(mainContent) mainContent.style.marginLeft = '80px';
+                toggleIcon.classList.add('rotate-180');
+            }
+        });
+
+        
+        if(toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                isLocked = !isLocked; 
+                if (isLocked) {
+                    sidebar.classList.remove('collapsed');
+                    if(mainContent) mainContent.style.marginLeft = '256px';
+                    toggleIcon.classList.remove('rotate-180');
+                } else {
+                    sidebar.classList.add('collapsed');
+                    if(mainContent) mainContent.style.marginLeft = '80px';
+                    toggleIcon.classList.add('rotate-180');
+                }
+            });
         }
+    });
 
-        // Toggle the chevron icon rotation
-        const chevron = element.querySelector('.fa-chevron-right');
-        if (chevron) {
-            chevron.classList.toggle('rotate-90');
+    
+    function toggleSidebarMobile() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        if (!sidebar || !overlay) return;
+
+        sidebar.classList.toggle('sidebar-open');
+        overlay.classList.toggle('active');
+        
+        if (sidebar.classList.contains('sidebar-open')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
         }
     }
 
-        document.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.getElementById('sidebar');
-    const toggleButton = document.getElementById('sidebar-toggle');
-    // Ensure this line correctly targets your main content
-    const mainContent = document.getElementById('main-content'); 
-    const iconOpen = document.getElementById('toggle-icon-open');
-    const iconClosed = document.getElementById('toggle-icon-closed');
-    
-    toggleButton.addEventListener('click', () => {
-        const isCollapsed = sidebar.classList.toggle('collapsed');
-        
-        // **This is the key section to ensure it works:**
-        if (mainContent) {
-             // 256px (w-64) is the expanded width, 80px is the collapsed width
-             mainContent.style.marginLeft = isCollapsed ? '80px' : '256px'; 
-        }
-
-        // Toggle the visibility of the chevron icons in the toggle button
-        iconOpen.classList.toggle('hidden', isCollapsed);
-        iconClosed.classList.toggle('hidden', !isCollapsed);
-            if (isCollapsed) {
-                document.querySelectorAll('.submenu:not(.hidden)').forEach(submenu => {
-                    submenu.classList.add('hidden');
-                    // Reset chevron for the parent link
-                    const parentLink = submenu.previousElementSibling;
-                    if (parentLink) {
-                        const chevron = parentLink.querySelector('.fa-chevron-right');
-                        if (chevron) {
-                             chevron.classList.remove('rotate-90');
-                        }
-                    }
-                });
-            }
-        });
-    });
+    function toggleSubmenu(element) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('collapsed') && window.innerWidth >= 1024) return;
+        const submenu = element.nextElementSibling;
+        if (submenu) submenu.classList.toggle('hidden');
+        const chevron = element.querySelector('.fa-chevron-right');
+        if (chevron) chevron.classList.toggle('rotate-90');
+    }
 </script>

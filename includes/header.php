@@ -16,7 +16,7 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Velocity POS - Modern Point of Sale System">
     <title><?= $page_title; ?></title>
-
+    <link rel="icon" type="image/x-icon" href="/pos/assets/images/logo.png" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css">
