@@ -3,7 +3,7 @@ session_start();
 include('../config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/signin"); // Clean URL for signin
     exit(0);
 }
 
@@ -14,7 +14,7 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
 $list_config = [
     'title' => 'Payment Method List',
-    'add_url' => '/pos/payment_methods/add_payment_method.php',
+    'add_url' => '/pos/payment-methods/add', // Clean URL
     'table_id' => 'paymentTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,9 +25,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/payment_methods/add_payment_method.php',
-    'delete_url' => '/pos/payment_methods/save_payment_method.php',
-    'status_url' => '/pos/payment_methods/save_payment_method.php',
+    'edit_url' => '/pos/payment-methods/edit', // Clean URL base for edit
+    'delete_url' => '/pos/payment_methods/save_payment_method.php', // Backend action paths usually keep .php or use a specific rewrite
+    'status_url' => '/pos/payment_methods/save_payment_method.php', 
     'primary_key' => 'id',
     'name_field' => 'name'
 ];
@@ -50,4 +50,3 @@ include('../includes/header.php');
         <?php include('../includes/footer.php'); ?>
     </main>
 </div>
-

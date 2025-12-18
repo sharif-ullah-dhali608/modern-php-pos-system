@@ -23,7 +23,7 @@ if(isset($_POST['save_currency_btn'])) {
     if(empty($currency_name) || empty($code)) {
         $_SESSION['message'] = "Currency name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php");
+        header("Location: /pos/currency/add");
         exit(0);
     }
 
@@ -32,7 +32,7 @@ if(isset($_POST['save_currency_btn'])) {
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Currency code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php");
+        header("Location: /pos/currency/add");
         exit(0);
     }
 
@@ -40,7 +40,7 @@ if(isset($_POST['save_currency_btn'])) {
     if(empty($stores)) {
         $_SESSION['message'] = "Please select at least one store!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php");
+        header("Location: /pos/currency/add");
         exit(0);
     }
 
@@ -60,11 +60,11 @@ if(isset($_POST['save_currency_btn'])) {
         
         $_SESSION['message'] = "Currency created successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: currency_list.php");
+        header("Location: /pos/currency/list");
     } else {
         $_SESSION['message'] = "Error: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php");
+        header("Location: /pos/currency/add");
     }
     exit(0);
 }
@@ -85,7 +85,7 @@ if(isset($_POST['update_currency_btn'])) {
     if(empty($currency_name) || empty($code)) {
         $_SESSION['message'] = "Currency name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php?id=$currency_id");
+        header("Location: /pos/currency/add?id=$currency_id");
         exit(0);
     }
 
@@ -94,7 +94,7 @@ if(isset($_POST['update_currency_btn'])) {
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Currency code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php?id=$currency_id");
+        header("Location: /pos/currency/add?id=$currency_id");
         exit(0);
     }
 
@@ -102,7 +102,7 @@ if(isset($_POST['update_currency_btn'])) {
     if(empty($stores)) {
         $_SESSION['message'] = "Please select at least one store!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php?id=$currency_id");
+        header("Location: /pos/currency/add?id=$currency_id");
         exit(0);
     }
 
@@ -130,11 +130,11 @@ if(isset($_POST['update_currency_btn'])) {
         
         $_SESSION['message'] = "Currency updated successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: currency_list.php");
+        header("Location: /pos/currency/list");
     } else {
         $_SESSION['message'] = "Error: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_currency.php?id=$currency_id");
+        header("Location: /pos/currency/add?id=$currency_id");
     }
     exit(0);
 }
@@ -150,7 +150,7 @@ if(isset($_POST['delete_btn'])) {
     if($usage['count'] > 0) {
         $_SESSION['message'] = "Cannot delete currency! It is assigned to stores.";
         $_SESSION['msg_type'] = "error";
-        header("Location: currency_list.php");
+        header("Location: /pos/currency/list");
         exit(0);
     }
 
@@ -165,7 +165,7 @@ if(isset($_POST['delete_btn'])) {
         $_SESSION['msg_type'] = "error";
     }
     
-    header("Location: currency_list.php");
+    header("Location: /pos/currency/list");
     exit(0);
 }
 
@@ -184,12 +184,12 @@ if(isset($_POST['toggle_status_btn'])) {
         $_SESSION['msg_type'] = "error";
     }
     
-    header("Location: currency_list.php");
+    header("Location: /pos/currency/list");
     exit(0);
 }
 
 // If no action matched, redirect
-header("Location: currency_list.php");
+header("Location: /pos/currency/list");
 exit(0);
 ?>
 

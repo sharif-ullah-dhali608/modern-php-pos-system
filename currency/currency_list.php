@@ -23,7 +23,7 @@ while($row = mysqli_fetch_assoc($query_run)) {
 // Prepare data for reusable list component
 $list_config = [
     'title' => 'Currency List',
-    'add_url' => '/pos/currency/add_currency.php',
+    'add_url' => '/pos/currency/add',
     'table_id' => 'currencyTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -37,7 +37,7 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $currencies,
-    'edit_url' => '/pos/currency/add_currency.php',
+    'edit_url' => '/pos/currency/edit',
     'delete_url' => '/pos/currency/save_currency.php',
     'status_url' => '/pos/currency/save_currency.php',
     'primary_key' => 'id',

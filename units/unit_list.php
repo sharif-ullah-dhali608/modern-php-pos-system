@@ -14,7 +14,7 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
 $list_config = [
     'title' => 'Unit List',
-    'add_url' => '/pos/units/add_unit.php',
+    'add_url' => '/pos/units/add',
     'table_id' => 'unitTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,7 +25,7 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/units/add_unit.php',
+    'edit_url' => '/pos/units/edit',
     'delete_url' => '/pos/units/save_unit.php',
     'status_url' => '/pos/units/save_unit.php',
     'primary_key' => 'id',

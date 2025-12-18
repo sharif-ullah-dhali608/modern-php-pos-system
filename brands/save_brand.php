@@ -19,7 +19,7 @@ if(isset($_POST['save_brand_btn'])) {
     if(empty($name) || empty($code)) {
         $_SESSION['message'] = "Name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php");
+        header("Location: /pos/brands/add");
         exit(0);
     }
 
@@ -27,7 +27,7 @@ if(isset($_POST['save_brand_btn'])) {
     if(mysqli_num_rows($dup) > 0){
         $_SESSION['message'] = "Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php");
+        header("Location: /pos/brands/add");
         exit(0);
     }
 
@@ -35,11 +35,11 @@ if(isset($_POST['save_brand_btn'])) {
     if(mysqli_query($conn, $q)) {
         $_SESSION['message'] = "Brand created!";
         $_SESSION['msg_type'] = "success";
-        header("Location: brand_list.php");
+        header("Location: /pos/brands/list");
     } else {
         $_SESSION['message'] = "Error: ".mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php");
+        header("Location: /pos/brands/add");
     }
     exit(0);
 }
@@ -57,7 +57,7 @@ if(isset($_POST['update_brand_btn'])) {
     if(empty($name) || empty($code)) {
         $_SESSION['message'] = "Name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php?id=$id");
+        header("Location: /pos/brands/add?id=$id");
         exit(0);
     }
 
@@ -65,7 +65,7 @@ if(isset($_POST['update_brand_btn'])) {
     if(mysqli_num_rows($dup) > 0){
         $_SESSION['message'] = "Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php?id=$id");
+        header("Location: /pos/brands/add?id=$id");
         exit(0);
     }
 
@@ -73,11 +73,11 @@ if(isset($_POST['update_brand_btn'])) {
     if(mysqli_query($conn, $q)) {
         $_SESSION['message'] = "Brand updated!";
         $_SESSION['msg_type'] = "success";
-        header("Location: brand_list.php");
+        header("Location: /pos/brands/list");
     } else {
         $_SESSION['message'] = "Error: ".mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_brand.php?id=$id");
+        header("Location: /pos/brands/edit?id=$id");
     }
     exit(0);
 }
@@ -88,7 +88,7 @@ if(isset($_POST['delete_btn'])) {
     mysqli_query($conn, "DELETE FROM brands WHERE id='$id'");
     $_SESSION['message'] = "Brand deleted!";
     $_SESSION['msg_type'] = "success";
-    header("Location: brand_list.php");
+    header("Location: /pos/brands/list");
     exit(0);
 }
 
@@ -99,11 +99,11 @@ if(isset($_POST['toggle_status_btn'])) {
     mysqli_query($conn, "UPDATE brands SET status='$status' WHERE id='$id'");
     $_SESSION['message'] = "Status updated!";
     $_SESSION['msg_type'] = "success";
-    header("Location: brand_list.php");
+    header("Location: /pos/brands/list");
     exit(0);
 }
 
-header("Location: brand_list.php");
+header("Location: /pos/brands/list");
 exit(0);
 ?>
 

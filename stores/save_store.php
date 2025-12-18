@@ -38,7 +38,7 @@ if(isset($_POST['save_store_btn']))
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Store Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_store.php"); // Stay on add page
+        header("Location: /pos/stores/add"); // Stay on add page
         exit(0);
     }
 
@@ -47,11 +47,11 @@ if(isset($_POST['save_store_btn']))
     if(mysqli_query($conn, $query)) {
         $_SESSION['message'] = "Store Created Successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: store_list.php"); // Redirect to list after success
+        header("Location: /pos/stores/list"); // Redirect to list after success
     } else {
         $_SESSION['message'] = "Database Error: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_store.php");
+        header("Location: /pos/stores/add");
     }
     exit(0);
 }
@@ -94,7 +94,7 @@ if(isset($_POST['update_store_btn']))
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Store Code already exists in another branch!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_store.php?id=$store_id"); // Stay on edit page
+        header("Location: /pos/stores/add?id=$store_id"); // Stay on edit page
         exit(0);
     }
 
@@ -111,11 +111,11 @@ if(isset($_POST['update_store_btn']))
     if(mysqli_query($conn, $query)) {
         $_SESSION['message'] = "Store Updated Successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: store_list.php"); 
+        header("Location: /pos/stores/list"); 
     } else {
         $_SESSION['message'] = "Update Failed: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_store.php?id=$store_id"); 
+        header("Location: /pos/stores/add?id=$store_id"); 
     }
     exit(0);
 }
@@ -135,7 +135,7 @@ if(isset($_POST['delete_store_btn']))
         $_SESSION['message'] = "Deletion Failed: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
     }
-    header("Location: store_list.php");
+    header("Location: /pos/stores/list");
     exit(0);
 }
 ?>

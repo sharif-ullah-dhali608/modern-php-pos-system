@@ -9,26 +9,25 @@ function uri_has($needle, $uri) {
     return strpos($uri, $needle) !== false;
 }
 
-// Menu items configuration
+// Menu items configuration with Clean URLs as per .htaccess rules
 $menu_items = [
     [
         'title' => 'Dashboards',
         'icon' => 'fa-tachometer-alt', 
-        'link' => '/pos/index.php',
+        'link' => '/pos', // Clean URL
         'badge' => '5',
-        'badge_color' => 'bg-red-500', // Using red-500 as defined in your array
-        'active' => ($current_page == 'index.php') 
+        'badge_color' => 'bg-red-500',
+        'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
-    // ... (rest of menu_items array remains the same) ...
     [
         'title' => 'Invoice',
         'icon' => 'fa-file-invoice-dollar',
         'link' => '#',
         'submenu' => [
-            ['title' => 'List', 'link' => '/pos/invoice/invoice_list.php'],
-            ['title' => 'Preview', 'link' => '/pos/invoice/invoice_preview.php'],
-            ['title' => 'Edit', 'link' => '/pos/invoice/invoice_edit.php'],
-            ['title' => 'Add', 'link' => '/pos/invoice/invoice_add.php']
+            ['title' => 'List', 'link' => '/pos/invoice/list'],
+            ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
+            ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
+            ['title' => 'Add', 'link' => '/pos/invoice/add']
         ],
         'active' => (uri_has('/invoice/', $current_uri))
     ],
@@ -37,8 +36,8 @@ $menu_items = [
         'icon' => 'fa-store',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Store', 'link' => '/pos/stores/add_store.php'],
-            ['title' => 'Store List', 'link' => '/pos/stores/store_list.php']
+            ['title' => 'Add Store', 'link' => '/pos/stores/add'], // Clean URL
+            ['title' => 'Store List', 'link' => '/pos/stores/list'] // Clean URL
         ],
         'active' => (uri_has('/stores/', $current_uri))
     ],
@@ -47,8 +46,8 @@ $menu_items = [
         'icon' => 'fa-dollar-sign',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Currency', 'link' => '/pos/currency/add_currency.php'],
-            ['title' => 'Currency List', 'link' => '/pos/currency/currency_list.php']
+            ['title' => 'Add Currency', 'link' => '/pos/currency/add'],
+            ['title' => 'Currency List', 'link' => '/pos/currency/list']
         ],
         'active' => (uri_has('/currency/', $current_uri))
     ],
@@ -57,18 +56,18 @@ $menu_items = [
         'icon' => 'fa-credit-card',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Payment', 'link' => '/pos/payment_methods/add_payment_method.php'],
-            ['title' => 'Payment List', 'link' => '/pos/payment_methods/payment_method_list.php']
+            ['title' => 'Add Payment', 'link' => '/pos/payment-methods/add'],
+            ['title' => 'Payment List', 'link' => '/pos/payment-methods/list']
         ],
-        'active' => (uri_has('/payment_methods/', $current_uri))
+        'active' => (uri_has('/payment-methods/', $current_uri) || uri_has('/payment_methods/', $current_uri))
     ],
     [
         'title' => 'Units',
         'icon' => 'fa-balance-scale',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Unit', 'link' => '/pos/units/add_unit.php'],
-            ['title' => 'Unit List', 'link' => '/pos/units/unit_list.php']
+            ['title' => 'Add Unit', 'link' => '/pos/units/add'],
+            ['title' => 'Unit List', 'link' => '/pos/units/list']
         ],
         'active' => (uri_has('/units/', $current_uri))
     ],
@@ -77,8 +76,8 @@ $menu_items = [
         'icon' => 'fa-tags',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Brand', 'link' => '/pos/brands/add_brand.php'],
-            ['title' => 'Brand List', 'link' => '/pos/brands/brand_list.php']
+            ['title' => 'Add Brand', 'link' => '/pos/brands/add'],
+            ['title' => 'Brand List', 'link' => '/pos/brands/list']
         ],
         'active' => (uri_has('/brands/', $current_uri))
     ],
@@ -87,8 +86,8 @@ $menu_items = [
         'icon' => 'fa-percent',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Taxrate', 'link' => '/pos/taxrates/add_taxrate.php'],
-            ['title' => 'Taxrate List', 'link' => '/pos/taxrates/taxrate_list.php']
+            ['title' => 'Add Taxrate', 'link' => '/pos/taxrates/add'],
+            ['title' => 'Taxrate List', 'link' => '/pos/taxrates/list']
         ],
         'active' => (uri_has('/taxrates/', $current_uri))
     ],
@@ -97,11 +96,11 @@ $menu_items = [
         'icon' => 'fa-users',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add User & List', 'link' => '/pos/users/add_user.php'],
-            ['title' => 'Verify Email', 'link' => '/pos/users/verify_email.php'],
-            ['title' => 'Reset Password', 'link' => '/pos/users/reset_password.php'],
-            ['title' => 'Forgot Password', 'link' => '/pos/users/forgot_password.php'],
-            ['title' => 'Two Steps', 'link' => '/pos/users/two_steps.php'],
+            ['title' => 'Add User & List', 'link' => '/pos/users/add'],
+            ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
+            ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
+            ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
+            ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
         ],
         'active' => (uri_has('/users/', $current_uri))
     ],
@@ -110,13 +109,14 @@ $menu_items = [
         'icon' => 'fa-cog',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Settings', 'link' => '/pos/system/settings.php'],
-            ['title' => 'Backup', 'link' => '/pos/system/backup.php']
+            ['title' => 'Settings', 'link' => '/pos/system/settings'],
+            ['title' => 'Backup', 'link' => '/pos/system/backup']
         ],
         'active' => (uri_has('/system/', $current_uri))
     ]
 ];
 ?>
+
 <style>
         /* Custom styles for the collapsed state and smooth transitions */
         .sidebar {
