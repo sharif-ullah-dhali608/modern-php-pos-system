@@ -57,7 +57,7 @@ include('../includes/header.php');
         <div class="p-12">
             <div class="mb-6 slide-in">
                 <div class="flex items-center gap-4 mb-4">
-                    <a href="/pos/brands/brand_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+                    <a href="/pos/brands/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <div>
@@ -71,7 +71,7 @@ include('../includes/header.php');
             </div>
 
             <div class="glass-card rounded-xl p-8 slide-in">
-                <form action="save_brand.php" method="POST" enctype="multipart/form-data">
+                <form action="/pos/brands/save_brand.php" method="POST" enctype="multipart/form-data">
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="brand_id" value="<?= $d['id']; ?>">
                         <input type="hidden" name="old_thumbnail" value="<?= htmlspecialchars($d['thumbnail']); ?>">

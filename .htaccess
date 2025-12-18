@@ -1,15 +1,46 @@
 RewriteEngine On
 RewriteBase /pos
 
-# 1. URL Cleanup: Removes trailing slash if request is not for a directory
+# Remove trailing slash
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)/$ /$1 [R=301,L]
+RewriteRule ^(.*)/$ /pos/$1 [R=301,L]
 
-# --- Custom/Specific Rewrites ---
-
+# Login route
 RewriteRule ^login$ signin.php [L]
 
-# --- POS Project Root Access ---
-RewriteCond %{REQUEST_FILENAME} !-d
+# Clean URLs - List pages
+RewriteRule ^stores/list$ stores/store_list.php [L]
+RewriteRule ^stores/add$ stores/add_store.php [L]
+RewriteRule ^stores/edit$ stores/add_store.php [L]
+
+RewriteRule ^currency/list$ currency/currency_list.php [L]
+RewriteRule ^currency/add$ currency/add_currency.php [L]
+RewriteRule ^currency/add/([0-9]+)$ currency/add_currency.php?id=$1 [L]
+RewriteRule ^currency/edit/([0-9]+)$ currency/add_currency.php?id=$1 [L]
+
+RewriteRule ^payment-methods/list$ payment_methods/payment_method_list.php [L]
+RewriteRule ^payment-methods/add$ payment_methods/add_payment_method.php [L]
+RewriteRule ^payment-methods/save$ payment_methods/save_payment_method.php [L]
+RewriteRule ^payment-methods/edit/([0-9]+)$ payment_methods/add_payment_method.php?id=$1 [L]
+
+RewriteRule ^units/list$ units/unit_list.php [L]
+RewriteRule ^units/edit/([0-9]+)$ units/add_unit.php?id=$1 [L]
+RewriteRule ^units/add/([0-9]+)$ units/add_unit.php?id=$1 [L]
+RewriteRule ^units/save$ units/save_unit.php [L]
+RewriteRule ^units/add$ units/add_unit.php [L]
+
+
+RewriteRule ^brands/list$ brands/brand_list.php [L]
+RewriteRule ^brands/add$ brands/add_brand.php [L]
+RewriteRule ^brands/edit/([0-9]+)$ brands/add_brand.php?id=$1 [L]
+
+RewriteRule ^taxrates/list$ taxrates/taxrate_list.php [L]
+RewriteRule ^taxrates/add$ taxrates/add_taxrate.php [L]
+RewriteRule ^taxrates/edit/([0-9]+)$ taxrates/add_taxrate.php?id=$1 [L]
+# RewriteRule ^taxrates/edit$ taxrates/add_taxrate.php [L]
+
+
+# Default route
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^$ index.php [L]

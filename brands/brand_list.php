@@ -3,7 +3,7 @@ session_start();
 include('../config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -14,7 +14,7 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
 $list_config = [
     'title' => 'Brand List',
-    'add_url' => '/pos/brands/add_brand.php',
+    'add_url' => '/pos/brands/add',
     'table_id' => 'brandTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,7 +25,7 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/brands/add_brand.php',
+    'edit_url' => '/pos/brands/edit',
     'delete_url' => '/pos/brands/save_brand.php',
     'status_url' => '/pos/brands/save_brand.php',
     'primary_key' => 'id',

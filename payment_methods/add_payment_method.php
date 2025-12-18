@@ -45,7 +45,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Payment method not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: payment_method_list.php");
+        header("Location: /pos/payment-method/list");
         exit(0);
     }
 }
@@ -68,7 +68,7 @@ include('../includes/header.php');
         <div class="p-6">
             <div class="mb-6 slide-in">
                 <div class="flex items-center gap-4 mb-4">
-                    <a href="/pos/payment_methods/payment_method_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+                    <a href="/pos/payment-methods/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <div>
@@ -82,7 +82,7 @@ include('../includes/header.php');
             </div>
 
             <div class="glass-card rounded-xl p-8 slide-in">
-                <form action="save_payment_method.php" method="POST" id="paymentForm">
+                <form action="/pos/payment_methods/save_payment_method.php" method="POST" id="paymentForm">
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="payment_id" value="<?= $d['id']; ?>">
                     <?php endif; ?>

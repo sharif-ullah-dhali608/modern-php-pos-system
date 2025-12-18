@@ -53,7 +53,7 @@ include('../includes/header.php');
         <div class="p-12">
             <div class="mb-6 slide-in">
                 <div class="flex items-center gap-4 mb-4">
-                    <a href="/pos/taxrates/taxrate_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+                    <a href="/pos/taxrates/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <div>
@@ -67,7 +67,7 @@ include('../includes/header.php');
             </div>
 
             <div class="glass-card rounded-xl p-8 slide-in">
-                <form action="save_taxrate.php" method="POST">
+                <form action="/pos/taxrates/save_taxrate.php" method="POST">
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="taxrate_id" value="<?= $d['id']; ?>">
                     <?php endif; ?>

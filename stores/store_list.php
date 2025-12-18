@@ -29,7 +29,7 @@ $page_title = "Store List - Velocity POS";
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Store List</h1>
                     <p class="text-slate-500 font-medium text-sm mt-1">Manage your business locations</p>
                 </div>
-                <a href="add_store.php" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl hover:bg-teal-700 transition-all">
+                <a href="/pos/stores/add" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl hover:bg-teal-700 transition-all">
                     <i class="fas fa-plus"></i> <span>Add New Store</span>
                 </a>
             </div>
@@ -56,7 +56,7 @@ $page_title = "Store List - Velocity POS";
                                         <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-500 border border-slate-200">#<?= htmlspecialchars($row['store_code']); ?></span>
                                     </div>
                                 </div>
-                                <a href="add_store.php?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
+                                <a href="/pos/stores/edit?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
                             </div>
                             
                             <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-5 pt-4 border-t border-slate-100 border-dashed">
@@ -209,7 +209,7 @@ $page_title = "Store List - Velocity POS";
 
         updateBadge('m_manualPriceBadge', data.allow_manual_price, 'Manual Price');
         updateBadge('m_backdateBadge', data.allow_backdate, 'Backdate');
-        document.getElementById('m_editBtn').href = 'add_store.php?id=' + data.id;
+        document.getElementById('m_editBtn').href = '/pos/stores/edit?id=' + data.id;
         modal.classList.remove('hidden');
         setTimeout(() => { modalBackdrop.classList.remove('opacity-0'); modalPanel.classList.remove('opacity-0', 'scale-95'); modalPanel.classList.add('modal-enter'); }, 10);
     }

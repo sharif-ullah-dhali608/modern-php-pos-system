@@ -38,7 +38,8 @@ include('includes/header.php');
                     $stores_result = mysqli_query($conn, $stores_query);
                     $stores_data = mysqli_fetch_assoc($stores_result);
                     ?>
-                    <h3 class="text-3xl font-bold text-slate-800 mb-1"><?= $stores_data['total']; ?></h3> <p class="text-sm text-slate-600">Active Stores</p> <a href="stores/store_list.php" class="text-xs text-blue-600 hover:text-blue-700 mt-2 inline-block">View all →</a> </div>
+                    <h3 class="text-3xl font-bold text-slate-800 mb-1"><?= $stores_data['total']; ?></h3> <p class="text-sm text-slate-600">Active Stores</p> 
+                    <a href="/pos/stores/list" class="text-xs text-blue-600 hover:text-blue-700 mt-2 inline-block">View all →</a> </div>
 
                 <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 slide-in" style="animation-delay: 0.1s;">
                     <div class="flex items-center justify-between mb-4">
@@ -54,7 +55,7 @@ include('includes/header.php');
                     ?>
                     <h3 class="text-3xl font-bold text-slate-800 mb-1"><?= $currency_data['total']; ?></h3>
                     <p class="text-sm text-slate-600">Currencies</p>
-                    <a href="currency/currency_list.php" class="text-xs text-purple-600 hover:text-purple-700 mt-2 inline-block">View all →</a>
+                    <a href="/pos/currency/list" class="text-xs text-purple-600 hover:text-purple-700 mt-2 inline-block">View all →</a>
                 </div>
 
                 <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 slide-in" style="animation-delay: 0.2s;">

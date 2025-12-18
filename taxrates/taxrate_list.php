@@ -14,7 +14,7 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
 $list_config = [
     'title' => 'Taxrate List',
-    'add_url' => '/pos/taxrates/add_taxrate.php',
+    'add_url' => '/pos/taxrates/add',
     'table_id' => 'taxrateTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,7 +25,7 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/taxrates/add_taxrate.php',
+    'edit_url' => '/pos/taxrates/edit',
     'delete_url' => '/pos/taxrates/save_taxrate.php',
     'status_url' => '/pos/taxrates/save_taxrate.php',
     'primary_key' => 'id',

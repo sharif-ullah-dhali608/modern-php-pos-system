@@ -18,7 +18,7 @@ if(isset($_POST['save_unit_btn'])) {
     if(empty($unit_name) || empty($code)) {
         $_SESSION['message'] = "Unit name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php");
+        header("Location: /pos/units/add");
         exit(0);
     }
 
@@ -26,7 +26,7 @@ if(isset($_POST['save_unit_btn'])) {
     if(mysqli_num_rows($dup) > 0){
         $_SESSION['message'] = "Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php");
+        header("Location: /pos/units/add");
         exit(0);
     }
 
@@ -34,11 +34,11 @@ if(isset($_POST['save_unit_btn'])) {
     if(mysqli_query($conn, $q)) {
         $_SESSION['message'] = "Unit created!";
         $_SESSION['msg_type'] = "success";
-        header("Location: unit_list.php");
+        header("Location: /pos/units/list");
     } else {
         $_SESSION['message'] = "Error: ".mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php");
+        header("Location: /pos/units/add");
     }
     exit(0);
 }
@@ -55,7 +55,7 @@ if(isset($_POST['update_unit_btn'])) {
     if(empty($unit_name) || empty($code)) {
         $_SESSION['message'] = "Unit name and code are required!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php?id=$id");
+        header("Location: /pos/units/add?id=$id");
         exit(0);
     }
 
@@ -63,7 +63,7 @@ if(isset($_POST['update_unit_btn'])) {
     if(mysqli_num_rows($dup) > 0){
         $_SESSION['message'] = "Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php?id=$id");
+        header("Location: /pos/units/add?id=$id");
         exit(0);
     }
 
@@ -71,11 +71,11 @@ if(isset($_POST['update_unit_btn'])) {
     if(mysqli_query($conn, $q)) {
         $_SESSION['message'] = "Unit updated!";
         $_SESSION['msg_type'] = "success";
-        header("Location: unit_list.php");
+        header("Location: /pos/units/list");
     } else {
         $_SESSION['message'] = "Error: ".mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: add_unit.php?id=$id");
+        header("Location: /pos/units/add?id=$id");
     }
     exit(0);
 }
@@ -86,7 +86,7 @@ if(isset($_POST['delete_btn'])) {
     mysqli_query($conn, "DELETE FROM units WHERE id='$id'");
     $_SESSION['message'] = "Unit deleted!";
     $_SESSION['msg_type'] = "success";
-    header("Location: unit_list.php");
+    header("Location: /pos/units/list");
     exit(0);
 }
 
@@ -97,11 +97,11 @@ if(isset($_POST['toggle_status_btn'])) {
     mysqli_query($conn, "UPDATE units SET status='$status' WHERE id='$id'");
     $_SESSION['message'] = "Status updated!";
     $_SESSION['msg_type'] = "success";
-    header("Location: unit_list.php");
+    header("Location: /pos/units/list");
     exit(0);
 }
 
-header("Location: unit_list.php");
+header("Location: /pos/units/list");
 exit(0);
 ?>
 
