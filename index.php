@@ -26,7 +26,7 @@ include('includes/header.php');
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 slide-in">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
@@ -88,7 +88,7 @@ include('includes/header.php');
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <a href="stores/add_store.php" class="bg-white rounded-xl p-6 shadow-lg border border-slate-100 hover:scale-105 transition-transform slide-in group cursor-pointer">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-shadow">
