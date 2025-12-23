@@ -21,7 +21,6 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
@@ -30,6 +29,59 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 
     <style>
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1e293b; 
+        background: linear-gradient(135deg, #ffffff, #f7f9fb);
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+    }
+
+   
+    .app-wrapper {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+
+    #main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        transition: margin-left 300ms ease-in-out;
+        height: 100vh;
+    }
+
+    .navbar-fixed-top {
+        flex-shrink: 0;
+        z-index: 50;
+    }
+
+ 
+    .content-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background-color: transparent;
+        scroll-behavior: smooth;
+    }
+
+
+    .content-scroll-area::-webkit-scrollbar { width: 6px; }
+    .content-scroll-area::-webkit-scrollbar-thumb { background: #0d9488; border-radius: 10px; }
+
+    @media (max-width: 1023px) {
+        #sidebar { transform: translateX(-100%); z-index: 1000; }
+        #sidebar.sidebar-open { transform: translateX(0); }
+        #main-content { margin-left: 0 !important; }
+    }
+</style>
+    
+    <!-- <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
@@ -107,6 +159,6 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
             #sidebar.sidebar-open { transform: translateX(0); }
             .main-content { margin-left: 0 !important; }
         }
-    </style>
+    </style> -->
 </head>
 <body class="min-h-screen">

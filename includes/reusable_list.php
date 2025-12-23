@@ -64,20 +64,20 @@ function renderReusableList($config) {
                                         if($key == 'actions'):
                                             // Action buttons with Clean URL support
                                             ?>
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-10">
                                                 <?php if($view_url): ?>
                                                     <a href="<?= $view_url; ?>/<?= $row[$primary_key]; ?>" class="btn-action btn-view text-blue-600 hover:text-blue-800" title="View">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                 <?php endif; ?>
                                                 
-                                                <a href="<?= $edit_url; ?>/<?= $row[$primary_key]; ?>" class="btn-action btn-edit text-amber-600 hover:text-amber-800" title="Edit">
+                                                <a href="<?= $edit_url; ?>/<?= $row[$primary_key]; ?>" class="btn-action btn-edit text-teal-600 hover:text-teal-800" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 
                                                 <button 
                                                     onclick="confirmDelete(<?= $row[$primary_key]; ?>, '<?= addslashes($row[$name_field]); ?>', '<?= $delete_url; ?>')" 
-                                                    class="btn-action btn-delete text-red-600 hover:text-red-800"
+                                                    class="btn-action btn-delete text-red-400 hover:text-red-800"
                                                     title="Delete"
                                                 >
                                                     <i class="fas fa-trash"></i>
