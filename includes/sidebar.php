@@ -16,18 +16,18 @@ $menu_items = [
         'link' => '/pos',
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
-    [
-        'title' => 'Invoice',
-        'icon' => 'fa-file-invoice-dollar',
-        'link' => '#',
-        'submenu' => [
-            ['title' => 'List', 'link' => '/pos/invoice/list'],
-            ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
-            ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
-            ['title' => 'Add', 'link' => '/pos/invoice/add']
-        ],
-        'active' => (uri_has('/invoice/', $current_uri))
-    ],
+    // [
+    //     'title' => 'Invoice',
+    //     'icon' => 'fa-file-invoice-dollar',
+    //     'link' => '#',
+    //     'submenu' => [
+    //         ['title' => 'List', 'link' => '/pos/invoice/list'],
+    //         ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
+    //         ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
+    //         ['title' => 'Add', 'link' => '/pos/invoice/add']
+    //     ],
+    //     'active' => (uri_has('/invoice/', $current_uri))
+    // ],
     [
         'title' => 'Stores',
         'icon' => 'fa-store',
@@ -88,29 +88,29 @@ $menu_items = [
         ],
         'active' => (uri_has('/taxrates/', $current_uri))
     ],
-    [
-        'title' => 'Users',
-        'icon' => 'fa-users',
-        'link' => '#',
-        'submenu' => [
-            ['title' => 'Add User & List', 'link' => '/pos/users/add'],
-            ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
-            ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
-            ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
-            ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
-        ],
-        'active' => (uri_has('/users/', $current_uri))
-    ],
-    [
-        'title' => 'System',
-        'icon' => 'fa-cog',
-        'link' => '#',
-        'submenu' => [
-            ['title' => 'Settings', 'link' => '/pos/system/settings'],
-            ['title' => 'Backup', 'link' => '/pos/system/backup']
-        ],
-        'active' => (uri_has('/system/', $current_uri))
-    ]
+    // [
+    //     'title' => 'Users',
+    //     'icon' => 'fa-users',
+    //     'link' => '#',
+    //     'submenu' => [
+    //         ['title' => 'Add User & List', 'link' => '/pos/users/add'],
+    //         ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
+    //         ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
+    //         ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
+    //         ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
+    //     ],
+    //     'active' => (uri_has('/users/', $current_uri))
+    // ],
+    // [
+    //     'title' => 'System',
+    //     'icon' => 'fa-cog',
+    //     'link' => '#',
+    //     'submenu' => [
+    //         ['title' => 'Settings', 'link' => '/pos/system/settings'],
+    //         ['title' => 'Backup', 'link' => '/pos/system/backup']
+    //     ],
+    //     'active' => (uri_has('/system/', $current_uri))
+    // ]
 ];
 ?>
 
@@ -200,14 +200,20 @@ $menu_items = [
 <div id="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
 
 <aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-all duration-300">
-    <div class="p-6 border-b border-white/10 relative h-20 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg p-1 shrink-0">
-            <img src="/pos/assets/images/logo-fav.jpeg" alt="Logo" class="w-10 h-full object-contain" />
+    <div class="flex items-center gap-3 px-2 py-4 border-b border-white/5 relative group">
+    <div class="w-14 h-14 rounded-2xl shrink-0 bg-gradient-to-br from-teal-900 via-teal-800 from-white/10 to-white/5 border border-white/20 shadow-inner flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+        <img src="/pos/assets/images/logo.png" alt="Logo" class="w-full h-full object-contain" />
+    </div>
+
+    <div class="logo-text-container overflow-hidden flex-1 select-none">
+        <h1 class="logo-text text-lg font-extrabold text-white tracking-tight leading-tight whitespace-nowrap">
+         <span class="text-teal-400">POS</span>
+        </h1>
+        <div class="flex items-center gap-1.5">
+            <span class="w-1 h-1 rounded-full bg-teal-500 animate-pulse"></span>
+            <p class="logo-subtitle text-[9px] text-white/50 uppercase font-bold tracking-[0.1em]">Inventory Hub</p>
         </div>
-        <div class="logo-text-container overflow-hidden">
-            <h1 class="logo-text text-xl font-bold text-white whitespace-nowrap">POS</h1>
-            <p class="logo-subtitle text-[10px] text-white/60 uppercase">Inventory System</p>
-        </div>
+    </div>
         
         <div id="sidebar-toggle-container">
             <button id="sidebar-toggle" class="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-teal-500">

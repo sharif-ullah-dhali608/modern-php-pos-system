@@ -36,18 +36,24 @@ $page_title = "Brand List - POS";
 include('../includes/header.php');
 ?>
 
-<div class="flex">
+<div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main id="main-content" class="flex-1 ml-64 main-content min-h-screen">
-        <?php include('../includes/navbar.php'); ?>
-        
-        <div class="p-6">
-            <?php include('../includes/reusable_list.php'); ?>
-            <?php renderReusableList($list_config); ?>
+    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
         </div>
         
-        <?php include('../includes/footer.php'); ?>
+        <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
+            <div class="p-6">
+                <?php 
+                include('../includes/reusable_list.php'); 
+                renderReusableList($list_config); 
+                ?>
+            </div>
+            
+            <?php include('../includes/footer.php'); ?>
+        </div>
     </main>
 </div>
 

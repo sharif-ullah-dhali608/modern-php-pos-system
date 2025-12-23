@@ -1,0 +1,65 @@
+
+    .ios-time-picker {
+        display: flex;
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 0;
+        border: 1px solid #e2e8f0;
+        height: 120px;
+        overflow: hidden;
+        position: relative;
+        
+        mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
+    }
+
+    .time-column {
+        flex: 1;
+        overflow-y: scroll;
+        scroll-snap-type: y mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        text-align: center;
+        z-index: 2;
+    }
+
+    .time-column::-webkit-scrollbar { display: none; }
+
+    .time-item {
+        height: 40px;
+        line-height: 40px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #94a3b8;
+        scroll-snap-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .time-item.selected {
+        color: #0d9488; /* Velocity POS Teal */
+        font-size: 18px;
+        transform: scale(1.1);
+    }
+
+    .picker-divider {
+        align-self: center;
+        font-weight: bold;
+        color: #cbd5e1;
+        padding-bottom: 5px;
+        z-index: 2;
+    }
+
+   
+    .selection-overlay {
+        position: absolute;
+        top: 50%;
+        left: 8px;
+        right: 8px;
+        height: 40px;
+        transform: translateY(-50%);
+        background: rgba(13, 148, 136, 0.05);
+        border-radius: 10px;
+        pointer-events: none;
+        border: 1px solid rgba(13, 148, 136, 0.15);
+        z-index: 1;
+    }
