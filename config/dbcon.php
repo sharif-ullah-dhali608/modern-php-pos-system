@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -113,6 +113,23 @@ function ensure_core_tables(mysqli $conn) {
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Boxes Table ---
+    $boxesSql = "CREATE TABLE IF NOT EXISTS boxes (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        box_name VARCHAR(255) NOT NULL,
+        code_name VARCHAR(100) NOT NULL UNIQUE,
+        barcode_id VARCHAR(100) NOT NULL UNIQUE,
+        box_details TEXT DEFAULT NULL,
+        shelf_number VARCHAR(100) DEFAULT NULL,
+        storage_type VARCHAR(100) DEFAULT NULL,
+        max_capacity INT(11) DEFAULT 0,
+        status TINYINT(1) DEFAULT 1,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
     
     // --- 2. Pivot Tables (Junction Tables) ---
 
@@ -177,6 +194,20 @@ function ensure_core_tables(mysqli $conn) {
     UNIQUE KEY unique_map (taxrate_id, store_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Box-Store Pivot ---
+    $boxStoreSql = "CREATE TABLE IF NOT EXISTS box_stores (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        box_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY box_store_unique (box_id, store_id),
+        KEY box_id (box_id),
+        KEY store_id (store_id),
+        CONSTRAINT box_store_box_fk FOREIGN KEY (box_id) REFERENCES boxes (id) ON DELETE CASCADE,
+        CONSTRAINT box_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 
     // Core tables
     mysqli_query($conn, $storesSql);
@@ -185,12 +216,16 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $unitsSql);
     mysqli_query($conn, $brandsSql);
     mysqli_query($conn, $taxSql);
+    mysqli_query($conn, $boxesSql); 
+    
     
     // Pivot tables (must run after core tables are created)
     mysqli_query($conn, $storeCurrencySql);
     mysqli_query($conn, $paymentStoreMapSql); // NEW: Execution of the missing table
     mysqli_query($conn, $brandStoreSql);
     mysqli_query($conn, $taxStoreSql);
+    mysqli_query($conn, $boxStoreSql);
+
 
 
 }

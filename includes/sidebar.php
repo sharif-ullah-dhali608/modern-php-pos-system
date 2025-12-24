@@ -89,6 +89,16 @@ $menu_items = [
         'active' => (uri_has('/taxrates/', $current_uri))
     ],
     [
+        'title' => 'Boxes',
+        'icon' => 'fa-box', 
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Box', 'link' => '/pos/boxes/add'],
+            ['title' => 'Box List', 'link' => '/pos/boxes/list']
+        ],
+        'active' => (uri_has('/boxes/', $current_uri))
+    ],
+    [
         'title' => 'Users',
         'icon' => 'fa-users',
         'link' => '#',

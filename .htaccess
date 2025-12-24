@@ -40,6 +40,14 @@ RewriteRule ^taxrates/edit/([0-9]+)$ taxrates/add_taxrate.php?id=$1 [L]
 # RewriteRule ^taxrates/edit$ taxrates/add_taxrate.php [L]
 
 
+
+# Boxes Routes
+RewriteRule ^boxes/list$ boxes/box_list.php [L]
+RewriteRule ^boxes/add$ boxes/add_box.php [L]
+RewriteRule ^boxes/save$ boxes/save_box.php [L]
+RewriteRule ^boxes/edit/([0-9]+)$ boxes/add_box.php?id=$1 [L]
+
+
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
