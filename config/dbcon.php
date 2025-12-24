@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "";
+$password = "root";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -131,7 +131,26 @@ function ensure_core_tables(mysqli $conn) {
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
     
-    // --- 2. Pivot Tables (Junction Tables) ---
+
+// --- Categories Table (Fix: Added IF NOT EXISTS) ---
+    $categorySql = "CREATE TABLE IF NOT EXISTS categories (
+        id int(11) NOT NULL AUTO_INCREMENT,
+        name varchar(255) NOT NULL,
+        category_code varchar(100) NOT NULL,
+        slug varchar(255) NOT NULL,
+        parent_id int(11) DEFAULT 0,
+        thumbnail varchar(255) DEFAULT NULL,
+        details text DEFAULT NULL,
+        status tinyint(1) DEFAULT 1 COMMENT '1=Active, 0=Inactive',
+        sort_order int(11) DEFAULT 0,
+        visibility_pos tinyint(1) DEFAULT 1 COMMENT '1=Visible, 0=Hidden',
+        created_at timestamp NOT NULL DEFAULT current_timestamp(),
+        updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+        PRIMARY KEY (id),
+        UNIQUE KEY category_code (category_code),
+        UNIQUE KEY slug (slug)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 
     // Store-currency pivot (already present)
     $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
@@ -209,7 +228,17 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
-    // Core tables
+    // --- Category-Store Pivot (Fix: Added IF NOT EXISTS) ---
+    $categoryStoreSql ="CREATE TABLE IF NOT EXISTS category_store_map (
+        id int(11) NOT NULL AUTO_INCREMENT,
+        category_id int(11) NOT NULL,
+        store_id int(11) NOT NULL,
+        PRIMARY KEY (id),
+        KEY category_id (category_id),
+        KEY store_id (store_id),
+        CONSTRAINT fk_category_map FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
+        CONSTRAINT fk_store_map FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
     mysqli_query($conn, $storesSql);
     mysqli_query($conn, $currencySql);
     mysqli_query($conn, $paymentSql);
@@ -217,6 +246,8 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $brandsSql);
     mysqli_query($conn, $taxSql);
     mysqli_query($conn, $boxesSql); 
+    mysqli_query($conn, $categorySql); 
+
     
     
     // Pivot tables (must run after core tables are created)
@@ -225,6 +256,9 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $brandStoreSql);
     mysqli_query($conn, $taxStoreSql);
     mysqli_query($conn, $boxStoreSql);
+    mysqli_query($conn, $categoryStoreSql);
+
+    
 
 
 
