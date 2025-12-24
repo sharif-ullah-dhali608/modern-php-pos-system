@@ -3,7 +3,7 @@ session_start();
 include('config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 

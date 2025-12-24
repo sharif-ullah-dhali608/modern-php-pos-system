@@ -9,7 +9,7 @@
                     >
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="flex-1 max-w-md">
+                <!-- <div class="flex-1 max-w-md">
                     <div class="relative">
                         <input 
                             type="text" 
@@ -18,7 +18,7 @@
                         >
                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                     </div>
-                </div>
+                </div> -->
             </div>
             
             <div class="flex items-center gap-4">

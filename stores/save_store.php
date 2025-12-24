@@ -2,9 +2,16 @@
 session_start();
 include('../config/dbcon.php');
 
+// Security Check
+if(!isset($_SESSION['auth'])){
+    header("Location: /pos/login");
+    exit(0);
+}
+
 // --- 1. INSERT NEW STORE ---
 if(isset($_POST['save_store_btn']))
 {
+    // String Data
     $store_name = mysqli_real_escape_string($conn, $_POST['store_name']);
     $store_code = mysqli_real_escape_string($conn, $_POST['store_code']);
     $business_type = mysqli_real_escape_string($conn, $_POST['business_type']);
@@ -14,21 +21,19 @@ if(isset($_POST['save_store_btn']))
     $city_zip = mysqli_real_escape_string($conn, $_POST['city_zip']);
     $vat_number = mysqli_real_escape_string($conn, $_POST['vat_number']);
     $timezone = mysqli_real_escape_string($conn, $_POST['timezone']);
-    $max_line_disc = mysqli_real_escape_string($conn, $_POST['max_line_disc']);
-    $max_inv_disc = mysqli_real_escape_string($conn, $_POST['max_inv_disc']);
-    $approval_disc = mysqli_real_escape_string($conn, $_POST['approval_disc']);
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
-    $low_stock = mysqli_real_escape_string($conn, $_POST['low_stock']);
-    
-    // FIX: Convert empty daily_target to '0' to avoid MySQL error
-    $daily_target = mysqli_real_escape_string($conn, $_POST['daily_target']);
-    if (empty($daily_target)) {
-        $daily_target = '0'; 
-    }
-    
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
 
+    // --- UPDATED LOGIC: Numeric Validation Fix ---
+    // Khali thakle '0' set hobe jate MySQL Decimal error na dey
+    $max_line_disc = !empty($_POST['max_line_disc']) ? mysqli_real_escape_string($conn, $_POST['max_line_disc']) : '0';
+    $max_inv_disc  = !empty($_POST['max_inv_disc'])  ? mysqli_real_escape_string($conn, $_POST['max_inv_disc'])  : '0';
+    $approval_disc = !empty($_POST['approval_disc']) ? mysqli_real_escape_string($conn, $_POST['approval_disc']) : '0';
+    $low_stock     = !empty($_POST['low_stock'])     ? mysqli_real_escape_string($conn, $_POST['low_stock'])     : '0';
+    $daily_target  = !empty($_POST['daily_target'])  ? mysqli_real_escape_string($conn, $_POST['daily_target'])  : '0';
+
+    // Switches/Checkboxes
     $status = isset($_POST['status']) ? 1 : 0;
     $allow_manual_price = isset($_POST['allow_manual_price']) ? 1 : 0;
     $allow_backdate = isset($_POST['allow_backdate']) ? 1 : 0;
@@ -38,16 +43,26 @@ if(isset($_POST['save_store_btn']))
     if(mysqli_num_rows($check) > 0) {
         $_SESSION['message'] = "Store Code already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: /pos/stores/add"); // Stay on add page
+        header("Location: /pos/stores/add");
         exit(0);
     }
 
-    $query = "INSERT INTO stores (store_name, store_code, business_type, email, phone, address, city_zip, vat_number, timezone, max_line_disc, max_inv_disc, approval_disc, overselling, low_stock, status, daily_target, open_time, close_time, allow_manual_price, allow_backdate) VALUES ('$store_name', '$store_code', '$business_type', '$email', '$phone', '$address', '$city_zip', '$vat_number', '$timezone', '$max_line_disc', '$max_inv_disc', '$approval_disc', '$overselling', '$low_stock', '$status', '$daily_target', '$open_time', '$close_time', '$allow_manual_price', '$allow_backdate')";
+    $query = "INSERT INTO stores (
+        store_name, store_code, business_type, email, phone, address, city_zip, 
+        vat_number, timezone, max_line_disc, max_inv_disc, approval_disc, 
+        overselling, low_stock, status, daily_target, open_time, close_time, 
+        allow_manual_price, allow_backdate
+    ) VALUES (
+        '$store_name', '$store_code', '$business_type', '$email', '$phone', '$address', '$city_zip', 
+        '$vat_number', '$timezone', '$max_line_disc', '$max_inv_disc', '$approval_disc', 
+        '$overselling', '$low_stock', '$status', '$daily_target', '$open_time', '$close_time', 
+        '$allow_manual_price', '$allow_backdate'
+    )";
 
     if(mysqli_query($conn, $query)) {
         $_SESSION['message'] = "Store Created Successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: /pos/stores/list"); // Redirect to list after success
+        header("Location: /pos/stores/list");
     } else {
         $_SESSION['message'] = "Database Error: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
@@ -70,31 +85,27 @@ if(isset($_POST['update_store_btn']))
     $city_zip = mysqli_real_escape_string($conn, $_POST['city_zip']);
     $vat_number = mysqli_real_escape_string($conn, $_POST['vat_number']);
     $timezone = mysqli_real_escape_string($conn, $_POST['timezone']);
-    $max_line_disc = mysqli_real_escape_string($conn, $_POST['max_line_disc']);
-    $max_inv_disc = mysqli_real_escape_string($conn, $_POST['max_inv_disc']);
-    $approval_disc = mysqli_real_escape_string($conn, $_POST['approval_disc']);
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
-    $low_stock = mysqli_real_escape_string($conn, $_POST['low_stock']);
-    
-    // FIX: Convert empty daily_target to '0' to avoid MySQL error
-    $daily_target = mysqli_real_escape_string($conn, $_POST['daily_target']);
-    if (empty($daily_target)) {
-        $daily_target = '0'; 
-    }
-    
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
+
+    // --- UPDATED LOGIC: Numeric Validation Fix for Update ---
+    $max_line_disc = !empty($_POST['max_line_disc']) ? mysqli_real_escape_string($conn, $_POST['max_line_disc']) : '0';
+    $max_inv_disc  = !empty($_POST['max_inv_disc'])  ? mysqli_real_escape_string($conn, $_POST['max_inv_disc'])  : '0';
+    $approval_disc = !empty($_POST['approval_disc']) ? mysqli_real_escape_string($conn, $_POST['approval_disc']) : '0';
+    $low_stock     = !empty($_POST['low_stock'])     ? mysqli_real_escape_string($conn, $_POST['low_stock'])     : '0';
+    $daily_target  = !empty($_POST['daily_target'])  ? mysqli_real_escape_string($conn, $_POST['daily_target'])  : '0';
 
     $status = isset($_POST['status']) ? 1 : 0;
     $allow_manual_price = isset($_POST['allow_manual_price']) ? 1 : 0;
     $allow_backdate = isset($_POST['allow_backdate']) ? 1 : 0;
 
-    // Check Duplicate Code (Exclude Current ID)
+    // Duplicate Check
     $check = mysqli_query($conn, "SELECT id FROM stores WHERE store_code='$store_code' AND id != '$store_id'");
     if(mysqli_num_rows($check) > 0) {
-        $_SESSION['message'] = "Store Code already exists in another branch!";
+        $_SESSION['message'] = "Store Code already used by another branch!";
         $_SESSION['msg_type'] = "error";
-        header("Location: /pos/stores/add?id=$store_id"); // Stay on edit page
+        header("Location: /pos/stores/add?id=$store_id");
         exit(0);
     }
 

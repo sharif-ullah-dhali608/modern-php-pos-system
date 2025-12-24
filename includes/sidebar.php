@@ -16,18 +16,18 @@ $menu_items = [
         'link' => '/pos',
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
-    // [
-    //     'title' => 'Invoice',
-    //     'icon' => 'fa-file-invoice-dollar',
-    //     'link' => '#',
-    //     'submenu' => [
-    //         ['title' => 'List', 'link' => '/pos/invoice/list'],
-    //         ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
-    //         ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
-    //         ['title' => 'Add', 'link' => '/pos/invoice/add']
-    //     ],
-    //     'active' => (uri_has('/invoice/', $current_uri))
-    // ],
+    [
+        'title' => 'Invoice',
+        'icon' => 'fa-file-invoice-dollar',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'List', 'link' => '/pos/invoice/list'],
+            ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
+            ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
+            ['title' => 'Add', 'link' => '/pos/invoice/add']
+        ],
+        'active' => (uri_has('/invoice/', $current_uri))
+    ],
     [
         'title' => 'Stores',
         'icon' => 'fa-store',
@@ -88,29 +88,29 @@ $menu_items = [
         ],
         'active' => (uri_has('/taxrates/', $current_uri))
     ],
-    // [
-    //     'title' => 'Users',
-    //     'icon' => 'fa-users',
-    //     'link' => '#',
-    //     'submenu' => [
-    //         ['title' => 'Add User & List', 'link' => '/pos/users/add'],
-    //         ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
-    //         ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
-    //         ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
-    //         ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
-    //     ],
-    //     'active' => (uri_has('/users/', $current_uri))
-    // ],
-    // [
-    //     'title' => 'System',
-    //     'icon' => 'fa-cog',
-    //     'link' => '#',
-    //     'submenu' => [
-    //         ['title' => 'Settings', 'link' => '/pos/system/settings'],
-    //         ['title' => 'Backup', 'link' => '/pos/system/backup']
-    //     ],
-    //     'active' => (uri_has('/system/', $current_uri))
-    // ]
+    [
+        'title' => 'Users',
+        'icon' => 'fa-users',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add User & List', 'link' => '/pos/users/add'],
+            ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
+            ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
+            ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
+            ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
+        ],
+        'active' => (uri_has('/users/', $current_uri))
+    ],
+    [
+        'title' => 'System',
+        'icon' => 'fa-cog',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Settings', 'link' => '/pos/system/settings'],
+            ['title' => 'Backup', 'link' => '/pos/system/backup']
+        ],
+        'active' => (uri_has('/system/', $current_uri))
+    ]
 ];
 ?>
 
@@ -255,16 +255,37 @@ $menu_items = [
         <?php endforeach; ?>
     </nav>
 </aside>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebar-toggle');
         const toggleIcon = document.getElementById('toggle-icon');
+        const overlay = document.getElementById('sidebar-overlay');
         const mainContent = document.getElementById('main-content');
-        let isLocked = false; 
+        
+        // Touch variables for swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
 
-       
+        // Retrieve sidebar lock state from local storage
+        let isLocked = localStorage.getItem('sidebarLocked') === 'true'; 
+
+        /**
+         * INITIALIZATION: Apply layout state on load
+         */
+        if (isLocked) {
+            sidebar.classList.remove('collapsed');
+            if(mainContent) mainContent.style.marginLeft = '256px';
+            toggleIcon.classList.remove('rotate-180');
+        } else {
+            sidebar.classList.add('collapsed');
+            if(mainContent) mainContent.style.marginLeft = '80px';
+            toggleIcon.classList.add('rotate-180');
+        }
+
+        /**
+         * DESKTOP HOVER LOGIC
+         */
         sidebar.addEventListener('mouseenter', () => {
             if (window.innerWidth >= 1024 && !isLocked) {
                 sidebar.classList.remove('collapsed');
@@ -273,7 +294,6 @@ $menu_items = [
             }
         });
 
-       
         sidebar.addEventListener('mouseleave', () => {
             if (window.innerWidth >= 1024 && !isLocked) {
                 sidebar.classList.add('collapsed');
@@ -282,11 +302,15 @@ $menu_items = [
             }
         });
 
-        
+        /**
+         * TOGGLE LOCK BUTTON
+         */
         if(toggleBtn) {
             toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent event bubbling
                 isLocked = !isLocked; 
+                localStorage.setItem('sidebarLocked', isLocked);
+
                 if (isLocked) {
                     sidebar.classList.remove('collapsed');
                     if(mainContent) mainContent.style.marginLeft = '256px';
@@ -298,28 +322,76 @@ $menu_items = [
                 }
             });
         }
+
+        /**
+         * GLOBAL CLICK LISTENER: Closes sidebar if clicking outside
+         */
+        window.addEventListener('click', (e) => {
+            const isMobile = window.innerWidth < 1024;
+            // Check if sidebar is open and click is outside sidebar and toggle button
+            if (isMobile && sidebar.classList.contains('sidebar-open')) {
+                if (!sidebar.contains(e.target) && !e.target.closest('button')) {
+                    closeMobileSidebar();
+                }
+            }
+        });
+
+        // Overlay click fallback
+        if (overlay) {
+            overlay.addEventListener('click', closeMobileSidebar);
+        }
+
+        /**
+         * MOBILE SWIPE GESTURES
+         */
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeDistance = touchEndX - touchStartX;
+            if (window.innerWidth >= 1024) return;
+
+            if (swipeDistance > 100 && touchStartX < 50) {
+                if (!sidebar.classList.contains('sidebar-open')) toggleSidebarMobile();
+            }
+            if (swipeDistance < -100) {
+                if (sidebar.classList.contains('sidebar-open')) closeMobileSidebar();
+            }
+        }
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('sidebar-open');
+            if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scroll
+        }
     });
 
-    
+    /**
+     * TOGGLE MOBILE SIDEBAR
+     */
     function toggleSidebarMobile() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        
         if (!sidebar || !overlay) return;
 
         sidebar.classList.toggle('sidebar-open');
         overlay.classList.toggle('active');
-        
-        if (sidebar.classList.contains('sidebar-open')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = sidebar.classList.contains('sidebar-open') ? 'hidden' : '';
     }
 
+    /**
+     * SUBMENU HANDLER
+     */
     function toggleSubmenu(element) {
         const sidebar = document.getElementById('sidebar');
         if (sidebar.classList.contains('collapsed') && window.innerWidth >= 1024) return;
+        
         const submenu = element.nextElementSibling;
         if (submenu) submenu.classList.toggle('hidden');
         const chevron = element.querySelector('.fa-chevron-right');
