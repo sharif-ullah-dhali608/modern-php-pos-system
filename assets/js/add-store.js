@@ -174,14 +174,17 @@ document.getElementById('storeForm').addEventListener('submit', function(e) {
         }
         
         Swal.fire({
-            icon: 'error',
-            title: 'Check fields',
-            text: 'Please fill up the required fields correctly.',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
+        icon: 'error',
+        title: 'Notice', // Footer title se match kiya
+        text: 'Please fill up the required fields correctly.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000, // Footer timer se match kiya
+        timerProgressBar: true,
+        background: '#064e3b', // Slate-800 (Jo aapke footer error bg mein hai)
+        color: '#fff' // White text
+    });
     }
 });
 

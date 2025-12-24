@@ -145,8 +145,39 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
+
+// Brand-Store Pivot
+    $brandStoreSql = "CREATE TABLE IF NOT EXISTS brand_store (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        brand_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY brand_store_unique (brand_id, store_id),
+        KEY brand_id (brand_id),
+        KEY store_id (store_id),
+        CONSTRAINT brand_store_brand_fk FOREIGN KEY (brand_id) REFERENCES brands (id) ON DELETE CASCADE,
+        CONSTRAINT brand_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
     // --- 3. Execute Queries ---
     
+
+   // -- Taxrates and Stores Mapping (Pivot Table)
+    $taxStoreSql ="CREATE TABLE IF NOT EXISTS taxrate_store_map (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    taxrate_id INT(11) NOT NULL,
+    store_id INT(11) NOT NULL,
+    PRIMARY KEY (id),
+    -- Foreign keys for data integrity
+    CONSTRAINT fk_taxrate FOREIGN KEY (taxrate_id) 
+        REFERENCES taxrates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_store FOREIGN KEY (store_id) 
+        REFERENCES stores(id) ON DELETE CASCADE,
+    -- Unique constraint taaki ek hi store mein ek hi taxrate do baar map na ho
+    UNIQUE KEY unique_map (taxrate_id, store_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
     // Core tables
     mysqli_query($conn, $storesSql);
     mysqli_query($conn, $currencySql);
@@ -158,6 +189,10 @@ function ensure_core_tables(mysqli $conn) {
     // Pivot tables (must run after core tables are created)
     mysqli_query($conn, $storeCurrencySql);
     mysqli_query($conn, $paymentStoreMapSql); // NEW: Execution of the missing table
+    mysqli_query($conn, $brandStoreSql);
+    mysqli_query($conn, $taxStoreSql);
+
+
 }
 
 ensure_core_tables($conn);

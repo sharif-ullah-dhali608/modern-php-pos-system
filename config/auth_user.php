@@ -71,6 +71,8 @@ if(isset($_POST['login_btn']))
             ];
 
             $_SESSION['message'] = "Welcome Dashboard"; 
+            $_SESSION['msg_type'] = "success";
+
             
             unset($_SESSION['input_email']);
             unset($_SESSION['input_password']); // Clear retained password

@@ -15,16 +15,18 @@ $btn_text = "Create Store";
 $page_title = "Create New Store";
 
 // Initialize empty array
+// Is hisse ko update karein (Line 23-28 approx)
 $d = [
     'id' => '', 'store_name' => '', 'store_code' => '', 'business_type' => '',
     'email' => '', 'phone' => '', 'address' => '', 'city_zip' => '',
     'vat_number' => '', 'timezone' => 'Asia/Dhaka', 
-    'max_line_disc' => '0', 'max_inv_disc' => '0', 'approval_disc' => '0',
-    'overselling' => 'deny', 'low_stock' => '5', 
+    'max_line_disc' => '', // '0' se '' kar diya
+    'max_inv_disc' => '',  // '0' se '' kar diya
+    'approval_disc' => '', // '0' se '' kar diya
+    'overselling' => 'deny', 'low_stock' => '', // '5' se '' kar diya
     'status' => '1', 'daily_target' => '', 'open_time' => '09:00', 'close_time' => '21:00',
     'allow_manual_price' => '0', 'allow_backdate' => '0'
 ];
-
 // 3. CHECK IF EDIT MODE
 if(isset($_GET['id'])) {
     $mode = "edit";
@@ -203,17 +205,26 @@ include('../includes/header.php');
                                 </h2>
                                 <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
                                     <div class="relative w-full mb-1 group">
-                                        <input type="number" name="max_line_disc" id="max_line_disc" value="<?= $d['max_line_disc']; ?>" 
-                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 text-center font-bold text-teal-600" placeholder="Max Line Disc %" min="0" max="100">
+                                        <input type="number" name="max_line_disc" id="max_line_disc" 
+                                            value="<?= $d['max_line_disc']; ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 font-bold text-teal-600" 
+                                            placeholder="Max Line Disc %" min="0" max="100">
                                     </div>
+                                    
                                     <div class="relative w-full mb-1 group">
-                                        <input type="number" name="max_inv_disc" id="max_inv_disc" value="<?= $d['max_inv_disc']; ?>" 
-                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 text-center font-bold text-teal-600" placeholder="Max Inv Disc %" min="0" max="100">
+                                        <input type="number" name="max_inv_disc" id="max_inv_disc" 
+                                            value="<?= $d['max_inv_disc']; ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 font-bold text-teal-600" 
+                                            placeholder="Max Inv Disc %" min="0" max="100">
                                     </div>
+                                    
                                     <div class="relative w-full mb-1 group">
-                                        <input type="number" name="approval_disc" id="approval_disc" value="<?= $d['approval_disc']; ?>" 
-                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 text-center font-bold text-teal-600" placeholder="Manager Appr %" min="0" max="100">
+                                        <input type="number" name="approval_disc" id="approval_disc" 
+                                            value="<?= $d['approval_disc']; ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 font-bold text-teal-600" 
+                                            placeholder="Manager Appr %" min="0" max="100">
                                     </div>
+
                                     <div class="relative w-full mb-1 group md:col-span-2">
                                         <select name="overselling" id="overselling" 
                                             class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all cursor-pointer">
@@ -223,9 +234,12 @@ include('../includes/header.php');
                                         </select>
                                         <i class="fas fa-chevron-down absolute right-4 top-5 text-slate-400 pointer-events-none text-xs"></i>
                                     </div>
+
                                     <div class="relative w-full mb-1 group">
-                                        <input type="number" name="low_stock" id="low_stock" value="<?= $d['low_stock']; ?>" 
-                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 text-center font-bold text-teal-600" placeholder="Low Stock Alert" min="1">
+                                        <input type="number" name="low_stock" id="low_stock" 
+                                            value="<?= $d['low_stock']; ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-teal-600 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all placeholder-slate-400 font-bold text-teal-600" 
+                                            placeholder="Low Stock Alert" min="1">
                                     </div>
                                 </div>
                             </div>
