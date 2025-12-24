@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "";
+$password = "root";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -152,10 +152,13 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // --- NEW: Suppliers Table ---
+// --- Suppliers Table (Updated with Trade License & Bank Account) ---
     $suppliersSql = "CREATE TABLE IF NOT EXISTS suppliers (
         id INT(11) NOT NULL AUTO_INCREMENT,
         name VARCHAR(255) NOT NULL,
         code_name VARCHAR(100) NOT NULL UNIQUE,
+        trade_license_num VARCHAR(100) DEFAULT NULL,
+        bank_account_num VARCHAR(100) DEFAULT NULL,
         email VARCHAR(255) DEFAULT NULL,
         mobile VARCHAR(50) NOT NULL,
         address TEXT DEFAULT NULL,
@@ -260,7 +263,7 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // --- NEW: Supplier-Store Pivot ---
-    $supplierStoreSql = "CREATE TABLE IF NOT EXISTS supplier_stores (
+    $supplierStoreSql = "CREATE TABLE IF NOT EXISTS supplier_stores_map (
         id INT(11) NOT NULL AUTO_INCREMENT,
         supplier_id INT(11) NOT NULL,
         store_id INT(11) NOT NULL,

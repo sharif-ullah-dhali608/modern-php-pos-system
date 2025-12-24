@@ -39,7 +39,7 @@ if(isset($_GET['id'])) {
         $d = mysqli_fetch_array($result);
         
         // Fetching mapped stores from the pivot table
-        $map_query = "SELECT store_id FROM supplier_store_map WHERE payment_method_id='$id'";
+        $map_query = "SELECT store_id FROM supplier_stores_map WHERE supplier_id='$id'";
         $map_result = mysqli_query($conn, $map_query);
         while($map_row = mysqli_fetch_assoc($map_result)) {
             $selected_stores[] = $map_row['store_id'];
@@ -47,7 +47,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Supplier not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: /pos/suppliers/list");
+        header("Location: /pos/suppliers/supplier_list.php");
         exit(0);
     }
 }
@@ -122,10 +122,13 @@ include('../includes/header.php');
                 
                 <div class="glass-card rounded-xl p-8 slide-in">
                     <form action="/pos/suppliers/save_supplier.php" method="POST" id="supplierForm" novalidate autocomplete="off">
-                        <?php if($mode == 'edit'): ?>
-                            <input type="hidden" name="supplier_id" value="<?= $d['id']; ?>">
-                        <?php endif; ?>
                         
+                        <?php if(isset($_GET['id'])): ?>
+                            <input type="hidden" name="supplier_id" value="<?= $d['id']; ?>">
+                            <input type="hidden" name="update_supplier_btn" value="true">
+                        <?php else: ?>
+                            <input type="hidden" name="save_supplier_btn" value="true">
+                        <?php endif; ?>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             
                             <div class="lg:col-span-2 space-y-6 glass-card rounded-xl p-6 shadow-lg border border-slate-200 bg-white">
@@ -162,7 +165,7 @@ include('../includes/header.php');
                                                 placeholder="License No.">
                                             <i class="fas fa-id-card absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                         </div>
-                                        <div class="error-msg-text" id="error-trade">Trade License is required</div>
+                                        <div class="error-msg-text" id="error-trade_license_num">Trade License is required</div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Bank Account Number</label>
@@ -205,7 +208,7 @@ include('../includes/header.php');
                                     </div>
                                 </div>
 
-                                <div class="glass-card bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+                                <div class="glass-card bg-slate-5 border border-slate-200 rounded-lg p-4 mb-4">
                                     <h3 class="text-sm font-bold text-slate-600 uppercase mb-4 border-b pb-2">Location Details</h3>
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
@@ -258,8 +261,9 @@ include('../includes/header.php');
                             <div class="space-y-6">
                                 <div class="relative">
                                 <?php 
-                                    $store_label = "Payment Available In"; 
-                                    $search_placeholder = "Search branches for payment...";
+                                    // Assuming these files exist, keeping them as per request
+                                    $store_label = "Assign Stores"; 
+                                    $search_placeholder = "Search branches...";
                                     include('../includes/store_select_component.php'); 
                                 ?>
                                 </div>
@@ -311,21 +315,16 @@ include('../includes/header.php');
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-    // 1. STRICT NUMERIC INPUT LOGIC (Solves your main problem)
-    // Select all inputs with class 'input-numeric'
+    // 1. STRICT NUMERIC INPUT LOGIC
     const numericInputs = document.querySelectorAll('.input-numeric');
     numericInputs.forEach(input => {
-        // Prevent typing non-digits immediately
         input.addEventListener('input', function(e) {
-            // Remove any character that is not 0-9
             this.value = this.value.replace(/[^0-9]/g, '');
         });
-        // Prevent pasting non-digits
         input.addEventListener('paste', function(e) {
             let pasteData = (e.clipboardData || window.clipboardData).getData('text');
             if(!/^\d+$/.test(pasteData)) {
                 e.preventDefault();
-                // Optional: Strip and insert logic could go here
             }
         });
     });
@@ -366,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (iti.isValidNumber()) {
                     validMsg.style.display = "block";
                     phoneInput.classList.add("border-green-500");
-                    fullMobileInput.value = iti.getNumber(); // Save full format (+880...)
+                    fullMobileInput.value = iti.getNumber(); 
                     return true;
                 } else {
                     phoneInput.classList.add("error-border");
@@ -389,7 +388,6 @@ document.addEventListener("DOMContentLoaded", function() {
     window.processForm = function() {
         let isValid = true;
         
-        // Helper to show error
         const showError = (id, show) => {
             const el = document.getElementById(id);
             const errEl = document.getElementById('error-' + id);
@@ -403,26 +401,15 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         };
 
-        // Validate Name
-        const name = document.getElementById('name');
-        showError('name', name.value.trim() === "");
-
-        // Validate Code Name
-        const code = document.getElementById('code_name');
-        showError('code_name', code.value.trim() === "");
-
-        // Validate Trade License
-        const trade = document.getElementById('trade_license_num');
-        showError('trade_license_num', trade.value.trim() === "");
-
-        // Validate Email
+        showError('name', document.getElementById('name').value.trim() === "");
+        showError('code_name', document.getElementById('code_name').value.trim() === "");
+        showError('trade_license_num', document.getElementById('trade_license_num').value.trim() === "");
+        
         const email = document.getElementById('email');
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         showError('email', !emailPattern.test(email.value));
 
-        // Validate Address
-        const address = document.getElementById('address');
-        showError('address', address.value.trim() === "");
+        showError('address', document.getElementById('address').value.trim() === "");
 
         // Validate Phone (Must use ITI logic)
         if(!iti.isValidNumber()) {
@@ -434,11 +421,9 @@ document.addEventListener("DOMContentLoaded", function() {
             fullMobileInput.value = iti.getNumber();
         }
 
-        // Final Submission
         if(isValid) {
             document.getElementById('supplierForm').submit();
         } else {
-            // Shake effect or scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -480,7 +465,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 stateText.classList.add('hidden');
                 stateText.removeAttribute('name');
             } else {
-                // Fallback to text if no states found
                 stateSelect.classList.add('hidden');
                 stateText.classList.remove('hidden');
             }

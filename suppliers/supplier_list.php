@@ -11,7 +11,7 @@ if(!isset($_SESSION['auth'])){
 // Fetch suppliers with store count (Active relationship count)
 // We use a subquery to count how many stores each supplier is assigned to
 $query = "SELECT s.*, 
-          (SELECT COUNT(*) FROM supplier_stores WHERE supplier_id = s.id) as store_count
+          (SELECT COUNT(*) FROM supplier_stores_map WHERE supplier_id = s.id) as store_count
           FROM suppliers s 
           ORDER BY s.sort_order ASC, s.id DESC";
 $query_run = mysqli_query($conn, $query);
