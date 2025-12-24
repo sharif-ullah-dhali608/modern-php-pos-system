@@ -39,6 +39,16 @@ $menu_items = [
         'active' => (uri_has('/stores/', $current_uri))
     ],
     [
+        'title' => 'Categories',
+        'icon' => 'fa-th-list', 
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Category', 'link' => '/pos/categories/add'],
+            ['title' => 'Category List', 'link' => '/pos/categories/list']
+        ],
+        'active' => (uri_has('/categories/', $current_uri))
+    ],
+    [
         'title' => 'Currency',
         'icon' => 'fa-dollar-sign',
         'link' => '#',

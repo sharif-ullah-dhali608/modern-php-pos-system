@@ -47,6 +47,11 @@ RewriteRule ^boxes/add$ boxes/add_box.php [L]
 RewriteRule ^boxes/save$ boxes/save_box.php [L]
 RewriteRule ^boxes/edit/([0-9]+)$ boxes/add_box.php?id=$1 [L]
 
+# Categories Routes
+RewriteRule ^categories/list$ categories/category_list.php [L]
+RewriteRule ^categories/add$ categories/add_category.php [L]
+RewriteRule ^categories/save$ categories/save_category.php [L]
+RewriteRule ^categories/edit/([0-9]+)$ categories/add_category.php?id=$1 [L]
 
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f
