@@ -238,7 +238,7 @@ include('../includes/header.php');
                                 
                                 <?php 
                                     $current_status = $d['status'];  
-                                    $status_title = "Box Status";      
+                                    $status_title = "Box";      
                                     $card_id = "status-card";
                                     $label_id = "status-label";
                                     $input_id = "status_input";

@@ -109,6 +109,16 @@ $menu_items = [
         'active' => (uri_has('/boxes/', $current_uri))
     ],
     [
+        'title' => 'Suppliers',
+        'icon' => 'fa-truck',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Supplier', 'link' => '/pos/suppliers/add'],
+            ['title' => 'Supplier List', 'link' => '/pos/suppliers/list']
+        ],
+        'active' => (uri_has('/suppliers/', $current_uri))
+    ],
+    [
         'title' => 'Users',
         'icon' => 'fa-users',
         'link' => '#',
