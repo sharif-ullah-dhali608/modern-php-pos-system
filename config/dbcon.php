@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -151,6 +151,25 @@ function ensure_core_tables(mysqli $conn) {
         UNIQUE KEY slug (slug)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Suppliers Table ---
+    $suppliersSql = "CREATE TABLE IF NOT EXISTS suppliers (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL,
+        code_name VARCHAR(100) NOT NULL UNIQUE,
+        email VARCHAR(255) DEFAULT NULL,
+        mobile VARCHAR(50) NOT NULL,
+        address TEXT DEFAULT NULL,
+        city VARCHAR(100) DEFAULT NULL,
+        state VARCHAR(100) DEFAULT NULL,
+        country VARCHAR(100) DEFAULT NULL,
+        details TEXT DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 
     // Store-currency pivot (already present)
     $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
@@ -239,6 +258,24 @@ function ensure_core_tables(mysqli $conn) {
         CONSTRAINT fk_category_map FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
         CONSTRAINT fk_store_map FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Supplier-Store Pivot ---
+    $supplierStoreSql = "CREATE TABLE IF NOT EXISTS supplier_stores (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        supplier_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY supplier_store_unique (supplier_id, store_id),
+        KEY supplier_id (supplier_id),
+        KEY store_id (store_id),
+        CONSTRAINT supplier_store_supplier_fk FOREIGN KEY (supplier_id) REFERENCES suppliers (id) ON DELETE CASCADE,
+        CONSTRAINT supplier_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
+
+
     mysqli_query($conn, $storesSql);
     mysqli_query($conn, $currencySql);
     mysqli_query($conn, $paymentSql);
@@ -247,6 +284,8 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $taxSql);
     mysqli_query($conn, $boxesSql); 
     mysqli_query($conn, $categorySql); 
+    mysqli_query($conn, $suppliersSql); // Execute Supplier Core Table
+
 
     
     
@@ -257,6 +296,7 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $taxStoreSql);
     mysqli_query($conn, $boxStoreSql);
     mysqli_query($conn, $categoryStoreSql);
+    mysqli_query($conn, $supplierStoreSql); // Execute Supplier Pivot Table
 
     
 

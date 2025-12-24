@@ -53,6 +53,12 @@ RewriteRule ^categories/add$ categories/add_category.php [L]
 RewriteRule ^categories/save$ categories/save_category.php [L]
 RewriteRule ^categories/edit/([0-9]+)$ categories/add_category.php?id=$1 [L]
 
+# --- Suppliers Routes (ADDED) ---
+RewriteRule ^suppliers/list$ suppliers/supplier_list.php [L]
+RewriteRule ^suppliers/add$ suppliers/add_supplier.php [L]
+RewriteRule ^suppliers/save$ suppliers/save_supplier.php [L]
+RewriteRule ^suppliers/edit/([0-9]+)$ suppliers/add_supplier.php?id=$1 [L]
+
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
