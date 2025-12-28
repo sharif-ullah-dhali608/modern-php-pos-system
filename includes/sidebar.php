@@ -17,6 +17,16 @@ $menu_items = [
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
     [
+        'title' => 'Products',
+        'icon' => 'fa-box',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Product', 'link' => '/pos/products/add'],
+            ['title' => 'Product List', 'link' => '/pos/products/list']
+        ],
+        'active' => (uri_has('/products/', $current_uri))
+    ],
+    [
         'title' => 'Invoice',
         'icon' => 'fa-file-invoice-dollar',
         'link' => '#',

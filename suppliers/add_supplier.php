@@ -294,7 +294,7 @@ include('../includes/header.php');
                                         <i class="fas fa-save mr-2"></i> <?= $btn_text; ?>
                                     </button>
                                     
-                                    <a href="supplier_list.php" class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all">
+                                    <a href="/pos/suppliers/list" class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all">
                                         <i class="fas fa-times mr-2"></i> Cancel
                                     </a>
                                 </div>

@@ -119,7 +119,7 @@ include('../includes/header.php');
                                     <button type="submit" name="<?= $btn_name; ?>" 
                                         class="w-full bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg shadow-lg transition-all transform hover:scale-[1.01]"> <?= $btn_text; ?> </button>
                                     
-                                    <a href="unit_list.php" 
+                                    <a href="/pos/units/list" 
                                         class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all">Cancel</a>
                                 </div>
                             </div>

@@ -59,6 +59,11 @@ RewriteRule ^suppliers/add$ suppliers/add_supplier.php [L]
 RewriteRule ^suppliers/save$ suppliers/save_supplier.php [L]
 RewriteRule ^suppliers/edit/([0-9]+)$ suppliers/add_supplier.php?id=$1 [L]
 
+# --- Products Routes (ADDED) ---
+RewriteRule ^products/list$ products/product_list.php [L]
+RewriteRule ^products/add$ products/add_product.php [L]
+RewriteRule ^products/save$ products/save_product.php [L]
+RewriteRule ^products/edit/([0-9]+)$ products/add_product.php?id=$1 [L]
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

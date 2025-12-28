@@ -188,6 +188,48 @@ function ensure_core_tables(mysqli $conn) {
         CONSTRAINT store_currency_currency_fk FOREIGN KEY (currency_id) REFERENCES currencies (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- UPDATED: Products Table ---
+    $productsSql = "CREATE TABLE IF NOT EXISTS products (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        product_name VARCHAR(255) NOT NULL,
+        product_code VARCHAR(100) NOT NULL UNIQUE,
+        barcode_symbology VARCHAR(20) DEFAULT 'code128',
+        category_id INT(11) NOT NULL,
+        brand_id INT(11) DEFAULT NULL,
+        unit_id INT(11) NOT NULL,
+        purchase_price DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+        selling_price DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+        
+        /* NEW FIELDS ADDED HERE */
+        wholesale_price DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+        profit_margin DECIMAL(10,2) DEFAULT 0.00,
+        box_id INT(11) DEFAULT NULL,
+        currency_id INT(11) DEFAULT NULL,
+        -- visibility_pos TINYINT(1) DEFAULT 1 COMMENT '1=Visible, 0=Hidden',
+        sort_order INT(11) DEFAULT 0,
+        
+        tax_rate_id INT(11) DEFAULT NULL,
+        tax_method VARCHAR(20) DEFAULT 'exclusive',
+        opening_stock INT(11) DEFAULT 0,
+        alert_quantity INT(11) DEFAULT 5,
+        supplier_id INT(11) DEFAULT NULL,
+        expire_date DATE DEFAULT NULL,
+        description TEXT DEFAULT NULL,
+        thumbnail VARCHAR(255) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        
+        /* FOREIGN KEYS */
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+        FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL,
+        FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
+        FOREIGN KEY (box_id) REFERENCES boxes(id) ON DELETE SET NULL,
+        FOREIGN KEY (currency_id) REFERENCES currencies(id) ON DELETE SET NULL,
+        FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
     // Payment-Store pivot (MISSING TABLE - Fixes the previous fatal error)
     $paymentStoreMapSql = "CREATE TABLE IF NOT EXISTS payment_store_map (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -277,6 +319,24 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
+     // --- Product-Store Pivot Table ---
+    $productStoreSql = "CREATE TABLE IF NOT EXISTS product_store_map (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        product_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY product_store_unique (product_id, store_id),
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // Add these lines to your Execute Queries section:
+
+
+
+
+
+
 
 
     mysqli_query($conn, $storesSql);
@@ -288,6 +348,8 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $boxesSql); 
     mysqli_query($conn, $categorySql); 
     mysqli_query($conn, $suppliersSql); // Execute Supplier Core Table
+    mysqli_query($conn, $productsSql);
+
 
 
     
@@ -300,6 +362,7 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $boxStoreSql);
     mysqli_query($conn, $categoryStoreSql);
     mysqli_query($conn, $supplierStoreSql); // Execute Supplier Pivot Table
+    mysqli_query($conn, $productStoreSql);
 
     
 
