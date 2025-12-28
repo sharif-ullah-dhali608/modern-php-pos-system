@@ -123,8 +123,11 @@ if(isset($_POST['update_supplier_btn'])) {
     $country = mysqli_real_escape_string($conn, $_POST['country']);
     $details = isset($_POST['details']) ? mysqli_real_escape_string($conn, $_POST['details']) : '';
     
-    // Status Logic
-    $status = isset($_POST['status']) ? 1 : 0; 
+  if(isset($_POST['status'])) {
+        $status = (int)$_POST['status']; 
+    } else {
+        $status = 0; // Default to inactive if not set
+    }
     
     $sort_order = (int)mysqli_real_escape_string($conn, $_POST['sort_order']);
     $stores = isset($_POST['store_ids']) ? $_POST['store_ids'] : (isset($_POST['stores']) ? $_POST['stores'] : []);
