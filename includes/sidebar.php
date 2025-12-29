@@ -27,6 +27,16 @@ $menu_items = [
         'active' => (uri_has('/products/', $current_uri))
     ],
     [
+        'title' => 'Purchases',
+        'icon' => 'fa-shopping-cart',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Purchase', 'link' => '/pos/purchases/add'],
+            ['title' => 'Purchase List', 'link' => '/pos/purchases/list']
+        ],
+        'active' => (uri_has('/purchases/', $current_uri))
+    ],
+    [
         'title' => 'Invoice',
         'icon' => 'fa-file-invoice-dollar',
         'link' => '#',

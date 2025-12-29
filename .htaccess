@@ -64,6 +64,15 @@ RewriteRule ^products/list$ products/product_list.php [L]
 RewriteRule ^products/add$ products/add_product.php [L]
 RewriteRule ^products/save$ products/save_product.php [L]
 RewriteRule ^products/edit/([0-9]+)$ products/add_product.php?id=$1 [L]
+
+# --- Purchases Routes (ADDED) ---
+RewriteRule ^purchases/list$ purchases/purchase_list.php [L]
+RewriteRule ^purchases/add$ purchases/add_purchase.php [L]
+RewriteRule ^purchases/save$ purchases/save_purchase.php [L]
+RewriteRule ^purchases/edit/([0-9]+)$ purchases/add_purchase.php?id=$1 [L]
+RewriteRule ^purchases/import$ purchases/import_stock.php [L]
+
+
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -40,7 +40,6 @@ $d = [
     'tax_method' => 'exclusive', 
     'opening_stock' => '0', 
     'alert_quantity' => '5', 
-    'supplier_id' => '', 
     'box_id' => '', // Added box ID
     'currency_id' => '', // Added currency ID
     'expire_date' => '', 
@@ -56,7 +55,6 @@ $all_stores = [];
 $categories = mysqli_query($conn, "SELECT id, name FROM categories WHERE status='1'");
 $brands     = mysqli_query($conn, "SELECT id, name FROM brands WHERE status='1'");
 $units      = mysqli_query($conn, "SELECT id, unit_name as name, code as short_name FROM units WHERE status='1'");
-$suppliers  = mysqli_query($conn, "SELECT id, name FROM suppliers WHERE status='1'");
 $taxes      = mysqli_query($conn, "SELECT id, name, taxrate as rate FROM taxrates WHERE status='1'");
 $boxes      = mysqli_query($conn, "SELECT id, box_name as name FROM boxes WHERE status='1'"); // Added
 $currencies = mysqli_query($conn, "SELECT id, currency_name as name, code FROM currencies WHERE status='1'"); // Added
@@ -218,33 +216,21 @@ include('../includes/header.php');
                                         </div>
                                     </div>
                                     
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 border-t border-dashed border-slate-200 pt-5">
-                                        <div class="form-group">
-                                            <label class="block text-sm font-semibold text-slate-700 mb-2">Supplier <span class="text-red-500">*</span></label>
-                                            <select name="supplier_id" id="supplier_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
-                                                <option value="">Select Supplier</option>
-                                                <?php mysqli_data_seek($suppliers, 0); while($sup = mysqli_fetch_assoc($suppliers)): ?>
-                                                    <option value="<?= $sup['id']; ?>" <?= $d['supplier_id'] == $sup['id'] ? 'selected' : ''; ?>><?= $sup['name']; ?></option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                            <span class="error-msg text-xs text-red-500 mt-1 hidden">Supplier selection is required.</span>
-                                        </div>
-
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
                                         <div class="form-group">
                                             <label class="block text-sm font-semibold text-slate-700 mb-2">Box / Shelf Placement</label>
-                                            <select name="box_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
+                                            <select name="box_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
                                                 <option value="">Select Box</option>
                                                 <?php mysqli_data_seek($boxes, 0); while($box = mysqli_fetch_assoc($boxes)): ?>
                                                     <option value="<?= $box['id']; ?>" <?= ($d['box_id'] ?? '') == $box['id'] ? 'selected' : ''; ?>><?= $box['name']; ?></option>
                                                 <?php endwhile; ?>
                                             </select>
                                         </div>
-
                                         <div class="form-group">
                                             <label class="block text-sm font-semibold text-slate-700 mb-2">Currency</label>
-                                            <select name="currency_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
+                                            <select name="currency_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
                                                 <?php mysqli_data_seek($currencies, 0); while($curr = mysqli_fetch_assoc($currencies)): ?>
-                                                    <option value="<?= $curr['id']; ?>" <?= ($d['currency_id'] ?? '') == $curr['id'] ? 'selected' : ''; ?>><?= $curr['name']; ?> (<?= $curr['code']; ?>)</option>
+                                                    <option value="<?= $curr['id']; ?>" <?= ($d['currency_id'] ?? '') == $curr['id'] ? 'selected' : ''; ?>><?= $curr['name']; ?></option>
                                                 <?php endwhile; ?>
                                             </select>
                                         </div>
@@ -253,49 +239,49 @@ include('../includes/header.php');
                             </div>
 
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
-                                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-                                <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                                    <i class="fas fa-coins text-emerald-600"></i> Pricing & Costing
-                                </h3>
+                            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                <i class="fas fa-coins text-emerald-600"></i> Pricing & Costing
+                            </h3>
 
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Price *</label>
-                                        <input type="number" step="0.01" name="purchase_price" id="purchase_price" value="<?= $d['purchase_price']; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Profit (%)</label>
-                                        <input type="number" step="0.01" name="profit_margin" id="profit_margin" value="<?= $d['profit_margin'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Selling Price *</label>
-                                        <input type="number" step="0.01" name="selling_price" id="selling_price" value="<?= $d['selling_price']; ?>" class="w-full bg-emerald-50 border border-emerald-400 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-900" placeholder="0.00">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Wholesale Price</label>
-                                        <input type="number" step="0.01" name="wholesale_price" id="wholesale_price" value="<?= $d['wholesale_price'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Price *</label>
+                                    <input type="number" step="0.01" name="purchase_price" id="purchase_price" value="<?= $d['purchase_price']; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
                                 </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Rate</label>
-                                        <select name="tax_rate_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-                                            <option value="">No Tax</option>
-                                            <?php mysqli_data_seek($taxes, 0); while($tax = mysqli_fetch_assoc($taxes)): ?>
-                                                <option value="<?= $tax['id']; ?>" <?= $d['tax_rate_id'] == $tax['id'] ? 'selected' : ''; ?>><?= $tax['name']; ?></option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Method</label>
-                                        <select name="tax_method" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-                                            <option value="inclusive" <?= $d['tax_method'] == 'inclusive' ? 'selected' : ''; ?>>Inclusive (Price includes Tax)</option>
-                                            <option value="exclusive" <?= $d['tax_method'] == 'exclusive' ? 'selected' : ''; ?>>Exclusive (Tax added to Price)</option>
-                                        </select>
-                                    </div>
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Profit (%)</label>
+                                    <input type="number" step="0.01" name="profit_margin" id="profit_margin" value="<?= $d['profit_margin'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Selling Price *</label>
+                                    <input type="number" step="0.01" name="selling_price" id="selling_price" value="<?= $d['selling_price']; ?>" class="w-full bg-emerald-50 border border-emerald-400 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-900" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Wholesale Price</label>
+                                    <input type="number" step="0.01" name="wholesale_price" id="wholesale_price" value="<?= $d['wholesale_price'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
                                 </div>
                             </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Rate</label>
+                                    <select name="tax_rate_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                        <option value="">No Tax</option>
+                                        <?php mysqli_data_seek($taxes, 0); while($tax = mysqli_fetch_assoc($taxes)): ?>
+                                            <option value="<?= $tax['id']; ?>" <?= $d['tax_rate_id'] == $tax['id'] ? 'selected' : ''; ?>><?= $tax['name']; ?></option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Method</label>
+                                    <select name="tax_method" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                        <option value="inclusive" <?= $d['tax_method'] == 'inclusive' ? 'selected' : ''; ?>>Inclusive (Price includes Tax)</option>
+                                        <option value="exclusive" <?= $d['tax_method'] == 'exclusive' ? 'selected' : ''; ?>>Exclusive (Tax added to Price)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
                                 <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
@@ -444,7 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'purchase_price',
             'selling_price',
             'alert_quantity',
-            'supplier_id' // Added supplier validation
         ];
 
         requiredFields.forEach(function(fieldName) {
