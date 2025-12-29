@@ -62,7 +62,6 @@ function renderReusableList($config) {
                                         $type = $col['type'] ?? 'text';
                                         
                                         if($key == 'actions'):
-                                            // Action buttons with Clean URL support
                                             ?>
                                             <div class="flex items-center gap-10">
                                                 <?php if($view_url): ?>
@@ -85,24 +84,40 @@ function renderReusableList($config) {
                                             </div>
                                             <?php
                                         elseif($type == 'status'):
-                                            // Render status badge (Status colors are kept vibrant)
+
                                             $status = isset($row['status']) ? (int)$row['status'] : 0;
-                                            $status_class = $status == 1 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200';
-                                            $status_text = $status == 1 ? 'Active' : 'Inactive';
+                                            
+                                            $active_label = $col['active_label'] ?? 'Active';
+                                            $inactive_label = $col['inactive_label'] ?? 'Inactive';
+                                            
+
+                                            if($status == 1) {
+                                                $status_class = 'bg-emerald-100 text-emerald-700 border-emerald-100';
+                                                $status_text = $active_label;
+                                                $dot_class = 'bg-emerald-500 animate-pulse';
+                                            } else {
+                                                $status_class = 'bg-amber-100 text-amber-700 border-amber-100';
+                                                $status_text = $inactive_label;
+                                                $dot_class = 'bg-amber-500';
+                                            }
                                             ?>
                                             <button 
                                                 onclick="toggleStatus(<?= $row[$primary_key]; ?>, <?= $status; ?>, '<?= $status_url; ?>')"
                                                 class="px-3 py-1 rounded-full text-xs font-bold border <?= $status_class; ?> cursor-pointer hover:opacity-80 transition-all flex items-center gap-1"
                                             >
-                                                <span class="w-1.5 h-1.5 rounded-full <?= $status == 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'; ?>"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full <?= $dot_class; ?>"></span>
                                                 <?= $status_text; ?>
                                             </button>
                                             <?php
+                                        elseif($type == 'badge'):
+                                            // For other badges
+                                            $val = isset($row[$key]) ? $row[$key] : '';
+                                            $badge_class = isset($col['dynamic_badge_key']) ? ($row[$col['dynamic_badge_key']] ?? '') : ($col['badge_class'] ?? 'bg-gray-100 text-gray-800');
+                                            echo '<span class="px-2 py-1 rounded text-xs '.$badge_class.'">'.htmlspecialchars($val).'</span>';
                                         elseif($type == 'image'):
                                             $image_url = isset($row[$key]) ? $row[$key] : '';
                                             echo $image_url ? '<img src="'.htmlspecialchars($image_url).'" class="w-10 h-10 rounded-lg object-cover border">' : '<span class="text-slate-400 italic">No Image</span>';
                                         else:
-                                            // Default Text Render
                                             $value = isset($row[$key]) ? $row[$key] : '';
                                             echo '<span class="text-slate-700 font-medium">' . htmlspecialchars($value) . '</span>';
                                         endif;

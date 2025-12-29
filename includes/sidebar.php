@@ -27,6 +27,16 @@ $menu_items = [
         'active' => (uri_has('/products/', $current_uri))
     ],
     [
+        'title' => 'Quotations',
+        'icon' => 'fa-file-alt',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Quotation', 'link' => '/pos/quotations/add'],
+            ['title' => 'Quotation List', 'link' => '/pos/quotations/list']
+        ],
+        'active' => (uri_has('/quotations/', $current_uri))
+    ],
+    [
         'title' => 'Purchases',
         'icon' => 'fa-shopping-cart',
         'link' => '#',

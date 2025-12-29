@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -96,6 +96,26 @@ function ensure_core_tables(mysqli $conn) {
         details TEXT DEFAULT NULL,
         status TINYINT(1) DEFAULT 1,
         sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Quotations Table ---
+    $quotationsSql = "CREATE TABLE IF NOT EXISTS quotations (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        ref_no VARCHAR(50) NOT NULL,
+        customer_id INT(11) DEFAULT NULL,
+        supplier_id INT(11) DEFAULT NULL,
+        date DATE DEFAULT NULL,
+        subtotal DECIMAL(15,2) DEFAULT 0.00,
+        discount DECIMAL(15,2) DEFAULT 0.00,
+        order_tax_rate DECIMAL(10,2) DEFAULT 0.00,
+        shipping_cost DECIMAL(15,2) DEFAULT 0.00,
+        others_charge DECIMAL(15,2) DEFAULT 0.00,
+        grand_total DECIMAL(15,2) DEFAULT 0.00,
+        terms TEXT DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
@@ -330,6 +350,21 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+        // --- NEW: Quotation Items Table ---
+        $quotationItemsSql = "CREATE TABLE IF NOT EXISTS quotation_items (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            quotation_id INT(11) NOT NULL,
+            product_id INT(11) NOT NULL,
+            price DECIMAL(15,2) NOT NULL,
+            qty DECIMAL(15,2) NOT NULL,
+            tax_rate_id INT(11) DEFAULT NULL,
+            tax_method VARCHAR(20) DEFAULT 'exclusive',
+            subtotal DECIMAL(15,2) NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
     // Add these lines to your Execute Queries section:
 
 
@@ -347,8 +382,10 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $taxSql);
     mysqli_query($conn, $boxesSql); 
     mysqli_query($conn, $categorySql); 
-    mysqli_query($conn, $suppliersSql); // Execute Supplier Core Table
+    mysqli_query($conn, $suppliersSql);
     mysqli_query($conn, $productsSql);
+    mysqli_query($conn, $quotationsSql);
+
 
 
 
@@ -356,13 +393,14 @@ function ensure_core_tables(mysqli $conn) {
     
     // Pivot tables (must run after core tables are created)
     mysqli_query($conn, $storeCurrencySql);
-    mysqli_query($conn, $paymentStoreMapSql); // NEW: Execution of the missing table
+    mysqli_query($conn, $paymentStoreMapSql);
     mysqli_query($conn, $brandStoreSql);
     mysqli_query($conn, $taxStoreSql);
     mysqli_query($conn, $boxStoreSql);
     mysqli_query($conn, $categoryStoreSql);
-    mysqli_query($conn, $supplierStoreSql); // Execute Supplier Pivot Table
+    mysqli_query($conn, $supplierStoreSql);
     mysqli_query($conn, $productStoreSql);
+    mysqli_query($conn, $quotationItemsSql);
 
     
 
