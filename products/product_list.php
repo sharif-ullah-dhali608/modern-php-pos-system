@@ -8,19 +8,17 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-// Fetch Products with Relations (Updated with Supplier, Box, Currency)
+// Fetch Products with Relations (Supplier বাদ দেওয়া হয়েছে)
 $query = "SELECT p.*, 
                  c.name as category_name, 
                  b.name as brand_name_display, 
                  u.unit_name,
-                 s.name as supplier_name,
                  bx.box_name,
                  cr.currency_name
           FROM products p
           LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN brands b ON p.brand_id = b.id
           LEFT JOIN units u ON p.unit_id = u.id
-          LEFT JOIN suppliers s ON p.supplier_id = s.id
           LEFT JOIN boxes bx ON p.box_id = bx.id
           LEFT JOIN currencies cr ON p.currency_id = cr.id
           ORDER BY p.id DESC";
@@ -32,7 +30,6 @@ if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
         $row['formatted_price'] = number_format($row['selling_price'], 2);
         $row['brand_name'] = $row['brand_name_display'] ?? 'N/A';
-        $row['supplier_display'] = $row['supplier_name'] ?? 'N/A';
         $row['box_display'] = $row['box_name'] ?? 'N/A';
         $row['currency_display'] = $row['currency_name'] ?? 'Default';
         $items[] = $row;
@@ -49,8 +46,7 @@ $list_config = [
         ['key' => 'product_code', 'label' => 'Code', 'sortable' => true],
         ['key' => 'category_name', 'label' => 'Category', 'sortable' => true],
         
-        // নতুন কলামগুলো এখানে যুক্ত করা হয়েছে
-        ['key' => 'supplier_display', 'label' => 'Supplier', 'sortable' => true],
+        // Supplier কলামটি এখান থেকে সরিয়ে দেওয়া হয়েছে
         ['key' => 'box_display', 'label' => 'Box/Shelf', 'sortable' => true],
         ['key' => 'currency_display', 'label' => 'Currency', 'sortable' => true],
         
