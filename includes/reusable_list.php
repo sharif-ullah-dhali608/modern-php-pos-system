@@ -1,146 +1,171 @@
 <?php
 /**
- * Reusable List Renderer for POS System
- * Handles dynamic tables with Clean URL support
+ * Reusable List Renderer (Cleaned & Integrated with Footer Swal)
  */
 function renderReusableList($config) {
-    $title = $config['title'] ?? 'List';
-    $add_url = $config['add_url'] ?? '#';
-    $table_id = $config['table_id'] ?? 'dataTable';
-    $columns = $config['columns'] ?? [];
-    $data = $config['data'] ?? [];
-    $edit_url = $config['edit_url'] ?? '#';
-    $delete_url = $config['delete_url'] ?? '#';
-    $status_url = $config['status_url'] ?? '#';
-    $view_url = $config['view_url'] ?? null;
-    $primary_key = $config['primary_key'] ?? 'id';
-    $name_field = $config['name_field'] ?? 'name';
-    ?>
+    // -----------------------------------------
+    // Configuration Setup
+    // -----------------------------------------
+    $title       = $config['title'] ?? 'List';
+    $table_id    = $config['table_id'] ?? 'dataTable_' . uniqid();
+    $columns     = $config['columns'] ?? [];
+    $data        = $config['data'] ?? [];
     
-    <div class="mb-6 slide-in">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    // URL Configurations
+    $add_url     = $config['add_url'] ?? '#';
+    $edit_url    = $config['edit_url'] ?? '#';
+    $delete_url  = $config['delete_url'] ?? '#';
+    $status_url  = $config['status_url'] ?? '#';
+    $view_url    = $config['view_url'] ?? null;
+    
+    // Key Fields
+    $primary_key = $config['primary_key'] ?? 'id';
+    $name_field  = $config['name_field'] ?? 'name';
+    ?>
+
+    <style>
+        .slide-in { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <div class="w-full slide-in">
+        
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-slate-800 mb-2"><?= htmlspecialchars($title); ?></h1>
                 <div class="flex items-center gap-2 text-sm text-slate-500">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span>Showing <?= count($data); ?> entries</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Total <?= count($data); ?> entries</span>
                 </div>
             </div>
-            <a 
-                href="<?= $add_url; ?>" 
-                class="inline-flex items-center gap-2 px-6 py-3 bg-[#064e3b] hover:bg-[#065f46] text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
-            >
-                <i class="fas fa-plus"></i>
+            
+            <?php if($add_url !== '#'): ?>
+            <a href="<?= $add_url; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                <i class="fas fa-plus transition-transform group-hover:rotate-90"></i>
                 <span>Add New</span>
             </a>
+            <?php endif; ?>
         </div>
-    </div>
-    
-    <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in">
-        <?php if(count($data) > 0): ?>
-            <div class="overflow-x-auto custom-scroll">
-                <table class="data-table w-full" id="<?= $table_id; ?>">
-                    <thead>
-                        <tr class="bg-slate-50">
-                            <?php foreach($columns as $col): ?>
-                                <th class="<?= isset($col['sortable']) && $col['sortable'] ? 'cursor-pointer hover:bg-slate-100' : ''; ?> text-slate-800 p-4 text-left font-bold border-b">
-                                    <?= htmlspecialchars($col['label']); ?>
-                                    <?php if(isset($col['sortable']) && $col['sortable']): ?>
-                                        <i class="fas fa-sort ml-2 text-slate-400"></i>
-                                    <?php endif; ?>
-                                </th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($data as $row): ?>
-                            <tr class="hover:bg-slate-50 transition-colors border-b last:border-0">
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden p-6">
+            
+            <?php if(count($data) > 0): ?>
+                <div class="overflow-x-auto">
+                    <table id="<?= $table_id; ?>" class="data-table w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
                                 <?php foreach($columns as $col): ?>
-                                    <td class="p-4">
-                                        <?php
-                                        $key = $col['key'];
-                                        $type = $col['type'] ?? 'text';
-                                        
-                                        if($key == 'actions'):
-                                            ?>
-                                            <div class="flex items-center gap-10">
-                                                <?php if($view_url): ?>
-                                                    <a href="<?= $view_url; ?>/<?= $row[$primary_key]; ?>" class="btn-action btn-view text-blue-600 hover:text-blue-800" title="View">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                                
-                                                <a href="<?= $edit_url; ?>/<?= $row[$primary_key]; ?>" class="btn-action btn-edit text-teal-600 hover:text-teal-800" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                
-                                                <button 
-                                                    onclick="confirmDelete(<?= $row[$primary_key]; ?>, '<?= addslashes($row[$name_field]); ?>', '<?= $delete_url; ?>')" 
-                                                    class="btn-action btn-delete text-red-400 hover:text-red-800"
-                                                    title="Delete"
-                                                >
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                            <?php
-                                        elseif($type == 'status'):
-
-                                            $status = isset($row['status']) ? (int)$row['status'] : 0;
-                                            
-                                            $active_label = $col['active_label'] ?? 'Active';
-                                            $inactive_label = $col['inactive_label'] ?? 'Inactive';
-                                            
-
-                                            if($status == 1) {
-                                                $status_class = 'bg-emerald-100 text-emerald-700 border-emerald-100';
-                                                $status_text = $active_label;
-                                                $dot_class = 'bg-emerald-500 animate-pulse';
-                                            } else {
-                                                $status_class = 'bg-amber-100 text-amber-700 border-amber-100';
-                                                $status_text = $inactive_label;
-                                                $dot_class = 'bg-amber-500';
-                                            }
-                                            ?>
-                                            <button 
-                                                onclick="toggleStatus(<?= $row[$primary_key]; ?>, <?= $status; ?>, '<?= $status_url; ?>')"
-                                                class="px-3 py-1 rounded-full text-xs font-bold border <?= $status_class; ?> cursor-pointer hover:opacity-80 transition-all flex items-center gap-1"
-                                            >
-                                                <span class="w-1.5 h-1.5 rounded-full <?= $dot_class; ?>"></span>
-                                                <?= $status_text; ?>
-                                            </button>
-                                            <?php
-                                        elseif($type == 'badge'):
-                                            // For other badges
-                                            $val = isset($row[$key]) ? $row[$key] : '';
-                                            $badge_class = isset($col['dynamic_badge_key']) ? ($row[$col['dynamic_badge_key']] ?? '') : ($col['badge_class'] ?? 'bg-gray-100 text-gray-800');
-                                            echo '<span class="px-2 py-1 rounded text-xs '.$badge_class.'">'.htmlspecialchars($val).'</span>';
-                                        elseif($type == 'image'):
-                                            $image_url = isset($row[$key]) ? $row[$key] : '';
-                                            echo $image_url ? '<img src="'.htmlspecialchars($image_url).'" class="w-10 h-10 rounded-lg object-cover border">' : '<span class="text-slate-400 italic">No Image</span>';
-                                        else:
-                                            $value = isset($row[$key]) ? $row[$key] : '';
-                                            echo '<span class="text-slate-700 font-medium">' . htmlspecialchars($value) . '</span>';
-                                        endif;
-                                        ?>
-                                    </td>
+                                    <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                                        <?= htmlspecialchars($col['label']); ?>
+                                    </th>
                                 <?php endforeach; ?>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="flex flex-col items-center justify-center py-16 text-center">
-                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 text-slate-300">
-                    <i class="fas fa-database text-3xl"></i>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <?php foreach($data as $row): ?>
+                                <tr class="hover:bg-slate-50 transition-colors group">
+                                    <?php foreach($columns as $col): ?>
+                                        <td class="p-4 text-sm text-slate-700 align-middle">
+                                            <?php
+                                            $key  = $col['key'];
+                                            $type = $col['type'] ?? 'text';
+                                            $val  = $row[$key] ?? '';
+                                            $id   = $row[$primary_key] ?? 0;
+
+                                            // --- Action Buttons ---
+                                            if ($key === 'actions' || $type === 'actions'): ?>
+                                                <div class="flex items-center gap-3">
+                                                    <?php if($view_url): ?>
+                                                        <a href="<?= $view_url; ?>/<?= $id; ?>" class="p-2 text-blue-500 hover:bg-blue-50 rounded transition" title="View">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    <?php endif; ?>
+
+                                                    <a href="<?= $edit_url; ?>/<?= $id; ?>" class="p-2 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    
+                                                    <button type="button" onclick="confirmDelete(<?= $id; ?>, '<?= addslashes($row[$name_field] ?? 'Item'); ?>', '<?= $delete_url; ?>')" 
+                                                            class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+
+                                            <?php 
+                                            // --- Status Toggle ---
+                                            elseif ($type === 'status'): 
+                                                $status = (int)$val;
+                                                $active_label = $col['active_label'] ?? 'Active';
+                                                $inactive_label = $col['inactive_label'] ?? 'Inactive';
+                                                
+                                                if($status === 1) {
+                                                    $badgeClass = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                                                    $dotClass = 'bg-emerald-500';
+                                                    $text = $active_label;
+                                                } else {
+                                                    $badgeClass = 'bg-amber-100 text-amber-700 border border-amber-200';
+                                                    $dotClass = 'bg-amber-500';
+                                                    $text = $inactive_label;
+                                                }
+                                            ?>
+                                                <button type="button" onclick="toggleStatus(<?= $id; ?>, <?= $status; ?>, '<?= $status_url; ?>')"
+                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium <?= $badgeClass; ?> hover:opacity-80 transition">
+                                                    <span class="w-1.5 h-1.5 rounded-full <?= $dotClass; ?>"></span>
+                                                    <?= $text; ?>
+                                                </button>
+
+                                            <?php 
+                                            // --- Badges ---
+                                            elseif ($type === 'badge'): 
+                                                $badgeClass = $col['badge_class'] ?? 'bg-slate-100 text-slate-700';
+                                            ?>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold uppercase <?= $badgeClass; ?>">
+                                                    <?= htmlspecialchars($val); ?>
+                                                </span>
+
+                                            <?php 
+                                            // --- Images ---
+                                            elseif ($type === 'image'): 
+                                            ?>
+                                                <?php if(!empty($val)): ?>
+                                                    <img src="<?= htmlspecialchars($val); ?>" class="w-10 h-10 rounded-lg object-cover border border-slate-200" alt="Img">
+                                                <?php else: ?>
+                                                    <span class="text-xs text-slate-400 italic">No Image</span>
+                                                <?php endif; ?>
+
+                                            <?php 
+                                            // --- HTML / Default Text ---
+                                            elseif ($type === 'html'): 
+                                                echo $val; // RAW Output
+                                            else:
+                                                echo htmlspecialchars($val);
+                                            endif;
+                                            ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">No results found</h3>
-                <p class="text-slate-500 mb-6 text-sm">We couldn't find any data in this section.</p>
-                <a href="<?= $add_url; ?>" class="px-5 py-2.5 bg-[#064e3b] text-white rounded-lg text-sm font-bold shadow-md hover:bg-[#065f46] transition-all">
-                    Create First Entry
-                </a>
-            </div>
-        <?php endif; ?>
+
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 text-slate-300">
+                        <i class="fas fa-folder-open text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">No records found</h3>
+                    <p class="text-slate-500 mb-6 text-sm">Get started by creating a new entry.</p>
+                    <?php if($add_url !== '#'): ?>
+                    <a href="<?= $add_url; ?>" class="px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-bold shadow hover:bg-teal-700 transition-all">
+                        Create First Entry
+                    </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
+
     <?php
 }
+?>

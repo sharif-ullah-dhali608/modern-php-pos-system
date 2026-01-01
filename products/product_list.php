@@ -8,7 +8,7 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-// Fetch Products with Relations (Supplier বাদ দেওয়া হয়েছে)
+// Fetch Products with Relations
 $query = "SELECT p.*, 
                  c.name as category_name, 
                  b.name as brand_name_display, 
@@ -46,7 +46,6 @@ $list_config = [
         ['key' => 'product_code', 'label' => 'Code', 'sortable' => true],
         ['key' => 'category_name', 'label' => 'Category', 'sortable' => true],
         
-        // Supplier কলামটি এখান থেকে সরিয়ে দেওয়া হয়েছে
         ['key' => 'box_display', 'label' => 'Box/Shelf', 'sortable' => true],
         ['key' => 'currency_display', 'label' => 'Currency', 'sortable' => true],
         
@@ -77,15 +76,11 @@ include('../includes/header.php');
         
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
             <div class="p-6">
-                <?php if(isset($_SESSION['message'])): ?>
-                    <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 <?php echo ($_SESSION['msg_type'] ?? 'success') == 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'; ?>" role="alert">
-                        <i class="fas <?php echo ($_SESSION['msg_type'] ?? 'success') == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
-                        <span class="font-medium"><?= $_SESSION['message']; ?></span>
-                    </div>
-                    <?php unset($_SESSION['message']); unset($_SESSION['msg_type']); ?>
-                <?php endif; ?>
-
+                
                 <?php 
+                // Manual Alert removed here.
+                // SweetAlert/Toaster in footer.php will now handle the message.
+                
                 include('../includes/reusable_list.php'); 
                 renderReusableList($list_config); 
                 ?>
