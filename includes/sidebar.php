@@ -40,9 +40,14 @@ $menu_items = [
         'title' => 'Purchases',
         'icon' => 'fa-shopping-cart',
         'link' => '#',
+        // Around lines 44-49 - Change submenu:
         'submenu' => [
             ['title' => 'Add Purchase', 'link' => '/pos/purchases/add'],
-            ['title' => 'Purchase List', 'link' => '/pos/purchases/list']
+            ['title' => 'Purchase List', 'link' => '/pos/purchases/list'],
+            ['title' => 'Due Invoice', 'link' => '/pos/purchases/list?filter=due'],
+            ['title' => 'Return List', 'link' => '/pos/purchases/return-list'],
+            ['title' => 'Purchase Logs', 'link' => '/pos/purchases/purchase-logs'],
+            ['title' => 'Stock Import', 'link' => '/pos/purchases/stock-import']
         ],
         'active' => (uri_has('/purchases/', $current_uri))
     ],

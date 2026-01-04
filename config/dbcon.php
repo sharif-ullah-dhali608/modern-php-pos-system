@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "";
+$password = "root";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -250,6 +250,21 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Product Images Table (For Multiple Images) --------------------------------------------------------
+    $productImagesSql = "CREATE TABLE IF NOT EXISTS product_images (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        product_id INT(11) NOT NULL,
+        image_path VARCHAR(255) NOT NULL,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
+
+
+
     // Payment-Store pivot (MISSING TABLE - Fixes the previous fatal error)
     $paymentStoreMapSql = "CREATE TABLE IF NOT EXISTS payment_store_map (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -350,6 +365,8 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+
+
         // --- NEW: Quotation Items Table ---
         $quotationItemsSql = "CREATE TABLE IF NOT EXISTS quotation_items (
             id INT(11) NOT NULL AUTO_INCREMENT,
@@ -364,6 +381,89 @@ function ensure_core_tables(mysqli $conn) {
             FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE,
             FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Purchase Info Table ---
+    $purchaseInfoSql = "CREATE TABLE IF NOT EXISTS purchase_info (
+        info_id INT(11) NOT NULL AUTO_INCREMENT,
+        invoice_id VARCHAR(50) NOT NULL,
+        inv_type VARCHAR(20) DEFAULT 'purchase',
+        store_id INT(11) NOT NULL,
+        sup_id INT(11) DEFAULT NULL,
+        total_item DECIMAL(15,2) DEFAULT 0.00,
+        status VARCHAR(20) DEFAULT 'stock',
+        total_sell DECIMAL(15,2) DEFAULT 0.00,
+        purchase_note TEXT DEFAULT NULL,
+        attachment VARCHAR(500) DEFAULT NULL,
+        is_visible TINYINT(1) DEFAULT 1,
+        payment_status VARCHAR(20) DEFAULT 'due',
+        checkout_status VARCHAR(20) DEFAULT NULL,
+        shipping_status VARCHAR(20) DEFAULT 'received',
+        created_by INT(11) NOT NULL,
+        purchase_date DATE DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (info_id),
+        UNIQUE KEY invoice_id (invoice_id),
+        KEY store_id (store_id),
+        KEY sup_id (sup_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (sup_id) REFERENCES suppliers(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Purchase Item Table ---
+    $purchaseItemSql = "CREATE TABLE IF NOT EXISTS purchase_item (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        invoice_id VARCHAR(50) NOT NULL,
+        store_id INT(11) NOT NULL,
+        item_id INT(11) NOT NULL,
+        category_id INT(11) DEFAULT NULL,
+        brand_id INT(11) DEFAULT NULL,
+        item_name VARCHAR(255) NOT NULL,
+        item_purchase_price DECIMAL(15,4) DEFAULT 0.0000,
+        item_selling_price DECIMAL(15,4) DEFAULT 0.0000,
+        item_quantity DECIMAL(15,4) DEFAULT 0.0000,
+        total_sell DECIMAL(15,4) DEFAULT 0.0000,
+        status VARCHAR(20) DEFAULT 'active',
+        item_total DECIMAL(15,4) DEFAULT 0.0000,
+        item_tax DECIMAL(15,4) DEFAULT 0.0000,
+        tax_method VARCHAR(20) DEFAULT 'inclusive',
+        tax DECIMAL(15,4) DEFAULT 0.0000,
+        gst DECIMAL(15,4) DEFAULT 0.0000,
+        cgst DECIMAL(15,4) DEFAULT 0.0000,
+        sgst DECIMAL(15,4) DEFAULT 0.0000,
+        igst DECIMAL(15,4) DEFAULT 0.0000,
+        return_quantity DECIMAL(15,4) DEFAULT 0.0000,
+        installment_quantity INT(11) DEFAULT 0,
+        PRIMARY KEY (id),
+        KEY invoice_id (invoice_id),
+        KEY item_id (item_id),
+        KEY store_id (store_id),
+        FOREIGN KEY (item_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Purchase Logs Table ---
+    $purchaseLogsSql = "CREATE TABLE IF NOT EXISTS purchase_logs (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        sup_id INT(11) DEFAULT NULL,
+        reference_no VARCHAR(50) NOT NULL,
+        ref_invoice_id VARCHAR(50) NOT NULL,
+        type VARCHAR(20) DEFAULT 'purchase',
+        pmethod_id INT(11) DEFAULT NULL,
+        description TEXT DEFAULT NULL,
+        amount DECIMAL(15,4) DEFAULT 0.0000,
+        store_id INT(11) NOT NULL,
+        created_by INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY sup_id (sup_id),
+        KEY ref_invoice_id (ref_invoice_id),
+        KEY pmethod_id (pmethod_id),
+        FOREIGN KEY (sup_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+        FOREIGN KEY (pmethod_id) REFERENCES payment_methods(id) ON DELETE SET NULL,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // Add these lines to your Execute Queries section:
 
@@ -385,10 +485,20 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $suppliersSql);
     mysqli_query($conn, $productsSql);
     mysqli_query($conn, $quotationsSql);
+    mysqli_query($conn, $purchaseInfoSql);
+    mysqli_query($conn, $purchaseItemSql);
+    mysqli_query($conn, $purchaseLogsSql);
+    
+    // Ensure return_quantity column exists in purchase_item table (for existing databases)
+    $checkColumn = @mysqli_query($conn, "SHOW COLUMNS FROM purchase_item LIKE 'return_quantity'");
+    if($checkColumn && mysqli_num_rows($checkColumn) == 0) {
+        // Just add at the end without specifying AFTER clause to avoid issues
+        @mysqli_query($conn, "ALTER TABLE purchase_item ADD COLUMN return_quantity DECIMAL(15,4) DEFAULT 0.0000");
+    }
 
 
 
-
+    
     
     
     // Pivot tables (must run after core tables are created)
@@ -401,6 +511,10 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $supplierStoreSql);
     mysqli_query($conn, $productStoreSql);
     mysqli_query($conn, $quotationItemsSql);
+
+
+    mysqli_query($conn, $productImagesSql);
+
 
     
 
