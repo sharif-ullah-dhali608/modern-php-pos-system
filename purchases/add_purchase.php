@@ -8,14 +8,51 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
+// ==========================================
+// EDIT MODE LOGIC START
+// ==========================================
+$mode = "create";
 $page_title = "New Purchase";
 $btn_text = "Confirm Purchase";
+$edit_data = [];
+$edit_items = [];
+
+if(isset($_GET['invoice_id'])) {
+    $mode = "edit";
+    $page_title = "Edit Purchase";
+    $btn_text = "Update Purchase";
+    $invoice_id = mysqli_real_escape_string($conn, $_GET['invoice_id']);
+
+    // Fetch main purchase info
+    $info_q = mysqli_query($conn, "SELECT * FROM purchase_info WHERE invoice_id = '$invoice_id' LIMIT 1");
+    if(mysqli_num_rows($info_q) > 0) {
+        $edit_data = mysqli_fetch_assoc($info_q);
+        
+        // Fetch items associated with this invoice
+        $items_q = mysqli_query($conn, "SELECT * FROM purchase_item WHERE invoice_id = '$invoice_id'");
+        while($row = mysqli_fetch_assoc($items_q)) {
+            $edit_items[] = $row;
+        }
+
+       
+        $paid_q = mysqli_query($conn, "SELECT SUM(amount) as paid FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'");
+        $paid_res = mysqli_fetch_assoc($paid_q);
+        $edit_data['total_paid'] = $paid_res['paid'] ?? 0;
+
+      
+        $pm_q = mysqli_query($conn, "SELECT pmethod_id FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase' ORDER BY id ASC LIMIT 1");
+        $pm_res = mysqli_fetch_assoc($pm_q);
+        $edit_data['pmethod_id'] = $pm_res['pmethod_id'] ?? '';
+    }
+}
+// ==========================================
+// EDIT MODE LOGIC END
+// ==========================================
 
 // Fetch Dropdown Data from Database
 $suppliers = mysqli_query($conn, "SELECT id, name FROM suppliers WHERE status='1'");
 $products = mysqli_query($conn, "SELECT id, product_name, product_code, opening_stock, selling_price, purchase_price FROM products WHERE status='1'");
 $payment_methods = mysqli_query($conn, "SELECT id, name FROM payment_methods WHERE status='1' ORDER BY name ASC");
-
 include('../includes/header.php');
 ?>
 
@@ -145,12 +182,15 @@ include('../includes/header.php');
                         </a>
                         <div>
                             <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><?= $page_title; ?></h1>
-                            <p class="text-slate-500 text-sm mt-1">Record new stock entry from suppliers.</p>
+                            <p class="text-slate-500 text-sm mt-1"><?= $mode == 'edit' ? 'Update existing stock entry.' : 'Record new stock entry from suppliers.'; ?></p>
                         </div>
                     </div>
                 </div>
 
-                <form action="/pos/purchases/save" method="POST" id="purchaseForm" enctype="multipart/form-data">
+                <form action="/pos/purchases/save_purchase.php" method="POST" id="purchaseForm" enctype="multipart/form-data">
+                    
+                    <input type="hidden" name="invoice_id_hidden" value="<?= $edit_data['invoice_id'] ?? ''; ?>">
+
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <div class="lg:col-span-2 space-y-6 slide-in delay-100">
@@ -161,13 +201,11 @@ include('../includes/header.php');
                                         
                                         <?php 
                                         $has_attachment = false;
-                                        $attachment_path = $d['attachment'] ?? ''; // assuming 'attachment' is the column name
+                                        $attachment_path = $edit_data['attachment'] ?? '';
 
                                         if(!empty($attachment_path)) {
-                                            // Formatting path for server-side check
                                             $clean_path = str_replace('/pos', '', $attachment_path);
                                             $server_path = ".." . $clean_path;
-
                                             if(file_exists($server_path)) {
                                                 $has_attachment = true;
                                             }
@@ -212,19 +250,19 @@ include('../includes/header.php');
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Date *</label>
-                                        <input type="date" name="purchase_date" value="<?= date('Y-m-d'); ?>" class="unique-input">
+                                        <input type="date" name="purchase_date" value="<?= $edit_data['purchase_date'] ?? date('Y-m-d'); ?>" class="unique-input">
                                     </div>
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Reference No *</label>
-                                        <input type="text" name="reference_no" value="<?= strtoupper(substr(md5(time()), 0, 8)); ?>" class="unique-input font-mono tracking-widest uppercase">
+                                        <input type="text" name="reference_no" value="<?= $edit_data['invoice_id'] ?? strtoupper(substr(md5(time()), 0, 8)); ?>" class="unique-input font-mono tracking-widest uppercase" <?= $mode == 'edit' ? 'readonly' : ''; ?>>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-semibold text-slate-700 mb-2">Supplier * (Searchable)</label>
                                     <select name="supplier_id" id="supplier_id" required class="w-full select2">
                                         <option value="">Search and select...</option>
-                                        <?php while($sup = mysqli_fetch_assoc($suppliers)): ?>
-                                            <option value="<?= $sup['id']; ?>"><?= $sup['name']; ?></option>
+                                        <?php mysqli_data_seek($suppliers, 0); while($sup = mysqli_fetch_assoc($suppliers)): ?>
+                                            <option value="<?= $sup['id']; ?>" <?= (isset($edit_data['sup_id']) && $edit_data['sup_id'] == $sup['id']) ? 'selected' : ''; ?>><?= $sup['name']; ?></option>
                                         <?php endwhile; ?>
                                     </select>
                                 </div>
@@ -265,7 +303,7 @@ include('../includes/header.php');
                         <div class="space-y-6 slide-in delay-200">
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Note / Remarks</label>
-                                <textarea name="note" rows="3" class="unique-input text-sm resize-none" placeholder="Enter purchase notes..."></textarea>
+                                <textarea name="note" rows="3" class="unique-input text-sm resize-none" placeholder="Enter purchase notes..."><?= $edit_data['purchase_note'] ?? ''; ?></textarea>
                             </div>
 
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4 sticky top-24">
@@ -276,15 +314,15 @@ include('../includes/header.php');
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Order Tax (%)</span>
-                                        <input type="number" id="order_tax" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="order_tax" id="order_tax" oninput="calculateSummary()" class="summary-input" value="0">
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Shipping Charge</span>
-                                        <input type="number" id="shipping_charge" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="shipping_charge" id="shipping_charge" oninput="calculateSummary()" class="summary-input" value="0">
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Discount Amount</span>
-                                        <input type="number" id="discount_amount" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="discount_amount" id="discount_amount" oninput="calculateSummary()" class="summary-input" value="0">
                                     </div>
                                     <div class="flex justify-between items-center pt-2 border-t mt-2">
                                         <span class="text-slate-800 font-bold uppercase text-[10px]">Payable Amount</span>
@@ -297,14 +335,14 @@ include('../includes/header.php');
                                     <select name="payment_method" id="payment_id" class="w-full select2">
                                         <option value="">Search and select...</option>
                                         <?php mysqli_data_seek($payment_methods, 0); while($method = mysqli_fetch_assoc($payment_methods)): ?>
-                                            <option value="<?= $method['id']; ?>"><?= $method['name']; ?></option>
+                                            <option value="<?= $method['id']; ?>" <?= (isset($edit_data['pmethod_id']) && $edit_data['pmethod_id'] == $method['id']) ? 'selected' : ''; ?>><?= $method['name']; ?></option>
                                         <?php endwhile; ?>
                                     </select>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Amount Paid *</label>
-                                    <input type="number" step="0.01" name="paid_amount" id="paid_amount" oninput="calculateSummary()" class="unique-input font-bold text-teal-800 text-lg" value="0.00">
+                                    <input type="number" step="0.01" name="paid_amount" id="paid_amount" oninput="calculateSummary()" class="unique-input font-bold text-teal-800 text-lg" value="<?= $edit_data['total_paid'] ?? '0.00'; ?>">
                                 </div>
 
                                <div class="grid grid-cols-2 gap-2 text-center">
@@ -320,7 +358,7 @@ include('../includes/header.php');
 
                                 <div class="flex gap-3 pt-2">
                                     <button type="submit" name="save_purchase_btn" id="submitBtn" class="flex-1 bg-teal-800 hover:bg-teal-900 text-white font-bold py-3 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 text-sm">
-                                        <span class="btn-text">Submit</span>
+                                        <span class="btn-text"><?= $btn_text; ?></span>
                                         <div class="loading-spinner"></div>
                                     </button>
                                     <button type="reset" id="resetBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 text-sm">
@@ -391,9 +429,31 @@ $(document).ready(function() {
     }
 
     initDropdowns();
-    addRow(); 
 
-    $('#purchaseForm').on('submit', function() {
+    // ==========================================
+    // AUTO LOAD ROWS FOR EDIT MODE START
+    // ==========================================
+    <?php if($mode == 'edit' && !empty($edit_items)): ?>
+        <?php foreach($edit_items as $item): ?>
+            addRow(
+                '<?= $item['item_id']; ?>', 
+                '<?= $item['item_quantity']; ?>', 
+                '<?= $item['item_purchase_price']; ?>', 
+                '<?= $item['item_selling_price']; ?>'
+            );
+        <?php endforeach; ?>
+    <?php else: ?>
+        addRow(); 
+    <?php endif; ?>
+    // ==========================================
+    // AUTO LOAD ROWS FOR EDIT MODE END
+    // ==========================================
+
+    $('#purchaseForm').on('submit', function(e) {
+        // Add hidden input to ensure save_purchase_btn is included in POST
+        if($('#purchaseForm').find('input[name="save_purchase_btn"]').length === 0) {
+            $('#purchaseForm').append('<input type="hidden" name="save_purchase_btn" value="1">');
+        }
         $('#submitBtn').prop('disabled', true).find('.loading-spinner').show();
     });
 
@@ -436,9 +496,9 @@ const productList = [
     ?>
 ];
 
-function addRow() {
+function addRow(pId = '', qty = 1, cost = 0, sell = 0) {
     const tbody = document.querySelector('#purchaseTable tbody');
-    const rowId = Date.now();
+    const rowId = Date.now() + Math.floor(Math.random() * 100); // Random offset for safety
     const tr = document.createElement('tr');
     tr.id = `row_${rowId}`;
     tr.className = "hover:bg-slate-50/50 transition-colors item-row";
@@ -447,13 +507,13 @@ function addRow() {
         <td class="px-6 py-4 product-col">
             <select name="items[${rowId}][product_id]" required class="table-select2" onchange="updateRowInfo(this, ${rowId})">
                 <option value="">Search and select...</option>
-                ${productList.map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('')}
+                ${productList.map(p => `<option value="${p.id}" ${p.id == pId ? 'selected' : ''}>${p.name} (${p.code})</option>`).join('')}
             </select>
         </td>
         <td class="px-4 py-4 text-xs font-bold text-slate-400" id="stock_${rowId}">0</td>
-        <td class="px-2 py-4"><input type="number" name="items[${rowId}][qty]" id="qty_${rowId}" value="1" oninput="calculateRow(${rowId})"></td>
-        <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][cost]" id="cost_${rowId}" value="0.00" oninput="calculateRow(${rowId})"></td>
-        <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][sell]" id="sell_${rowId}" value="0.00"></td>
+        <td class="px-2 py-4"><input type="number" name="items[${rowId}][qty]" id="qty_${rowId}" value="${qty}" oninput="calculateRow(${rowId})"></td>
+        <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][cost]" id="cost_${rowId}" value="${cost}" oninput="calculateRow(${rowId})"></td>
+        <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][sell]" id="sell_${rowId}" value="${sell}"></td>
         <td class="px-2 py-4"><input type="number" id="tax_${rowId}" value="0" oninput="calculateRow(${rowId})"></td>
         <td class="px-4 py-4 text-right font-bold text-slate-700 text-xs row-subtotal" id="subtotal_${rowId}">0.00</td>
         <td class="px-4 py-4 text-center">
@@ -466,6 +526,15 @@ function addRow() {
         placeholder: "Search Product...",
         width: '100%'
     });
+
+    // If Edit Mode, Load initial info
+    if(pId) {
+        const p = productList.find(i => i.id == pId);
+        if(p) {
+            document.getElementById(`stock_${rowId}`).innerText = p.stock;
+            calculateRow(rowId);
+        }
+    }
 }
 
 function updateRowInfo(select, rowId) {
@@ -496,26 +565,21 @@ function removeRow(rowId) {
 
 function calculateSummary() {
     let itemsTotal = 0;
-    
-    // Fix: Targeted only the row subtotal values using the new class 'row-subtotal'
     document.querySelectorAll('.row-subtotal').forEach(s => {
         itemsTotal += parseFloat(s.innerText) || 0;
     });
     
     document.getElementById('subtotal_display').innerText = itemsTotal.toFixed(2);
-    
     const taxPct = parseFloat(document.getElementById('order_tax').value) || 0;
     const ship = parseFloat(document.getElementById('shipping_charge').value) || 0;
     const disc = parseFloat(document.getElementById('discount_amount').value) || 0;
     const paid = parseFloat(document.getElementById('paid_amount').value) || 0;
 
-    // Calculations
     const taxValue = (itemsTotal * taxPct) / 100;
     const grand = (itemsTotal + taxValue + ship) - disc;
     
     document.getElementById('grand_total_display').innerText = grand.toFixed(2);
 
-    // Due and Change logic
     if (paid >= grand) {
         document.getElementById('due_text').innerText = "0.00";
         document.getElementById('change_text').innerText = (paid - grand).toFixed(2);

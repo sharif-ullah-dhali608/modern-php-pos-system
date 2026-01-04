@@ -40,8 +40,8 @@ $d = [
     'tax_method' => 'exclusive', 
     'opening_stock' => '0', 
     'alert_quantity' => '5', 
-    'box_id' => '', // Added box ID
-    'currency_id' => '', // Added currency ID
+    'box_id' => '', 
+    'currency_id' => '', 
     'expire_date' => '', 
     'description' => '', 
     'status' => '1', 
@@ -50,14 +50,15 @@ $d = [
 
 $selected_stores = []; 
 $all_stores = [];
+$gallery_images = []; // Array to hold extra images
 
 // Fetch Dropdown Data 
 $categories = mysqli_query($conn, "SELECT id, name FROM categories WHERE status='1'");
 $brands     = mysqli_query($conn, "SELECT id, name FROM brands WHERE status='1'");
 $units      = mysqli_query($conn, "SELECT id, unit_name as name, code as short_name FROM units WHERE status='1'");
 $taxes      = mysqli_query($conn, "SELECT id, name, taxrate as rate FROM taxrates WHERE status='1'");
-$boxes      = mysqli_query($conn, "SELECT id, box_name as name FROM boxes WHERE status='1'"); // Added
-$currencies = mysqli_query($conn, "SELECT id, currency_name as name, code FROM currencies WHERE status='1'"); // Added
+$boxes      = mysqli_query($conn, "SELECT id, box_name as name FROM boxes WHERE status='1'"); 
+$currencies = mysqli_query($conn, "SELECT id, currency_name as name, code FROM currencies WHERE status='1'"); 
 
 // Fetch Stores
 $stores_query = "SELECT * FROM stores WHERE status=1 ORDER BY store_name ASC";
@@ -77,21 +78,31 @@ if(isset($_GET['id'])) {
 
     $id = mysqli_real_escape_string($conn, $_GET['id']);
     
+    // 1. Fetch Basic Data
     $query = "SELECT * FROM products WHERE id='$id' LIMIT 1";
     $result = mysqli_query($conn, $query);
 
     if(mysqli_num_rows($result) > 0){
         $d = mysqli_fetch_array($result);
         
-        // Fetch Mapped Stores
+        // 2. Fetch Mapped Stores
         $map_query = "SELECT store_id FROM product_store_map WHERE product_id='$id'";
         $map_result = mysqli_query($conn, $map_query);
-        
         if(mysqli_num_rows($map_result) > 0){
             while($map_row = mysqli_fetch_assoc($map_result)) { 
                 $selected_stores[] = $map_row['store_id']; 
             }
         }
+
+        // 3. FETCH GALLERY IMAGES
+        $gal_query = "SELECT id, image_path FROM product_images WHERE product_id='$id'";
+        $gal_result = mysqli_query($conn, $gal_query);
+        if($gal_result){
+            while($grow = mysqli_fetch_assoc($gal_result)){
+                $gallery_images[] = $grow; // Storing whole row [id, image_path]
+            }
+        }
+
     } else {
         $_SESSION['message'] = "Product not found";
         $_SESSION['msg_type'] = "error";
@@ -239,49 +250,53 @@ include('../includes/header.php');
                             </div>
 
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-                            <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                                <i class="fas fa-coins text-emerald-600"></i> Pricing & Costing
-                            </h3>
+                                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                    <i class="fas fa-coins text-emerald-600"></i> Pricing & Costing
+                                </h3>
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Price *</label>
-                                    <input type="number" step="0.01" name="purchase_price" id="purchase_price" value="<?= $d['purchase_price']; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Purchase Price *</label>
+                                        <input type="number" step="0.01" name="purchase_price" id="purchase_price" value="<?= $d['purchase_price']; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Profit (%)</label>
+                                        <input type="number" step="0.01" name="profit_margin" id="profit_margin" value="<?= $d['profit_margin'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Selling Price *</label>
+                                        <input type="number" step="0.01" name="selling_price" id="selling_price" value="<?= $d['selling_price']; ?>" class="w-full bg-emerald-50 border border-emerald-400 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-900" placeholder="0.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Wholesale Price</label>
+                                        <input type="number" step="0.01" name="wholesale_price" id="wholesale_price" value="<?= $d['wholesale_price'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Profit (%)</label>
-                                    <input type="number" step="0.01" name="profit_margin" id="profit_margin" value="<?= $d['profit_margin'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0">
-                                </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Selling Price *</label>
-                                    <input type="number" step="0.01" name="selling_price" id="selling_price" value="<?= $d['selling_price']; ?>" class="w-full bg-emerald-50 border border-emerald-400 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-900" placeholder="0.00">
-                                </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Wholesale Price</label>
-                                    <input type="number" step="0.01" name="wholesale_price" id="wholesale_price" value="<?= $d['wholesale_price'] ?? '0'; ?>" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none font-bold" placeholder="0.00">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Rate</label>
+                                        <select name="tax_rate_id" id="tax_rate_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                            <option value="" data-rate="0">No Tax</option>
+                                            <?php mysqli_data_seek($taxes, 0); while($tax = mysqli_fetch_assoc($taxes)): ?>
+                                                <option value="<?= $tax['id']; ?>" data-rate="<?= $tax['rate']; ?>" <?= $d['tax_rate_id'] == $tax['id'] ? 'selected' : ''; ?>>
+                                                    <?= $tax['name']; ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Method</label>
+                                        <select name="tax_method" id="tax_method" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                            <option value="inclusive" <?= $d['tax_method'] == 'inclusive' ? 'selected' : ''; ?>>Inclusive (Price includes Tax)</option>
+                                            <option value="exclusive" <?= $d['tax_method'] == 'exclusive' ? 'selected' : ''; ?>>Exclusive (Tax added to Price)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Rate</label>
-                                    <select name="tax_rate_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-                                        <option value="">No Tax</option>
-                                        <?php mysqli_data_seek($taxes, 0); while($tax = mysqli_fetch_assoc($taxes)): ?>
-                                            <option value="<?= $tax['id']; ?>" <?= $d['tax_rate_id'] == $tax['id'] ? 'selected' : ''; ?>><?= $tax['name']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Method</label>
-                                    <select name="tax_method" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-                                        <option value="inclusive" <?= $d['tax_method'] == 'inclusive' ? 'selected' : ''; ?>>Inclusive (Price includes Tax)</option>
-                                        <option value="exclusive" <?= $d['tax_method'] == 'exclusive' ? 'selected' : ''; ?>>Exclusive (Tax added to Price)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+
 
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
                                 <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
@@ -319,47 +334,57 @@ include('../includes/header.php');
                         </div>
                         
                         <div class="space-y-6 slide-in delay-200">
+                            
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <label class="block text-sm font-semibold text-slate-700 mb-4">Product Thumbnail</label>
-                                <div class="flex flex-col items-center justify-center h-48">
+                                <label class="block text-sm font-semibold text-slate-700 mb-4">Product Gallery</label>
+                                
+                                <div class="grid grid-cols-3 gap-3 mb-4" id="gallery-container">
+                                    
+                                    <input type="hidden" name="remove_main_image" id="remove_main_image_flag" value="0">
+                                    <?php if(!empty($d['thumbnail']) && file_exists(".." . str_replace('/pos', '', $d['thumbnail']))): ?>
+                                        <div id="main_img_preview" class="relative group h-24 w-24 border rounded overflow-hidden ring-2 ring-teal-500">
+                                            <img src="<?= $d['thumbnail']; ?>" class="w-full h-full object-cover">
+                                            
+                                            <button type="button" onclick="removeMainImage()" 
+                                                class="absolute top-0 right-0 bg-red-600 text-white w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-700 z-10" title="Remove Image">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
 
-                                    <label for="thumbnail-upload" class="group relative w-full aspect-square max-w-[250px] rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-teal-500 hover:bg-teal-50 transition-all" id="thumbnail-preview-container">
-                                        
-                                        <?php 
-                                        $img_src = "";
-                                        $show_image = false;
-                                        $db_thumb_path = $d['thumbnail'] ?? '';
-
-                                        if(!empty($db_thumb_path)) {
-                                            $clean_path = str_replace('/pos', '', $db_thumb_path);
-                                            $server_path = ".." . $clean_path;
-
-                                            if(file_exists($server_path)) {
-                                                $img_src = $db_thumb_path;
-                                                $show_image = true;
-                                            }
-                                        }
-                                        ?>
-
-                                        <?php if($show_image): ?>
-                                            <img src="<?= $img_src; ?>" class="w-full h-full object-cover">
-                                        <?php else: ?>
-                                            <div class="text-center p-4">
-                                                <i class="fas fa-cloud-upload-alt text-4xl text-slate-300 group-hover:text-teal-500 transition-colors mb-2"></i>
-                                                <p class="text-sm text-slate-500 group-hover:text-teal-600">Click to Upload</p>
+                                            <div class="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs pointer-events-none">
+                                                Main Image
                                             </div>
-                                        <?php endif; ?>
-                                        
-                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span class="text-white font-medium text-sm">Change Image</span>
                                         </div>
-                                    </label>
+                                    <?php endif; ?>
 
-                                    <input type="file" name="thumbnail" id="thumbnail-upload" class="hidden" onchange="readURL(this);" accept="image/*">
-                                    <p class="text-[11px] text-teal-800 mt-2 text-center">Size: 600x600px | Max: 2MB</p>
+                                    <?php foreach($gallery_images as $g_img): ?>
+                                        <?php 
+                                            // Ensure file exists
+                                            if(!empty($g_img['image_path']) && file_exists(".." . str_replace('/pos', '', $g_img['image_path']))): 
+                                                // Skip if it's the exact same file as main image
+                                                if($g_img['image_path'] == $d['thumbnail']) continue;
+                                        ?>
+                                        <div class="relative group h-24 w-24 border rounded overflow-hidden shadow-sm" id="img-card-<?= $g_img['id']; ?>">
+                                            <img src="<?= $g_img['image_path']; ?>" class="w-full h-full object-cover">
+                                            
+                                            <button type="button" onclick="deleteServerImage(<?= $g_img['id']; ?>)" 
+                                                class="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white w-6 h-6 flex items-center justify-center text-xs transition shadow-md z-10 opacity-0 group-hover:opacity-100" title="Delete Image">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+
+                                    <div id="new-preview-container" class="contents"></div>
+                                </div>
+
+                                <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-slate-100 rounded-2xl p-6 hover:border-teal-500 hover:bg-teal-50 transition-all cursor-pointer relative">
+                                    <input type="file" name="thumbnails[]" id="thumbnail-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/*" onchange="previewImages(this);">
+                                    
+                                    <i class="fas fa-images text-4xl text-slate-300 mb-2"></i>
+                                    <p class="text-sm text-slate-500 font-medium">Click to upload multiple images</p>
+                                    <p class="text-[11px] text-teal-800 mt-1">Select as many as you want</p>
                                 </div>
                             </div>
-
                             <?php 
                                     $current_status = $d['status']; 
                                     $status_title = "Product"; 
@@ -410,26 +435,106 @@ include('../includes/header.php');
     </main>
 </div>
 
+// --- 1. NEW IMAGE PREVIEW FUNCTION ---
 <script>
+// =========================================================
+// 1. UTILITY FUNCTIONS (IMAGE, DELETE, RANDOM CODE, FILTER)
+// =========================================================
+
+// --- NEW IMAGE PREVIEW FUNCTION ---
+function previewImages(input) {
+    var container = document.getElementById("new-preview-container");
+    if (input.files) {
+        var filesAmount = input.files.length;
+        for (i = 0; i < filesAmount; i++) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var html = `
+                    <div class="relative h-24 w-24 border rounded-lg overflow-hidden shadow-sm animate-fade-in bg-gray-100">
+                        <img src="${event.target.result}" class="w-full h-full object-cover opacity-80">
+                        <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-600">NEW</div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+            reader.readAsDataURL(input.files[i]);
+        }
+    }
+}
+
+// --- DELETE SERVER IMAGE (AJAX) ---
+function deleteServerImage(imageId) {
+    const element = document.getElementById('img-card-' + imageId);
+    if(element) element.style.display = 'none';
+
+    let formData = new FormData();
+    formData.append('delete_gallery_image', true);
+    formData.append('image_id', imageId);
+
+    fetch('/pos/products/save', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        if(data.trim() !== 'success') {
+            console.error('Failed to delete image: ' + data);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// --- REMOVE MAIN IMAGE (NO ALERT) ---
+function removeMainImage() {
+    const imgDiv = document.getElementById('main_img_preview');
+    if(imgDiv) {
+        imgDiv.style.display = 'none'; 
+    }
+    document.getElementById('remove_main_image_flag').value = '1';
+}
+
+// --- RANDOM CODE GENERATOR ---
+function generateCode() {
+    const min = 10000000;
+    const max = 99999999;
+    const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;
+    const input = document.getElementById('product_code');
+    if(input) {
+        input.value = randomCode;
+        input.dispatchEvent(new Event('input'));
+    }
+}
+
+// --- STORE FILTER FUNCTION ---
+function filterStores() {
+    const input = document.getElementById('storeSearch');
+    const filter = input.value.toLowerCase();
+    const list = document.getElementById('storeList');
+    const labels = list.getElementsByTagName('label');
+
+    for (let i = 0; i < labels.length; i++) {
+        const span = labels[i].querySelector('span');
+        const txtValue = span.textContent || span.innerText;
+        labels[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+    }
+}
+
+// =========================================================
+// 2. MAIN LOGIC (VALIDATION & PRICING WITH TAX)
+// =========================================================
+
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- A. FORM VALIDATION ---
     const productForm = document.getElementById('productForm');
 
-    // Validation Logic
     productForm.addEventListener('submit', function(e) {
         let isValid = true;
         let firstErrorField = null;
 
-        // List of Must Required Fields
         const requiredFields = [
-            'product_name',
-            'product_code',
-            'barcode_symbology',
-            'category_id',
-            'unit_id',
-            'purchase_price',
-            'selling_price',
-            'alert_quantity',
+            'product_name', 'product_code', 'barcode_symbology',
+            'category_id', 'unit_id', 'purchase_price',
+            'selling_price', 'alert_quantity'
         ];
 
         requiredFields.forEach(function(fieldName) {
@@ -452,22 +557,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Store Checkbox Validation
         const storeCheckboxes = document.querySelectorAll('.store-checkbox');
-        const storeError = document.getElementById('store-error'); 
+        let storeChecked = false;
+        storeCheckboxes.forEach(cb => {
+            if(cb.checked) storeChecked = true;
+        });
         
-        if(storeCheckboxes.length > 0) {
-            let isOneStoreChecked = false;
-            storeCheckboxes.forEach(cb => { if(cb.checked) isOneStoreChecked = true; });
-            
-            if(!isOneStoreChecked) {
-                isValid = false;
-                if(storeError) {
-                    storeError.classList.remove('hidden');
-                }
-            } else {
-                if(storeError) storeError.classList.add('hidden');
-            }
+        const storeError = document.getElementById('store-error');
+        if(!storeChecked) {
+            isValid = false;
+            storeError.classList.remove('hidden');
+            if(!firstErrorField) firstErrorField = document.getElementById('storeList');
+        } else {
+            storeError.classList.add('hidden');
         }
 
         if(!isValid) {
@@ -479,80 +581,97 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Real-time validation removal
-    const allInputs = productForm.querySelectorAll('input, select, textarea');
-    allInputs.forEach(input => {
-        ['input', 'change'].forEach(evt => {
-            input.addEventListener(evt, function() {
-                if(this.value.trim() !== "") {
-                    this.classList.remove('border-red-500', 'focus:ring-red-500', 'bg-red-50');
-                    this.classList.add('border-slate-300', 'focus:ring-teal-500', 'bg-slate-50');
-                    
-                    const parent = this.closest('.form-group') || this.parentElement;
-                    const errorMsg = parent.querySelector('.error-msg');
-                    if(errorMsg) errorMsg.classList.add('hidden');
-                }
-            });
-        });
-    });
-});
 
-// Image Preview Function
-function readURL(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const container = document.getElementById('thumbnail-preview-container');
-            container.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">
-                                   <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="text-white font-medium text-sm">Change Image</span>
-                                   </div>`;
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// Random Code Generator
-function generateCode() {
-    const min = 10000000;
-    const max = 99999999;
-    const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;
-    const input = document.getElementById('product_code');
-    if(input) {
-        input.value = randomCode;
-        input.dispatchEvent(new Event('input'));
-    }
-}
-
-// Store Filter Function
-function filterStores() {
-    const input = document.getElementById('storeSearch');
-    const filter = input.value.toLowerCase();
-    const list = document.getElementById('storeList');
-    const labels = list.getElementsByTagName('label');
-
-    for (let i = 0; i < labels.length; i++) {
-        const span = labels[i].querySelector('span');
-        const txtValue = span.textContent || span.innerText;
-        labels[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none";
-    }
-}
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+    // --- B. PRICING & TAX CALCULATION LOGIC ---
+    
+    // Inputs identification
     const pInput = document.getElementById('purchase_price');
-    const mInput = document.getElementById('profit_margin');
+    const mInput = document.getElementById('profit_margin'); // Ensure ID is profit_margin
     const sInput = document.getElementById('selling_price');
+    
+    // Selects for Tax (Note: Ensure your select names match these)
+    const taxSelect = document.querySelector('select[name="tax_rate_id"]');
+    const taxMethodSelect = document.querySelector('select[name="tax_method"]');
 
-    // Automatic Profit/Selling Price Calculation
+    // Helper: Get Tax Rate from selected option's data-rate
+    function getTaxRate() {
+        if (!taxSelect || !taxSelect.value) return 0;
+        const selectedOption = taxSelect.options[taxSelect.selectedIndex];
+        // Ensure your PHP generates data-rate attribute
+        return parseFloat(selectedOption.getAttribute('data-rate')) || 0;
+    }
+
+    // Helper: Get Tax Method (1 = Exclusive, 0 = Inclusive based on standard Logic)
+    // Adjust values '1' or 'exclusive' based on your HTML values
+    function getTaxMethod() {
+        // Assuming value '1' or 'exclusive' means Exclusive
+        // Assuming value '0' or 'inclusive' means Inclusive
+        if(!taxMethodSelect) return 'exclusive';
+        const val = taxMethodSelect.value.toLowerCase();
+        if(val === '1' || val === 'exclusive') return 'exclusive';
+        return 'inclusive';
+    }
+
+    // 1. Calculate Selling Price (Forward: Purchase -> Selling)
     function calculatePrices() {
         let purchase = parseFloat(pInput.value) || 0;
         let margin = parseFloat(mInput.value) || 0;
-        let selling = purchase + (purchase * (margin / 100));
-        sInput.value = selling.toFixed(2);
+        let taxRate = getTaxRate();
+        let method = getTaxMethod();
+
+        // Step 1: Base Price (Purchase + Profit)
+        let basePrice = purchase + (purchase * (margin / 100));
+        let finalSellingPrice = basePrice;
+
+        // Step 2: Apply Tax Logic
+        if (method === 'exclusive') {
+            // Exclusive: Price = Base + (Base * Tax%)
+            finalSellingPrice = basePrice * (1 + (taxRate / 100));
+        } else {
+            // Inclusive: Price = Base (Tax is inside, so price doesn't increase visually)
+            finalSellingPrice = basePrice;
+        }
+
+        sInput.value = finalSellingPrice.toFixed(2);
     }
 
-    pInput.addEventListener('input', calculatePrices);
-    mInput.addEventListener('input', calculatePrices);
+    // 2. Calculate Margin (Reverse: Selling -> Profit)
+    function calculateMargin() {
+        let purchase = parseFloat(pInput.value) || 0;
+        let selling = parseFloat(sInput.value) || 0;
+        let taxRate = getTaxRate();
+        let method = getTaxMethod();
+
+        if(purchase > 0) {
+            let basePrice = selling;
+
+            // Reverse Tax Logic
+            if (method === 'exclusive') {
+                // Remove tax to get pure base price
+                basePrice = selling / (1 + (taxRate / 100));
+            } else {
+                // Inclusive: Selling price is the base for margin calculation
+                basePrice = selling;
+            }
+
+            let margin = ((basePrice - purchase) / purchase) * 100;
+            mInput.value = margin.toFixed(2);
+        }
+    }
+
+    // Listeners
+    if(pInput && mInput && sInput) {
+        // Recalculate when Purchase or Margin changes
+        pInput.addEventListener('input', calculatePrices);
+        mInput.addEventListener('input', calculatePrices);
+        
+        // Recalculate when Tax settings change
+        if(taxSelect) taxSelect.addEventListener('change', calculatePrices);
+        if(taxMethodSelect) taxMethodSelect.addEventListener('change', calculatePrices);
+
+        // Reverse calc when Selling Price is manually typed
+        sInput.addEventListener('input', calculateMargin);
+    }
+
 });
 </script>
