@@ -208,7 +208,7 @@ include('../includes/header.php');
                                         </div>
                                         <div class="form-group">
                                             <label class="block text-sm font-semibold text-slate-700 mb-2">Brand</label>
-                                            <select name="brand_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
+                                            <select name="brand_id" id="brand_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
                                                 <option value="">Select Brand</option>
                                                 <?php mysqli_data_seek($brands, 0); while($brand = mysqli_fetch_assoc($brands)): ?>
                                                     <option value="<?= $brand['id']; ?>" <?= $d['brand_id'] == $brand['id'] ? 'selected' : ''; ?>><?= $brand['name']; ?></option>
@@ -227,10 +227,10 @@ include('../includes/header.php');
                                         </div>
                                     </div>
                                     
-                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5">
                                         <div class="form-group">
                                             <label class="block text-sm font-semibold text-slate-700 mb-2">Box / Shelf Placement</label>
-                                            <select name="box_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
+                                            <select name="box_id" id="box_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
                                                 <option value="">Select Box</option>
                                                 <?php mysqli_data_seek($boxes, 0); while($box = mysqli_fetch_assoc($boxes)): ?>
                                                     <option value="<?= $box['id']; ?>" <?= ($d['box_id'] ?? '') == $box['id'] ? 'selected' : ''; ?>><?= $box['name']; ?></option>
@@ -239,7 +239,7 @@ include('../includes/header.php');
                                         </div>
                                         <div class="form-group">
                                             <label class="block text-sm font-semibold text-slate-700 mb-2">Currency</label>
-                                            <select name="currency_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
+                                            <select name="currency_id" id="currency_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
                                                 <?php mysqli_data_seek($currencies, 0); while($curr = mysqli_fetch_assoc($currencies)): ?>
                                                     <option value="<?= $curr['id']; ?>" <?= ($d['currency_id'] ?? '') == $curr['id'] ? 'selected' : ''; ?>><?= $curr['name']; ?></option>
                                                 <?php endwhile; ?>
@@ -274,7 +274,7 @@ include('../includes/header.php');
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5">
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Rate</label>
                                         <select name="tax_rate_id" id="tax_rate_id" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -320,7 +320,7 @@ include('../includes/header.php');
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-dashed border-slate-200 pt-5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5">
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Qty</label>
                                             <input type="number" name="alert_quantity" value="<?= $d['alert_quantity']; ?>" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
@@ -377,7 +377,7 @@ include('../includes/header.php');
                                     <div id="new-preview-container" class="contents"></div>
                                 </div>
 
-                                <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 bg-slate-100 rounded-2xl p-6 hover:border-teal-500 hover:bg-teal-50 transition-all cursor-pointer relative">
+                                <div class="flex flex-col items-center justify-center bg-slate-100 rounded-2xl p-6 hover:border-teal-500 hover:bg-teal-50 transition-all cursor-pointer relative">
                                     <input type="file" name="thumbnails[]" id="thumbnail-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/*" onchange="previewImages(this);">
                                     
                                     <i class="fas fa-images text-4xl text-slate-300 mb-2"></i>
@@ -400,23 +400,11 @@ include('../includes/header.php');
                                 <textarea name="description" rows="4" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none text-sm resize-none" placeholder="Enter product details..."><?= htmlspecialchars($d['description']); ?></textarea>
                             </div>
 
-                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Available Stores</label>
-                                <input type="text" id="storeSearch" onkeyup="filterStores()" placeholder="Search stores..." class="w-full mb-3 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500">
-                                
-                                <div id="storeList" class="space-y-2 max-h-48 overflow-y-auto custom-scroll pr-1">
-                                    <?php foreach($all_stores as $store): ?>
-                                        <label class="flex items-center p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-100">
-                                            <input type="checkbox" name="store_ids[]" value="<?= $store['id']; ?>" 
-                                                class="store-checkbox w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2"
-                                                <?= in_array($store['id'], $selected_stores) ? 'checked' : ''; ?> 
-                                            >
-                                            <span class="ml-2.5 text-sm text-slate-600 font-medium select-none"><?= $store['store_name']; ?></span>
-                                        </label>
-                                    <?php endforeach; ?>
-                                </div>
-                                <p id="store-error" class="text-xs text-red-500 mt-2 hidden"><i class="fas fa-exclamation-circle"></i> Please select at least one store.</p>
-                            </div>
+                            <?php 
+                                $store_label = "Available Stores"; 
+                                $search_placeholder = "Search stores...";
+                                include('../includes/store_select_component.php'); 
+                            ?>
 
                             <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-4 sticky top-24 z-10">
                                 <button type="submit" name="<?= $btn_name; ?>" class="w-full bg-gradient-to-r from-teal-800 to-emerald-800 hover:from-teal-900 hover:to-emerald-900 text-white font-bold py-3.5 rounded-xl shadow-md transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2 mb-3"> 
@@ -434,6 +422,49 @@ include('../includes/header.php');
         </div>
     </main>
 </div>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+/* Select2 Styling for Product Form */
+.select2-container .select2-selection--single {
+    height: 48px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 46px !important;
+    padding-left: 16px !important;
+    color: #334155 !important;
+}
+.select2-container .select2-selection--single .select2-selection__arrow {
+    height: 46px !important;
+    right: 10px !important;
+}
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #14b8a6 !important;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1) !important;
+}
+.select2-dropdown {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+.select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+}
+.select2-results__option--highlighted[aria-selected] {
+    background-color: #14b8a6 !important;
+}
+</style>
 
 // --- 1. NEW IMAGE PREVIEW FUNCTION ---
 <script>
@@ -501,20 +532,6 @@ function generateCode() {
     if(input) {
         input.value = randomCode;
         input.dispatchEvent(new Event('input'));
-    }
-}
-
-// --- STORE FILTER FUNCTION ---
-function filterStores() {
-    const input = document.getElementById('storeSearch');
-    const filter = input.value.toLowerCase();
-    const list = document.getElementById('storeList');
-    const labels = list.getElementsByTagName('label');
-
-    for (let i = 0; i < labels.length; i++) {
-        const span = labels[i].querySelector('span');
-        const txtValue = span.textContent || span.innerText;
-        labels[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none";
     }
 }
 
@@ -672,6 +689,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reverse calc when Selling Price is manually typed
         sInput.addEventListener('input', calculateMargin);
     }
+
+    // --- C. SELECT2 INITIALIZATION FOR SEARCHABLE DROPDOWNS ---
+    $('#category_id').select2({ placeholder: "Search Category...", width: '100%' });
+    $('#brand_id').select2({ placeholder: "Search Brand...", width: '100%' });
+    $('#unit_id').select2({ placeholder: "Search Unit...", width: '100%' });
+    $('#box_id').select2({ placeholder: "Search Box/Shelf...", width: '100%' });
+    $('#currency_id').select2({ placeholder: "Search Currency...", width: '100%' });
+    $('#tax_rate_id').select2({ placeholder: "Search Tax Rate...", width: '100%' });
 
 });
 </script>

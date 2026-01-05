@@ -89,7 +89,25 @@ include('../includes/header.php');
         outline: none;
     }
 </style>
-
+<style>
+    .dataTables_paginate .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 2px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        cursor: pointer !important;
+    }
+    .dataTables_paginate .paginate_button.current {
+        background: #4f46e5 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .dataTables_length select {
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 5px 10px !important;
+    }
+</style>
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
     
@@ -182,6 +200,30 @@ include('../includes/header.php');
                     </table>
                 </div>
             </div>
+            <div id="viewModal" class="fixed inset-0 z-[9999] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeViewModal()"></div>
+                <div class="fixed inset-0 z-10 overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+                        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all w-full max-w-4xl my-4">
+                            <div class="bg-teal-600 px-4 py-3 flex flex-wrap justify-between items-center gap-2 print:hidden">
+                                <h3 class="text-sm sm:text-base font-semibold text-white truncate" id="modal-title">
+                                    <i class="fas fa-eye mr-2"></i> <span id="viewModalTitle">Return Details</span>
+                                </h3>
+                                <div class="flex flex-wrap gap-1 sm:gap-2">
+                                    <button onclick="printPurchase()" class="p-1.5 sm:p-2 bg-teal-700 text-white rounded hover:bg-teal-800 transition" title="Print">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button onclick="closeViewModal()" class="p-1.5 sm:p-2 bg-red-500 text-white rounded hover:bg-red-600 transition" title="Close">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="viewModalContent" class="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <?php include('../includes/footer.php'); ?>
         </div>
     </main>
@@ -203,31 +245,46 @@ $(document).ready(function() {
     var table = $('#returnTable').DataTable({
         pageLength: 25,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        dom: 'Bfrtip',
+        // dom: l=length menu, f=filter, t=table, i=info, p=pagination
+        dom: '<"flex flex-col md:flex-row justify-between items-center gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-center gap-4 mt-4"i p>',
         buttons: [
-            { extend: 'print', className: 'dt-print' },
-            { extend: 'csv', className: 'dt-csv' },
-            { extend: 'excel', className: 'dt-excel' },
-            { extend: 'pdf', className: 'dt-pdf' },
-            { extend: 'copy', className: 'dt-copy' }
+            { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
+            { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
+            { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
+            { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
+            { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
         ],
-        order: [[0, 'desc']],
+        order: [[0, 'desc']], 
         language: {
-            search: "",
-            searchPlaceholder: "Search return invoices, suppliers, or creator..."
+            search: "", 
+            searchPlaceholder: "Search return invoices, suppliers, or creator...",
+            lengthMenu: "Show _MENU_ entries"
         }
+    });
+
+   
+    $('.dataTables_filter').addClass('flex-1 w-full md:max-w-2xl');
+    $('.dataTables_filter input').addClass('w-full h-12 pl-4 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-medium');
+    
+
+    $('#selectAll').on('click', function() {
+        $('.row-checkbox').prop('checked', $(this).prop('checked'));
     });
 });
 
-// Trigger DataTable Button from Custom Menu
+
 function triggerDtAction(action) {
-    if(action == 'print') $('.buttons-print').click();
-    if(action == 'csv') $('.buttons-csv').click();
-    if(action == 'excel') $('.buttons-excel').click();
-    if(action == 'pdf') $('.buttons-pdf').click();
-    if(action == 'copy') $('.buttons-copy').click();
+    const table = $('#returnTable').DataTable();
+    
+    if(action == 'print') table.button('.buttons-print').trigger();
+    else if(action == 'csv') table.button('.buttons-csv').trigger();
+    else if(action == 'excel') table.button('.buttons-excel').trigger();
+    else if(action == 'pdf') table.button('.buttons-pdf').trigger();
+    else if(action == 'copy') table.button('.buttons-copy').trigger();
+    
     $('#exportDropdown').addClass('hidden');
 }
+
 
 // Export dropdown toggle
 function toggleExportDropdown() {
@@ -241,7 +298,48 @@ $(document).on('click', function(e) {
     }
 });
 
+// View Return/Purchase Details via AJAX
 function viewReturn(invoiceId) {
-    window.location.href = '/pos/purchases/list?filter=all';
+    $('#viewModalTitle').text('Return Detail > ' + invoiceId);
+    $('#viewModalContent').html('<div class="text-center py-8"><i class="fas fa-spinner fa-spin fa-2x text-teal-600"></i><p class="mt-4 text-slate-600">Loading...</p></div>');
+    $('#viewModal').removeClass('hidden');
+    
+    $.ajax({
+        url: '/pos/purchases/save_purchase.php', // আপনার সেভ পারচেজ ফাইলে ভিউ লজিক অলরেডি আছে
+        type: 'POST',
+        data: { 
+            view_purchase_btn: true, 
+            invoice_id: invoiceId 
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.status == 200) {
+                $('#viewModalContent').html(response.html);
+            } else {
+                $('#viewModalContent').html('<div class="text-center py-8 text-red-600">' + response.message + '</div>');
+            }
+        },
+        error: function() {
+            $('#viewModalContent').html('<div class="text-center py-8 text-red-600">Error loading details</div>');
+        }
+    });
+}
+
+function closeViewModal() {
+    $('#viewModal').addClass('hidden');
+}
+
+function printPurchase() {
+    var content = document.getElementById('viewModalContent').innerHTML;
+    var mywindow = window.open('', 'PRINT', 'height=800,width=1000');
+    mywindow.document.write('<html><head><title>Return_' + invoiceId + '</title>');
+    mywindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+    mywindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>');
+    mywindow.document.write('</head><body class="p-4">');
+    mywindow.document.write(content);
+    mywindow.document.write('</body></html>');
+    mywindow.document.close(); 
+    mywindow.focus(); 
+    setTimeout(function(){ mywindow.print(); mywindow.close(); }, 1500);
 }
 </script>

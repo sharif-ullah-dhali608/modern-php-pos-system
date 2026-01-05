@@ -11,47 +11,56 @@ if(!isset($_SESSION['auth'])){
 // Get filter parameter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 
-// Build query based on filter
+/**
+
+ * Added Subqueries to calculate total bought vs total returned.
+ * Used HAVING to hide invoices where everything has been returned.
+ */
 $query = "SELECT pi.*, 
                  s.name as supplier_name,
-                 u.name as creator_name
+                 u.name as creator_name,
+                 (SELECT SUM(item_quantity) FROM purchase_item WHERE invoice_id = pi.invoice_id) as total_qty_bought,
+                 (SELECT SUM(return_quantity) FROM purchase_item WHERE invoice_id = pi.invoice_id) as total_qty_returned
           FROM purchase_info pi
           LEFT JOIN suppliers s ON pi.sup_id = s.id
           LEFT JOIN users u ON pi.created_by = u.id
           WHERE 1=1";
 
-// Apply filters
+// Apply existing filters
 if($filter == 'today') {
     $query .= " AND DATE(pi.created_at) = CURDATE()";
-} elseif($filter == 'due') {
-    $query .= " AND pi.payment_status = 'due'";
-} elseif($filter == 'all_due') {
+} elseif($filter == 'due' || $filter == 'all_due') {
     $query .= " AND pi.payment_status = 'due'";
 } elseif($filter == 'paid') {
     $query .= " AND pi.payment_status = 'paid'";
 } elseif($filter == 'inactive') {
     $query .= " AND pi.is_visible = 0";
 } else {
-    // All invoice
     $query .= " AND pi.is_visible = 1";
 }
+
+/**
+
+ * If total items bought minus total items returned is 0, 
+ * it means the invoice is fully returned and should be hidden from the list.
+ */
+$query .= " HAVING (total_qty_bought - total_qty_returned) > 0";
 
 $query .= " ORDER BY pi.created_at DESC";
 
 $query_run = mysqli_query($conn, $query);
 $items = [];
 
-// Calculate totals for summary
+// Reset totals for summary cards
 $total_amount = 0;
 $total_paid = 0;
 $total_due = 0;
 
 if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
-        // Get payment details
         $invoice_id = mysqli_real_escape_string($conn, $row['invoice_id']);
         
-        // Calculate paid amount from purchase_logs
+        // Calculate paid amount from logs
         $paid_query = "SELECT COALESCE(SUM(amount), 0) as total_paid 
                        FROM purchase_logs 
                        WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'";
@@ -59,59 +68,52 @@ if($query_run) {
         $paid_data = mysqli_fetch_assoc($paid_result);
         $paid_amount = floatval($paid_data['total_paid']);
         
-        // Calculate total from purchase_items
-        $total_query = "SELECT COALESCE(SUM(item_total), 0) as total_amount 
-                        FROM purchase_item 
-                        WHERE invoice_id = '$invoice_id'";
-        $total_result = mysqli_query($conn, $total_query);
-        $total_data = mysqli_fetch_assoc($total_result);
-        // $amount = floatval($total_data['total_sell']);
+        // Use total_sell from info table as the source of truth for grand total
         $amount = floatval($row['total_sell']);        
-        $due_amount = $amount - $paid_amount;        
-        // Format data
+        $due_amount = $amount - $paid_amount;  
+
+        // Ensure Due doesn't show negative if overpaid
+        // $due_display_val = ($due_amount < 0) ? 0 : $due_amount;
+        
+        // Format data for table display
         $row['formatted_datetime'] = date('Y-m-d H:i:s', strtotime($row['created_at']));
         $row['invoice_id_display'] = $row['invoice_id'];
         $row['supplier_display'] = !empty($row['supplier_name']) ? $row['supplier_name'] : 'No Supplier';
-        $row['creator_display'] = !empty($row['creator_name']) ? $row['creator_name'] : 'Your Name';
+        $row['creator_display'] = !empty($row['creator_name']) ? $row['creator_name'] : 'Admin';
         $row['amount_display'] = number_format($amount, 2);
         $row['paid_display'] = number_format($paid_amount, 2);
         $row['due_display'] = number_format($due_amount, 2);
         
+        // Status badge logic
         // Status badge
-        $status_class = $row['payment_status'] == 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+        if($row['payment_status'] == 'paid') {
+            $status_class = 'bg-green-100 text-green-700';
+        } elseif($row['payment_status'] == 'receivable') {
+            $status_class = 'bg-blue-100 text-blue-700';
+        } else {
+            $status_class = 'bg-red-100 text-red-700';
+        }
         $status_text = ucfirst($row['payment_status']);
         $row['status_badge'] = '<span class="px-2 py-1 rounded-full text-xs font-bold ' . $status_class . '">' . $status_text . '</span>';
         
-        // Store raw values for calculations
+        // Raw values for footer totals
         $row['amount_raw'] = $amount;
         $row['paid_raw'] = $paid_amount;
         $row['due_raw'] = $due_amount;
         
-        // Actions
+        // Action Buttons
         $row['actions_html'] = '';
-        
-        // Pay button (only show if due)
         if($due_amount > 0) {
             $row['actions_html'] .= '<button type="button" onclick="openPaymentModal(\'' . $row['invoice_id'] . '\')" class="p-2 text-green-500 hover:bg-green-50 rounded transition" title="Pay"><i class="fas fa-dollar-sign"></i></button>';
-        } else {
-            $row['actions_html'] .= '<span class="p-2 text-gray-400">-</span>';
         }
-        
-        // Return button
         $row['actions_html'] .= '<button type="button" onclick="openReturnModal(\'' . $row['invoice_id'] . '\')" class="p-2 text-orange-500 hover:bg-orange-50 rounded transition" title="Return"><i class="fas fa-arrow-left"></i></button>';
-        
-        // View button
         $row['actions_html'] .= '<button type="button" onclick="viewPurchase(\'' . $row['invoice_id'] . '\')" class="p-2 text-blue-500 hover:bg-blue-50 rounded transition" title="View"><i class="fas fa-eye"></i></button>';
-        
-        // Edit button
         $row['actions_html'] .= '<a href="/pos/purchases/add?invoice_id=' . $row['invoice_id'] . '" class="p-2 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit"><i class="fas fa-edit"></i></a>';
-        
-        // Delete button
         $row['actions_html'] .= '<button type="button" onclick="confirmDelete(\'' . $row['invoice_id'] . '\', \'' . addslashes($row['invoice_id']) . '\', \'/pos/purchases/save_purchase.php\')" class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete"><i class="fas fa-trash-alt"></i></button>';
         
         $items[] = $row;
         
-        // Add to totals
+        // Add to aggregate totals for summary cards
         $total_amount += $amount;
         $total_paid += $paid_amount;
         $total_due += $due_amount;
@@ -154,6 +156,25 @@ include('../includes/header.php');
         border-color: #0d9488 !important;
         box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1) !important;
         outline: none;
+    }
+</style>
+<style>
+    .dataTables_paginate .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 2px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        cursor: pointer !important;
+    }
+    .dataTables_paginate .paginate_button.current {
+        background: #4f46e5 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .dataTables_length select {
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 5px 10px !important;
     }
 </style>
 
@@ -417,39 +438,46 @@ include('../includes/header.php');
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#purchaseTable').DataTable({
-        pageLength: 25,
+var table = $('#purchaseTable').DataTable({
+        pageLength: 10,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        dom: 'Bfrtip',
+        // l=length, f=filter, t=table, i=info, p=pagination
+        dom: '<"flex flex-col md:flex-row justify-between items-center gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-center gap-4 mt-4"i p>',
         buttons: [
-            { extend: 'print', className: 'dt-print' },
-            { extend: 'csv', className: 'dt-csv' },
-            { extend: 'excel', className: 'dt-excel' },
-            { extend: 'pdf', className: 'dt-pdf' },
-            { extend: 'copy', className: 'dt-copy' }
+            { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
+            { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
+            { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
+            { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
+            { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
         ],
-        order: [[1, 'desc']],
+        order: [[1, 'desc']], 
         language: {
-            search: "",
-            searchPlaceholder: "Search for invoices, suppliers, or dates..."
+            search: "", 
+            searchPlaceholder: "Search for invoices, suppliers, or dates...",
+            lengthMenu: "Show _MENU_ entries"
         }
     });
+
+   
+    $('.dataTables_filter').addClass('flex-1 w-full md:max-w-2xl');
+    $('.dataTables_filter input').addClass('w-full h-12 pl-4 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-medium');
     
-    // Select all checkbox
+   
     $('#selectAll').on('click', function() {
         $('.row-checkbox').prop('checked', $(this).prop('checked'));
     });
 });
-
-// Trigger DataTable Button from Custom Menu
+// Trigger DataTable Action from Custom Dropdown Menu
 function triggerDtAction(action) {
-    if(action == 'print') $('.buttons-print').click();
-    if(action == 'csv') $('.buttons-csv').click();
-    if(action == 'excel') $('.buttons-excel').click();
-    if(action == 'pdf') $('.buttons-pdf').click();
-    if(action == 'copy') $('.buttons-copy').click();
-    $('#exportDropdown').addClass('hidden');
+    const table = $('#purchaseTable').DataTable(); // নিশ্চিত করুন সঠিক আইডি ব্যবহার করছেন
+    
+    if(action === 'print') table.button('.buttons-print').trigger();
+    else if(action === 'csv') table.button('.buttons-csv').trigger();
+    else if(action === 'excel') table.button('.buttons-excel').trigger();
+    else if(action === 'pdf') table.button('.buttons-pdf').trigger();
+    else if(action === 'copy') table.button('.buttons-copy').trigger();
+    
+    $('#exportDropdown').addClass('hidden'); // ক্লিক করার পর ড্রপডাউন বন্ধ হবে
 }
 
 // Export dropdown toggle
@@ -568,7 +596,6 @@ function openReturnModal(invoiceId) {
 function closeReturnModal() {
     $('#returnModal').addClass('hidden');
 }
-
 // Pay All Selected
 function payAllSelected() {
     var selected = [];
@@ -580,34 +607,57 @@ function payAllSelected() {
     });
     
     if(selected.length === 0) {
-        alert('Please select invoices with due amount');
+        Swal.fire({
+            icon: 'info',
+            title: 'No Selection',
+            text: 'Please select invoices with a due amount first.',
+            confirmButtonColor: '#0d9488'
+        });
         return;
     }
     
-    if(confirm('Pay all selected ' + selected.length + ' invoice(s)?')) {
-        // Implement bulk payment logic
-        $.ajax({
-            url: '/pos/purchases/save_purchase.php',
-            type: 'POST',
-            data: { pay_all_btn: true, invoice_ids: selected },
-            dataType: 'json',
-            success: function(response) {
-                if(response.status == 200) {
-                    alert('Payment processed successfully');
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Pay All Selected?',
+        text: `You are about to process payments for ${selected.length} invoice(s).`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, Pay All'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/pos/purchases/save_purchase.php',
+                type: 'POST',
+                data: { pay_all_btn: true, invoice_ids: selected },
+                dataType: 'json',
+                success: function(response) {
+                    if(response.status == 200) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Paid!',
+                            text: 'Bulk payments processed successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 // Handle payment submission
 $(document).on('submit', '#paymentForm', function(e) {
     e.preventDefault();
     var formData = $(this).serialize();
+    var submitBtn = $(this).find('button[type="submit"]');
     
+    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
     $.ajax({
         url: '/pos/purchases/save_purchase.php',
         type: 'POST',
@@ -615,12 +665,23 @@ $(document).on('submit', '#paymentForm', function(e) {
         dataType: 'json',
         success: function(response) {
             if(response.status == 200) {
-                alert('Payment successful!');
                 closePaymentModal();
-                location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Payment processed successfully!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert('Error: ' + response.message);
+                submitBtn.prop('disabled', false).text('Save Payment');
+                Swal.fire('Error', response.message, 'error');
             }
+        },
+        error: function() {
+            submitBtn.prop('disabled', false).text('Save Payment');
+            Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
         }
     });
 });
@@ -629,6 +690,9 @@ $(document).on('submit', '#paymentForm', function(e) {
 $(document).on('submit', '#returnForm', function(e) {
     e.preventDefault();
     var formData = $(this).serialize();
+    var submitBtn = $(this).find('button[type="submit"]');
+
+    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
     
     $.ajax({
         url: '/pos/purchases/save_purchase.php',
@@ -637,12 +701,23 @@ $(document).on('submit', '#returnForm', function(e) {
         dataType: 'json',
         success: function(response) {
             if(response.status == 200) {
-                alert('Return processed successfully!');
                 closeReturnModal();
-                location.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Returned',
+                    text: 'Return processed successfully!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert('Error: ' + response.message);
+                submitBtn.prop('disabled', false).text('Submit Return');
+                Swal.fire('Error', response.message, 'error');
             }
+        },
+        error: function() {
+            submitBtn.prop('disabled', false).text('Submit Return');
+            Swal.fire('Error', 'Failed to process return.', 'error');
         }
     });
 });

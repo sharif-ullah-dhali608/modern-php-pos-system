@@ -401,7 +401,7 @@ include('../includes/header.php');
             <button onclick="closeImportModal()" class="text-white hover:text-slate-300"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-6">
-            <form action="/pos/purchases/import" method="POST" enctype="multipart/form-data">
+            <form id="importForm" method="POST" enctype="multipart/form-data">
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Export Product Of</label>
                     <select name="import_supplier_id" class="unique-input">
@@ -427,6 +427,7 @@ include('../includes/header.php');
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 // Modal Controls
@@ -489,6 +490,102 @@ $(document).ready(function() {
     setTimeout(function() {
         calculateSummary();
     }, 500);
+
+    // Toast Mixin
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    // CSV Import Handler
+    $('#importForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var btn = $(this).find('button[type="submit"]');
+        var originalText = btn.html();
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
+        
+        $.ajax({
+            url: 'ajax_parse_purchase_csv.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function(response) {
+                if(response.status == 'success') {
+                    if(response.items && response.items.length > 0) {
+                        response.items.forEach(function(item) {
+                            addRow(
+                                item.item_id, 
+                                item.item_quantity, 
+                                item.item_purchase_price, 
+                                item.item_selling_price, 
+                                item.item_tax
+                            );
+                        });
+                        
+                        let msg = response.count + " items imported successfully!";
+                        if(response.missing && response.missing.length > 0) {
+                             Toast.fire({
+                                icon: 'warning',
+                                title: 'Partial Import',
+                                html: msg + '<br><br><b>Missing Products:</b><br>' + response.missing.join(", ")
+                             });
+                        } else {
+                             Toast.fire({
+                                icon: 'success',
+                                title: 'Import Successful',
+                                text: msg
+                             });
+                        }
+                        
+                        closeImportModal();
+                        $('#importForm')[0].reset();
+                    } else {
+                        if(response.missing && response.missing.length > 0) {
+                             Toast.fire({
+                                icon: 'error',
+                                title: 'Items Not Found',
+                                html: 'The following products were not found:<br>' + response.missing.join(", ")
+                             });
+                        } else {
+                             Toast.fire({
+                                icon: 'info',
+                                title: 'No Items',
+                                text: 'No valid items found in CSV.'
+                             });
+                        }
+                    }
+                } else {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                Toast.fire({
+                    icon: 'error',
+                    title: 'System Error',
+                    text: 'Failed to process request. Check console.'
+                });
+            },
+            complete: function() {
+                btn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
 });
 
 function handleFilePreview(input) {
