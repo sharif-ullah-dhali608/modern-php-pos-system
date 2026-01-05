@@ -946,13 +946,14 @@ if(isset($_POST['delete_btn']) && isset($_POST['delete_id'])) {
 // ============================================================
 // SAVE PURCHASE (From Add Purchase Form)
 // ============================================================
+
+
 if(isset($_POST['save_purchase_btn']))
 {
-    // Log that we're in the save handler
     error_log("Purchase Save: Handler called");
     
+    // Form theke data collect kora (Already apnar code-e ache)
     $purchase_date = mysqli_real_escape_string($conn, $_POST['purchase_date'] ?? date('Y-m-d'));
-    $reference_no = mysqli_real_escape_string($conn, $_POST['reference_no'] ?? '');
     $supplier_id = !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : 0;
     $payment_method = !empty($_POST['payment_method']) ? (int)$_POST['payment_method'] : NULL;
     $paid_amount = (float)($_POST['paid_amount'] ?? 0);
@@ -960,191 +961,141 @@ if(isset($_POST['save_purchase_btn']))
     $order_tax = (float)($_POST['order_tax'] ?? 0);
     $shipping_charge = (float)($_POST['shipping_charge'] ?? 0);
     $discount_amount = (float)($_POST['discount_amount'] ?? 0);
-    
-    // Generate invoice ID
-    $invoice_id = strtoupper(substr(md5(time() . rand()), 0, 9));
-    
-    // Get items
-    $items = $_POST['items'] ?? [];
-    
-    error_log("Purchase Save: Items count: " . count($items));
-    error_log("Purchase Save: Store ID: $store_id, User ID: $user_id");
-    
-    // Validate items - check if we have at least one valid item
-    $valid_items = [];
-    foreach($items as $item) {
-        if(!empty($item['product_id']) && (float)($item['qty'] ?? 0) > 0) {
-            $valid_items[] = $item;
-        }
-    }
-    
-    if(empty($valid_items)) {
-        $_SESSION['message'] = "Please add at least one item with quantity";
-        $_SESSION['msg_type'] = "error";
-        ob_end_clean();
-        header("Location: /pos/purchases/add");
-        exit(0);
-    }
-    
-    // Calculate totals
-    $subtotal = 0;
-    $total_items = 0;
-    
-    foreach($valid_items as $item) {
-            $qty = (float)($item['qty'] ?? 0);
-            $cost = (float)($item['cost'] ?? 0);
-            $subtotal += ($qty * $cost);
-            $total_items += $qty;
-    }
-    
-    $order_tax_amount = ($subtotal * $order_tax) / 100;
-    $grand_total = $subtotal + $order_tax_amount + $shipping_charge - $discount_amount;
-    
-    // Handle attachment upload
-    $attachment_path = '';
-    if(isset($_FILES['attachment']['name']) && !empty($_FILES['attachment']['name'][0])) {
-        // Simple file upload handling - you may want to enhance this
-        $upload_dir = '../uploads/purchases/';
-        if(!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        $attachment_path = $upload_dir . time() . '_' . $_FILES['attachment']['name'][0];
-        move_uploaded_file($_FILES['attachment']['tmp_name'][0], $attachment_path);
-        $attachment_path = str_replace('../', '/pos/', $attachment_path);
-    }
-    
+
+    // ==========================================================
+    // EDIT vs CREATE Logic Start
+    // ==========================================================
+    $invoice_id_hidden = mysqli_real_escape_string($conn, $_POST['invoice_id_hidden'] ?? '');
+
     mysqli_begin_transaction($conn);
-    
     try {
-        // Insert purchase_info
-        $payment_status = ($paid_amount >= $grand_total) ? 'paid' : 'due';
-        $insert_query = "INSERT INTO purchase_info (
-            invoice_id, inv_type, store_id, sup_id, total_item, status, total_sell,
-            purchase_note, attachment, is_visible, payment_status, checkout_status,
-            shipping_status, created_by, purchase_date
-        ) VALUES (
-            '$invoice_id', 'purchase', '$store_id', '$supplier_id', '$total_items', 'stock',
-            '$grand_total', '$note', '$attachment_path', 1,
-            '$payment_status', '', 'received', '$user_id', '$purchase_date'
-        )";
-        
-        error_log("Purchase Save: Insert query: " . substr($insert_query, 0, 200));
-        
-        if(!mysqli_query($conn, $insert_query)) {
-            $error = mysqli_error($conn);
-            error_log("Purchase Save: INSERT failed: " . $error);
-            throw new Exception("Failed to insert purchase_info: " . $error);
+        if(!empty($invoice_id_hidden)) {
+            // EDIT MODE logic
+            $invoice_id = $invoice_id_hidden;
+            
+            // 1. Purono stock reverse (minus) kora
+            $old_items_q = mysqli_query($conn, "SELECT item_id, item_quantity FROM purchase_item WHERE invoice_id = '$invoice_id'");
+            while($old_item = mysqli_fetch_assoc($old_items_q)) {
+                $pid = $old_item['item_id'];
+                $old_qty = $old_item['item_quantity'];
+                mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock - $old_qty WHERE id = $pid");
+            }
+            
+            // 2. Purono record delete (notun data insert korar jonno)
+            mysqli_query($conn, "DELETE FROM purchase_info WHERE invoice_id = '$invoice_id'");
+            mysqli_query($conn, "DELETE FROM purchase_item WHERE invoice_id = '$invoice_id'");
+            mysqli_query($conn, "DELETE FROM purchase_logs WHERE ref_invoice_id = '$invoice_id'");
+        } else {
+            // CREATE MODE logic: Notun invoice generate
+            $invoice_id = strtoupper(substr(md5(time() . rand()), 0, 9));
         }
-        
-        error_log("Purchase Save: purchase_info inserted successfully");
-        
-        // Insert items and update product stock
+        // ==========================================================
+        // EDIT vs CREATE Logic End
+        // ==========================================================
+
+        // Validation: Item check
+        $items = $_POST['items'] ?? [];
+        $valid_items = [];
+        foreach($items as $item) {
+            if(!empty($item['product_id']) && (float)($item['qty'] ?? 0) > 0) {
+                $valid_items[] = $item;
+            }
+        }
+
+        if(empty($valid_items)) { throw new Exception("Please add at least one item."); }
+
+        // Totals calculate kora
+       
+        $subtotal = 0;
+        $total_items_qty = 0;
+        $total_item_tax = 0; 
+
         foreach($valid_items as $item) {
-                $product_id = (int)$item['product_id'];
-                $qty = (float)($item['qty'] ?? 0);
-                $cost = (float)($item['cost'] ?? 0);
-                $sell = (float)($item['sell'] ?? 0);
-                
-                // Get product details
-                $product_query = mysqli_query($conn, "SELECT category_id, brand_id, product_name FROM products WHERE id = $product_id LIMIT 1");
-            if(!$product_query) {
-                throw new Exception("Product query failed: " . mysqli_error($conn));
+            $qty = (float)$item['qty'];
+            $cost = (float)$item['cost'];
+            $row_tax = (float)($item['tax'] ?? 0); 
+            
+            $subtotal += ($qty * $cost) + $row_tax;
+            $total_items_qty += $qty;
+            // $total_item_tax += $row_tax;
+        }
+
+        $order_tax_amount = ($subtotal * $order_tax) / 100;
+        $grand_total = ($subtotal + $order_tax_amount + $shipping_charge) - $discount_amount;
+        // 1. Insert into purchase_info
+        $payment_status = ($paid_amount >= $grand_total) ? 'paid' : 'due';
+        $insert_info = "INSERT INTO purchase_info (invoice_id, store_id, sup_id, total_item,order_tax, shipping_charge, discount_amount, total_sell, purchase_note, payment_status, created_by, purchase_date) 
+                        VALUES ('$invoice_id', '$store_id', '$supplier_id', '$total_items_qty','$order_tax','$shipping_charge','$discount_amount', '$grand_total', '$note', '$payment_status', '$user_id', '$purchase_date')";
+        
+        if(!mysqli_query($conn, $insert_info)) { throw new Exception("Info insert failed: ".mysqli_error($conn)); }
+        if (isset($_FILES['attachment']['name']) && !empty($_FILES['attachment']['name'][0])) {
+            $upload_dir = '../uploads/purchases/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
             }
-                $product_data = mysqli_fetch_assoc($product_query);
-            if(!$product_data) {
-                throw new Exception("Product not found with ID: $product_id");
-            }
-                
-                $item_total = $qty * $cost;
-                
-                // Insert purchase_item
-                $item_insert = "INSERT INTO purchase_item (
-                    invoice_id, store_id, item_id, category_id, brand_id, item_name,
-                    item_purchase_price, item_selling_price, item_quantity, item_total,
-                    status, return_quantity
-                ) VALUES (
-                    '$invoice_id', '$store_id', $product_id, ".(int)$product_data['category_id'].", 
-                    ".((int)$product_data['brand_id'] ?? 0).", '".mysqli_real_escape_string($conn, $product_data['product_name'])."',
-                    $cost, $sell, $qty, $item_total, 'active', 0
-                )";
-                
-                if(!mysqli_query($conn, $item_insert)) {
-                    throw new Exception(mysqli_error($conn));
+
+            foreach ($_FILES['attachment']['name'] as $key => $val) {
+                if ($_FILES['attachment']['error'][$key] == 0) {
+                    $original_name = $_FILES['attachment']['name'][$key];
+                    $ext = pathinfo($original_name, PATHINFO_EXTENSION);
+                    $file_name = time() . '_' . rand(100, 999) . '.' . $ext;
+                    $target_file = $upload_dir . $file_name;
+                    
+                    if (move_uploaded_file($_FILES['attachment']['tmp_name'][$key], $target_file)) {
+                        $db_path = '/pos/uploads/purchases/' . $file_name;
+                       
+                        mysqli_query($conn, "INSERT INTO purchase_image (invoice_id, file_path, file_type) VALUES ('$invoice_id', '$db_path', '$ext')");
+                    }
                 }
-                
-            // Update product stock, prices, and supplier
-            $supplier_update = ($supplier_id > 0) ? ", supplier_id = $supplier_id" : "";
-                $update_product = "UPDATE products SET 
-                    opening_stock = opening_stock + $qty,
-                    purchase_price = $cost,
-                    selling_price = $sell
-                $supplier_update
-                    WHERE id = $product_id";
-                
-                if(!mysqli_query($conn, $update_product)) {
-                throw new Exception("Product update failed: " . mysqli_error($conn));
             }
         }
-        
-        // Insert payment log if paid
-        if($paid_amount > 0 && $payment_method) {
-            $payment_ref = 'CT' . date('ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            $payment_desc = 'Paid while purchasing';
+
+        // 2. Insert Items & Update Stock
+       foreach($valid_items as $item) {
+            $product_id = (int)$item['product_id'];
+            $qty = (float)$item['qty'];
+            $cost = (float)$item['cost'];
+            $sell = (float)$item['sell'];
+            $row_tax = (float)($item['tax'] ?? 0); 
+            $p_q = mysqli_query($conn, "SELECT product_name, category_id, brand_id FROM products WHERE id = $product_id");
+            $p_data = mysqli_fetch_assoc($p_q);
             
-            $payment_insert = "INSERT INTO purchase_logs (
-                sup_id, reference_no, ref_invoice_id, type, pmethod_id, description,
-                amount, store_id, created_by
+            
+            $item_total = ($qty * $cost) + $row_tax; 
+            
+            
+            mysqli_query($conn, "INSERT INTO purchase_item (
+                invoice_id, store_id, item_id, category_id, brand_id, item_name, 
+                item_purchase_price, item_selling_price, item_quantity, item_total, item_tax
             ) VALUES (
-                '$supplier_id', '$payment_ref', '$invoice_id', 'purchase', $payment_method,
-                '$payment_desc', $paid_amount, '$store_id', '$user_id'
-            )";
+                '$invoice_id', '$store_id', '$product_id', '{$p_data['category_id']}', 
+                '{$p_data['brand_id']}', '".mysqli_real_escape_string($conn, $p_data['product_name'])."', 
+                '$cost', '$sell', '$qty', '$item_total', '$row_tax'
+            )");
             
-            if(!mysqli_query($conn, $payment_insert)) {
-                throw new Exception(mysqli_error($conn));
-            }
-            
-            // If partial payment, create due entry
-            if($paid_amount < $grand_total) {
-                $due_amount = $grand_total - $paid_amount;
-                $due_ref = 'CT' . date('ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-                $due_desc = 'Due while purchasing';
-                
-                $due_insert = "INSERT INTO purchase_logs (
-                    sup_id, reference_no, ref_invoice_id, type, pmethod_id, description,
-                    amount, store_id, created_by
-                ) VALUES (
-                    '$supplier_id', '$due_ref', '$invoice_id', 'due', NULL,
-                    '$due_desc', $due_amount, '$store_id', '$user_id'
-                )";
-                
-                if(!mysqli_query($conn, $due_insert)) {
-                    throw new Exception(mysqli_error($conn));
-                }
-            }
+          
+            mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock + $qty WHERE id = $product_id");
         }
-        
+
+        // 3. Payment Logs
+        if($paid_amount > 0 && $payment_method) {
+            $pay_ref = 'PAY-' . strtoupper(substr(md5(microtime()), 0, 6));
+            mysqli_query($conn, "INSERT INTO purchase_logs (sup_id, reference_no, ref_invoice_id, type, pmethod_id, description, amount, store_id, created_by) 
+                                 VALUES ('$supplier_id', '$pay_ref', '$invoice_id', 'purchase', '$payment_method', 'Paid amount', '$paid_amount', '$store_id', '$user_id')");
+        }
+
         mysqli_commit($conn);
-        $_SESSION['message'] = "Purchase saved successfully!";
+        $_SESSION['message'] = "Purchase " . (!empty($invoice_id_hidden) ? "Updated" : "Saved") . " Successfully!";
         $_SESSION['msg_type'] = "success";
-        ob_end_clean();
         header("Location: /pos/purchases/list");
         exit(0);
-        
+
     } catch(Exception $e) {
         mysqli_rollback($conn);
-        $error_msg = $e->getMessage();
-        error_log("Purchase Save Error: " . $error_msg);
-        error_log("Purchase Save Error: Stack trace: " . $e->getTraceAsString());
-        $_SESSION['message'] = "Error saving purchase: " . $error_msg;
+        $_SESSION['message'] = "Error: " . $e->getMessage();
         $_SESSION['msg_type'] = "error";
-        ob_end_clean();
         header("Location: /pos/purchases/add");
         exit(0);
-    }
-} else {
-    // Debug: Log if save_purchase_btn is not set
-    if($_SERVER['REQUEST_METHOD'] === 'POST') {
-        error_log("Purchase Save: save_purchase_btn not set. POST keys: " . implode(', ', array_keys($_POST)));
     }
 }
 

@@ -390,6 +390,9 @@ function ensure_core_tables(mysqli $conn) {
         store_id INT(11) NOT NULL,
         sup_id INT(11) DEFAULT NULL,
         total_item DECIMAL(15,2) DEFAULT 0.00,
+        order_tax DECIMAL(15,2) DEFAULT 0.00,        /* Notun Column */
+        shipping_charge DECIMAL(15,2) DEFAULT 0.00,  /* Notun Column */
+        discount_amount DECIMAL(15,2) DEFAULT 0.00,  /* Notun Column */
         status VARCHAR(20) DEFAULT 'stock',
         total_sell DECIMAL(15,2) DEFAULT 0.00,
         purchase_note TEXT DEFAULT NULL,
@@ -409,7 +412,6 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
         FOREIGN KEY (sup_id) REFERENCES suppliers(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
     // --- NEW: Purchase Item Table ---
     $purchaseItemSql = "CREATE TABLE IF NOT EXISTS purchase_item (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -467,6 +469,16 @@ function ensure_core_tables(mysqli $conn) {
 
     // Add these lines to your Execute Queries section:
 
+// --- NEW: Purchase Images Table (For Multiple Files like PDF, Excel, Images) ---
+$purchaseImageSql = "CREATE TABLE IF NOT EXISTS purchase_image (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    invoice_id VARCHAR(50) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY invoice_id (invoice_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
 
@@ -488,6 +500,8 @@ function ensure_core_tables(mysqli $conn) {
     mysqli_query($conn, $purchaseInfoSql);
     mysqli_query($conn, $purchaseItemSql);
     mysqli_query($conn, $purchaseLogsSql);
+    mysqli_query($conn, $purchaseImageSql);
+
     
     // Ensure return_quantity column exists in purchase_item table (for existing databases)
     $checkColumn = @mysqli_query($conn, "SHOW COLUMNS FROM purchase_item LIKE 'return_quantity'");

@@ -65,10 +65,9 @@ if($query_run) {
                         WHERE invoice_id = '$invoice_id'";
         $total_result = mysqli_query($conn, $total_query);
         $total_data = mysqli_fetch_assoc($total_result);
-        $amount = floatval($total_data['total_amount']);
-        
-        $due_amount = $amount - $paid_amount;
-        
+        // $amount = floatval($total_data['total_sell']);
+        $amount = floatval($row['total_sell']);        
+        $due_amount = $amount - $paid_amount;        
         // Format data
         $row['formatted_datetime'] = date('Y-m-d H:i:s', strtotime($row['created_at']));
         $row['invoice_id_display'] = $row['invoice_id'];

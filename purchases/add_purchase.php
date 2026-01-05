@@ -8,7 +8,7 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-// ==========================================
+/// ==========================================
 // EDIT MODE LOGIC START
 // ==========================================
 $mode = "create";
@@ -28,18 +28,26 @@ if(isset($_GET['invoice_id'])) {
     if(mysqli_num_rows($info_q) > 0) {
         $edit_data = mysqli_fetch_assoc($info_q);
         
+        $edit_data['order_tax'] = $edit_data['order_tax'] ?? 0; 
+        $edit_data['shipping_charge'] = $edit_data['shipping_charge'] ?? 0;
+        $edit_data['discount_amount'] = $edit_data['discount_amount'] ?? 0;
+
         // Fetch items associated with this invoice
         $items_q = mysqli_query($conn, "SELECT * FROM purchase_item WHERE invoice_id = '$invoice_id'");
         while($row = mysqli_fetch_assoc($items_q)) {
             $edit_items[] = $row;
         }
+        $edit_images = [];
+        $imgs_q = mysqli_query($conn, "SELECT * FROM purchase_image WHERE invoice_id = '$invoice_id'");
+        while($img_row = mysqli_fetch_assoc($imgs_q)) {
+            $edit_images[] = $img_row;
+        }
+        // =========================================================
 
-       
         $paid_q = mysqli_query($conn, "SELECT SUM(amount) as paid FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'");
         $paid_res = mysqli_fetch_assoc($paid_q);
         $edit_data['total_paid'] = $paid_res['paid'] ?? 0;
 
-      
         $pm_q = mysqli_query($conn, "SELECT pmethod_id FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase' ORDER BY id ASC LIMIT 1");
         $pm_res = mysqli_fetch_assoc($pm_q);
         $edit_data['pmethod_id'] = $pm_res['pmethod_id'] ?? '';
@@ -198,36 +206,47 @@ include('../includes/header.php');
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
                                 <div class="flex items-start gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
                                     <div id="file-preview-container" class="flex flex-wrap gap-2">
-                                        
                                         <?php 
-                                        $has_attachment = false;
+                                        $has_attachment = false; 
                                         $attachment_path = $edit_data['attachment'] ?? '';
 
                                         if(!empty($attachment_path)) {
-                                            $clean_path = str_replace('/pos', '', $attachment_path);
-                                            $server_path = ".." . $clean_path;
-                                            if(file_exists($server_path)) {
-                                                $has_attachment = true;
+                                            $images = explode(',', $attachment_path);
+                                            foreach($images as $img) {
+                                                $clean_path = str_replace('/pos', '', $img);
+                                                if(file_exists(".." . $clean_path)) {
+                                                    $has_attachment = true;
+                                                    break;
+                                                }
                                             }
                                         }
                                         ?>
 
-                                        <?php if($has_attachment): ?>
-                                            <div class="w-16 h-16 bg-white rounded-lg border shadow-sm overflow-hidden flex items-center justify-center relative">
-                                                <?php 
-                                                $ext = pathinfo($attachment_path, PATHINFO_EXTENSION);
-                                                if(in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp', 'gif'])): ?>
-                                                    <img src="<?= $attachment_path; ?>" class="w-full h-full object-cover">
-                                                <?php else: ?>
-                                                    <i class="fas fa-file-alt text-2xl text-teal-600"></i>
-                                                <?php endif; ?>
-                                            </div>
+                                        <?php if($mode == 'edit' && !empty($edit_images)): ?>
+                                            <?php foreach($edit_images as $img): ?>
+                                                <div class="relative w-20 h-20 border-2 border-teal-500 rounded-lg overflow-hidden bg-white shadow-sm group">
+                                                    <?php 
+                                                    $ext = strtolower($img['file_type']);
+                                                    if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])): ?>
+                                                        <img src="<?= $img['file_path']; ?>" class="w-full h-full object-cover">
+                                                    <?php elseif($ext == 'pdf'): ?>
+                                                        <div class="flex flex-col items-center justify-center h-full text-red-500 bg-red-50">
+                                                            <i class="fas fa-file-pdf text-2xl"></i>
+                                                            <span class="text-[8px] font-bold mt-1">PDF</span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="flex flex-col items-center justify-center h-full text-blue-500 bg-blue-50">
+                                                            <i class="fas fa-file-excel text-2xl"></i>
+                                                            <span class="text-[8px] font-bold mt-1"><?= strtoupper($ext); ?></span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
                                         <?php else: ?>
                                             <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center border shadow-sm text-slate-400">
                                                 <i class="fas fa-file-upload text-2xl"></i>
                                             </div>
                                         <?php endif; ?>
-
                                     </div>
                                     <div class="flex-1">
                                         <label class="block text-sm font-bold text-slate-700 mb-1">Attachment / Receipt (Images, PDF, Doc)</label>
@@ -314,15 +333,15 @@ include('../includes/header.php');
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Order Tax (%)</span>
-                                        <input type="number" name="order_tax" id="order_tax" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="order_tax" id="order_tax" oninput="calculateSummary()" class="summary-input" value="<?= $edit_data['order_tax'] ?? 0; ?>">
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Shipping Charge</span>
-                                        <input type="number" name="shipping_charge" id="shipping_charge" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="shipping_charge" id="shipping_charge" oninput="calculateSummary()" class="summary-input" value="<?= $edit_data['shipping_charge'] ?? 0; ?>">
                                     </div>
                                     <div class="flex justify-between items-center text-xs text-slate-500">
                                         <span>Discount Amount</span>
-                                        <input type="number" name="discount_amount" id="discount_amount" oninput="calculateSummary()" class="summary-input" value="0">
+                                        <input type="number" name="discount_amount" id="discount_amount" oninput="calculateSummary()" class="summary-input" value="<?= $edit_data['discount_amount'] ?? 0; ?>">
                                     </div>
                                     <div class="flex justify-between items-center pt-2 border-t mt-2">
                                         <span class="text-slate-800 font-bold uppercase text-[10px]">Payable Amount</span>
@@ -433,18 +452,20 @@ $(document).ready(function() {
     // ==========================================
     // AUTO LOAD ROWS FOR EDIT MODE START
     // ==========================================
-    <?php if($mode == 'edit' && !empty($edit_items)): ?>
-        <?php foreach($edit_items as $item): ?>
-            addRow(
-                '<?= $item['item_id']; ?>', 
-                '<?= $item['item_quantity']; ?>', 
-                '<?= $item['item_purchase_price']; ?>', 
-                '<?= $item['item_selling_price']; ?>'
-            );
-        <?php endforeach; ?>
-    <?php else: ?>
-        addRow(); 
-    <?php endif; ?>
+ 
+        <?php if($mode == 'edit' && !empty($edit_items)): ?>
+            <?php foreach($edit_items as $item): ?>
+                addRow(
+                    '<?= $item['item_id']; ?>', 
+                    '<?= $item['item_quantity']; ?>', 
+                    '<?= $item['item_purchase_price']; ?>', 
+                    '<?= $item['item_selling_price']; ?>',
+                    '<?= $item['item_tax']; ?>' 
+                );
+            <?php endforeach; ?>
+        <?php else: ?>
+            addRow(); 
+        <?php endif; ?>
     // ==========================================
     // AUTO LOAD ROWS FOR EDIT MODE END
     // ==========================================
@@ -464,23 +485,31 @@ $(document).ready(function() {
         }
         location.reload();
     });
+
+    setTimeout(function() {
+        calculateSummary();
+    }, 500);
 });
 
 function handleFilePreview(input) {
     const container = document.getElementById('file-preview-container');
     const countSpan = document.getElementById('file-count');
     container.innerHTML = ''; 
+
     if (input.files.length > 0) {
-        countSpan.innerText = `${input.files.length} file(s) selected`;
+        countSpan.innerText = `${input.files.length} new file(s) selected`;
         Array.from(input.files).forEach(file => {
             const div = document.createElement('div');
-            div.className = "w-16 h-16 bg-white rounded-lg border shadow-sm overflow-hidden flex items-center justify-center relative";
+            div.className = "w-20 h-20 bg-white rounded-lg border-2 border-dashed border-teal-400 shadow-sm overflow-hidden flex items-center justify-center relative";
+            
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (e) => div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
                 reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                div.innerHTML = `<div class="text-center text-red-500"><i class="fas fa-file-pdf text-2xl"></i><p class="text-[8px] font-bold">PDF</p></div>`;
             } else {
-                div.innerHTML = `<i class="fas fa-file-pdf text-2xl text-red-500"></i>`;
+                div.innerHTML = `<div class="text-center text-blue-500"><i class="fas fa-file-excel text-2xl"></i><p class="text-[8px] font-bold">FILE</p></div>`;
             }
             container.appendChild(div);
         });
@@ -496,9 +525,10 @@ const productList = [
     ?>
 ];
 
-function addRow(pId = '', qty = 1, cost = 0, sell = 0) {
+
+function addRow(pId = '', qty = 1, cost = 0, sell = 0, tax = 0) {
     const tbody = document.querySelector('#purchaseTable tbody');
-    const rowId = Date.now() + Math.floor(Math.random() * 100); // Random offset for safety
+    const rowId = Date.now() + Math.floor(Math.random() * 100);
     const tr = document.createElement('tr');
     tr.id = `row_${rowId}`;
     tr.className = "hover:bg-slate-50/50 transition-colors item-row";
@@ -514,7 +544,7 @@ function addRow(pId = '', qty = 1, cost = 0, sell = 0) {
         <td class="px-2 py-4"><input type="number" name="items[${rowId}][qty]" id="qty_${rowId}" value="${qty}" oninput="calculateRow(${rowId})"></td>
         <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][cost]" id="cost_${rowId}" value="${cost}" oninput="calculateRow(${rowId})"></td>
         <td class="px-2 py-4"><input type="number" step="0.01" name="items[${rowId}][sell]" id="sell_${rowId}" value="${sell}"></td>
-        <td class="px-2 py-4"><input type="number" id="tax_${rowId}" value="0" oninput="calculateRow(${rowId})"></td>
+        <td class="px-2 py-4"><input type="number" name="items[${rowId}][tax]" id="tax_${rowId}" value="${tax}" oninput="calculateRow(${rowId})"></td>
         <td class="px-4 py-4 text-right font-bold text-slate-700 text-xs row-subtotal" id="subtotal_${rowId}">0.00</td>
         <td class="px-4 py-4 text-center">
             <button type="button" onclick="removeRow(${rowId})" class="text-red-400 hover:text-red-600 transition-colors"><i class="fas fa-trash-alt"></i></button>
@@ -522,18 +552,12 @@ function addRow(pId = '', qty = 1, cost = 0, sell = 0) {
     `;
     tbody.appendChild(tr);
 
-    $(`#row_${rowId} .table-select2`).select2({
-        placeholder: "Search Product...",
-        width: '100%'
-    });
-
-    // If Edit Mode, Load initial info
+    
+    $(`#row_${rowId} .table-select2`).select2({ width: '100%' });
     if(pId) {
         const p = productList.find(i => i.id == pId);
-        if(p) {
-            document.getElementById(`stock_${rowId}`).innerText = p.stock;
-            calculateRow(rowId);
-        }
+        if(p) document.getElementById(`stock_${rowId}`).innerText = p.stock;
+        calculateRow(rowId); 
     }
 }
 
