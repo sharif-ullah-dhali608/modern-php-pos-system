@@ -7,7 +7,7 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-// লগ ইনভয়েস এবং সোর্স ট্রাক করার জন্য কুয়েরি
+
 $query = "SELECT pl.*, 
                  s.name as supplier_name,
                  pm.name as pmethod_name,
@@ -26,7 +26,7 @@ if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
         $row['formatted_datetime'] = date('d M Y, h:i A', strtotime($row['created_at']));
         
-        // সোর্স ব্যাজ লজিক
+        
         $type = strtolower($row['type']);
         $desc = strtolower($row['description']);
         
@@ -130,7 +130,7 @@ include('../includes/header.php');
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reference Invoice</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Method</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Amount</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
@@ -147,7 +147,7 @@ include('../includes/header.php');
                                 <td class="p-4 text-xs font-black text-indigo-600 font-mono italic">#<?= $row['ref_invoice_id']; ?></td>
                                 <td class="p-4 text-xs font-bold text-slate-600"><?= $row['supplier_display']; ?></td>
                                 <td class="p-4 text-[10px] text-slate-500 uppercase font-black"><?= $row['pmethod_display']; ?></td>
-                                <td class="p-4 text-sm font-black text-slate-900 text-right"><?= number_format($row['amount'], 2); ?></td>
+                                <td class="p-4 text-sm font-black text-slate-900 "><?= number_format($row['amount'], 2); ?></td>
                                 <td class="p-4 text-center">
                                     <button onclick="viewLogDetail('<?= $row['ref_invoice_id']; ?>')" class="w-8 h-8 inline-flex items-center justify-center text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                                         <i class="fas fa-eye text-xs"></i>
