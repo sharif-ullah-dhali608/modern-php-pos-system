@@ -62,10 +62,10 @@ if(isset($_POST['payment_modal_btn']) || isset($_POST['view_purchase_btn']) || i
 if(isset($_POST['payment_modal_btn']) && isset($_POST['invoice_id'])) {
     $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']);
     
-    // Get purchase info
+    // 1. Fetch Purchase Info with tax, shipping, and discount details
     $purchase_query = "SELECT pi.*, s.name as supplier_name 
-              FROM purchase_info pi
-              LEFT JOIN suppliers s ON pi.sup_id = s.id
+                       FROM purchase_info pi
+                       LEFT JOIN suppliers s ON pi.sup_id = s.id
                        WHERE pi.invoice_id = '$invoice_id' LIMIT 1";
     $purchase_result = mysqli_query($conn, $purchase_query);
     
@@ -76,13 +76,24 @@ if(isset($_POST['payment_modal_btn']) && isset($_POST['invoice_id'])) {
     
     $purchase = mysqli_fetch_assoc($purchase_result);
     
-    // Calculate totals
-    $items_query = "SELECT SUM(item_total) as total_amount FROM purchase_item WHERE invoice_id = '$invoice_id'";
-        $items_result = mysqli_query($conn, $items_query);
-    $items_data = mysqli_fetch_assoc($items_result);
-    $total_amount = floatval($items_data['total_amount'] ?? 0);
+    // 2. Variables for calculation from database
+    $order_tax_pct = floatval($purchase['order_tax'] ?? 0);
+    $shipping = floatval($purchase['shipping_charge'] ?? 0);
+    $discount = floatval($purchase['discount_amount'] ?? 0);
     
-    // Calculate paid amount
+    // Source of Truth: Use total_sell for the final payable amount
+    $total_amount = floatval($purchase['total_sell'] ?? 0);
+    
+    // 3. Calculate Item Subtotal (Sum of all item_totals)
+    $items_query = "SELECT SUM(item_total) as subtotal FROM purchase_item WHERE invoice_id = '$invoice_id'";
+    $items_result = mysqli_query($conn, $items_query);
+    $items_data = mysqli_fetch_assoc($items_result);
+    $items_subtotal = floatval($items_data['subtotal'] ?? 0);
+    
+    // Calculate Order Tax Amount
+    $order_tax_amount = ($items_subtotal * $order_tax_pct) / 100;
+    
+    // 4. Calculate Paid Amount from logs
     $paid_query = "SELECT COALESCE(SUM(amount), 0) as total_paid FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'";
     $paid_result = mysqli_query($conn, $paid_query);
     $paid_data = mysqli_fetch_assoc($paid_result);
@@ -90,179 +101,163 @@ if(isset($_POST['payment_modal_btn']) && isset($_POST['invoice_id'])) {
     
     $due_amount = $total_amount - $paid_amount;
     
-    // Get payment methods
-    $pmethods_query = "SELECT * FROM payment_methods WHERE status = 1 ORDER BY name ASC";
-    $pmethods_result = mysqli_query($conn, $pmethods_query);
-    
-    // Get purchase items for billing summary
+    // Get purchase items detail list
     $items_detail_query = "SELECT * FROM purchase_item WHERE invoice_id = '$invoice_id'";
     $items_detail_result = mysqli_query($conn, $items_detail_query);
     
     ob_start();
     ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Left Side: Payment Form -->
         <div class="space-y-4">
             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <h4 class="font-bold text-slate-700 mb-2">Payment Method</h4>
-                <select id="pmethod_select" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500" onchange="loadPaymentMethod(this.value)">
+                <select id="pmethod_select" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500">
                     <option value="">Select Payment Method</option>
-                    <?php while($pm = mysqli_fetch_assoc($pmethods_result)): ?>
+                    <?php 
+                    $pm_q = mysqli_query($conn, "SELECT * FROM payment_methods WHERE status = 1 ORDER BY name ASC");
+                    while($pm = mysqli_fetch_assoc($pm_q)): ?>
                         <option value="<?= $pm['id']; ?>"><?= htmlspecialchars($pm['name']); ?></option>
                     <?php endwhile; ?>
                 </select>
-                    </div>
+            </div>
             
-            <div id="paymentMethodDetails" class="space-y-4">
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <h4 class="font-bold text-slate-700 mb-2" id="pmethod_title">Payment Method</h4>
-                    <button type="button" onclick="fullPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
-                        <i class="fas fa-dollar-sign"></i>
-                        Full Payment
-                    </button>
-                    </div>
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
+                <h4 class="font-bold text-slate-700 mb-2">Payment Action</h4>
+                <button type="button" onclick="fullPayment()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all">
+                    <i class="fas fa-dollar-sign"></i> Full Payment
+                </button>
                 
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Pay Amount</label>
-                        <input type="number" step="0.01" id="pay_amount" name="pay_amount" value="<?= $due_amount; ?>" 
+                        <input type="number" step="0.01" id="pay_amount" value="<?= $due_amount; ?>" 
                                class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500" 
-                               placeholder="Input An Amount" oninput="calculatePayment()">
+                               oninput="calculatePayment()">
                     </div>
-                    
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Note</label>
-                        <textarea id="payment_note" name="payment_note" rows="3" 
-                                  class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500" 
-                                  placeholder="Note Here"></textarea>
-                    </div>
-                    </div>
+                        <textarea id="payment_note" rows="2" class="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500" placeholder="Note Here"></textarea>
                     </div>
                 </div>
+            </div>
+        </div>
         
-        <!-- Right Side: Billing Details -->
         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
             <div class="flex justify-between items-center mb-4">
-                <h4 class="font-bold text-slate-700">Full Payment</h4>
-                <span class="font-mono text-sm text-slate-600"><?= htmlspecialchars($invoice_id); ?></span>
+                <h4 class="font-bold text-slate-700">Billing Summary</h4>
+                <span class="font-mono text-sm text-slate-600 font-bold"><?= htmlspecialchars($invoice_id); ?></span>
             </div>
 
-            <h3 class="font-bold text-lg text-slate-800 mb-4">Billing Details</h3>
-            
-            <div class="space-y-2 mb-4">
+            <div class="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scroll">
                 <?php 
-                mysqli_data_seek($items_detail_result, 0);
-                $item_count = 1;
+                $count = 1;
                 while($item = mysqli_fetch_assoc($items_detail_result)): 
                     $qty = floatval($item['item_quantity']) - floatval($item['return_quantity']);
                 ?>
-                    <div class="flex justify-between text-sm">
-                        <span><?= $item_count; ?> <?= htmlspecialchars($item['item_name']); ?> (x<?= number_format($qty, 2); ?> Pieces)</span>
+                    <div class="flex justify-between text-xs text-slate-600">
+                        <span><?= $count++; ?>. <?= htmlspecialchars($item['item_name']); ?> (x<?= $qty; ?>)</span>
                         <span class="font-bold"><?= number_format($item['item_total'], 2); ?></span>
-                                    </div>
-                <?php 
-                    $item_count++;
-                endwhile; 
-                ?>
-                                </div>
+                    </div>
+                <?php endwhile; ?>
+            </div>
             
             <div class="space-y-2 border-t border-slate-300 pt-3">
                 <div class="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span class="font-bold" id="bill_subtotal"><?= number_format($total_amount, 2); ?></span>
+                    <span>Subtotal (Items + Item Tax)</span>
+                    <span class="font-bold"><?= number_format($items_subtotal, 2); ?></span>
                 </div>
-                <div class="flex justify-between text-sm">
-                    <span>Order Tax</span>
-                    <span class="font-bold">0.00</span>
-            </div>
+                <div class="flex justify-between text-sm text-blue-600">
+                    <span>(+) Order Tax (<?= $order_tax_pct; ?>%)</span>
+                    <span class="font-bold"><?= number_format($order_tax_amount, 2); ?></span>
+                </div>
+                <div class="flex justify-between text-sm text-blue-600">
+                    <span>(+) Shipping Charge</span>
+                    <span class="font-bold"><?= number_format($shipping, 2); ?></span>
+                </div>
+                <div class="flex justify-between text-sm text-red-500">
+                    <span>(-) Discount</span>
+                    <span class="font-bold"><?= number_format($discount, 2); ?></span>
+                </div>
 
                 <div class="bg-slate-200 p-2 rounded mt-2">
-                    <div class="flex justify-between text-sm font-bold">
-                        <span>Payable Amount ( Items)</span>
+                    <div class="flex justify-between text-base font-black text-slate-800">
+                        <span>Total Payable Amount</span>
                         <span><?= number_format($total_amount, 2); ?></span>
-                        </div>
-                        </div>
-                
-                <?php if($paid_amount > 0): ?>
-                    <div class="bg-green-100 p-2 rounded mt-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-green-800">Paid by <?= htmlspecialchars($purchase['supplier_name'] ?? 'Unknown'); ?> on <?= date('Y-m-d H:i:s'); ?> by <?= htmlspecialchars($_SESSION['auth_user']['name'] ?? 'Your Name'); ?></span>
-                            <span class="font-bold text-green-800"><?= number_format($paid_amount, 2); ?></span>
-                        </div>
                     </div>
-                <?php endif; ?>
+                </div>
+                
+                <div class="flex justify-between text-sm text-green-700 font-bold px-2 mt-2">
+                    <span>Total Paid Previously</span>
+                    <span><?= number_format($paid_amount, 2); ?></span>
+                </div>
                 
                 <div class="bg-pink-100 p-2 rounded mt-2">
-                    <div class="flex justify-between text-sm font-bold">
-                        <span class="text-red-800">Due</span>
-                        <span class="text-red-800" id="bill_due"><?= number_format($due_amount, 2); ?></span>
+                    <div class="flex justify-between text-sm font-bold text-red-700">
+                        <span>Current Due</span>
+                        <span id="bill_due"><?= number_format($due_amount, 2); ?></span>
                     </div>
                 </div>
                 
                 <div class="bg-yellow-100 p-2 rounded mt-2">
-                    <div class="flex justify-between text-sm font-bold">
-                        <span class="text-yellow-800">Balance</span>
-                        <span class="text-yellow-800" id="bill_balance">0.00</span>
+                    <div class="flex justify-between text-sm font-bold text-yellow-800">
+                        <span>Change / Balance</span>
+                        <span id="bill_balance">0.00</span>
                     </div>
                 </div>
             </div>
-                    </div>
-                </div>
+        </div>
+    </div>
 
     <div class="mt-6 flex justify-end gap-3 border-t pt-4">
-        <button onclick="closePaymentModal()" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold">
-            <i class="fas fa-times mr-2"></i>Close
-        </button>
-        <button onclick="submitPayment()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold">
-            <i class="fas fa-dollar-sign mr-2"></i>Pay Now →
-        </button>
+        <button onclick="closePaymentModal()" class="px-6 py-2 bg-slate-400 hover:bg-slate-500 text-white rounded-lg font-bold">Close</button>
+        <button onclick="submitPayment()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-lg transition-all">Pay Now →</button>
     </div>
     
     <script>
+    // Local Toast initialization to ensure it exists within the modal context
+    const ModalToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: '#1e3a3a',
+        color: '#fff'
+    });
+
     var invoiceId = '<?= $invoice_id; ?>';
-    var totalAmount = <?= $total_amount; ?>;
-    var paidAmount = <?= $paid_amount; ?>;
-    var dueAmount = <?= $due_amount; ?>;
-    var selectedPmethodId = null;
-    
-    function loadPaymentMethod(pmethodId) {
-        selectedPmethodId = pmethodId;
-        if(pmethodId) {
-            // You can load payment method details here if needed
-            document.getElementById('pmethod_title').textContent = 'Pmethod ' + document.getElementById('pmethod_select').options[document.getElementById('pmethod_select').selectedIndex].text;
-        }
-    }
-    
+    var dueAmount = parseFloat('<?= $due_amount; ?>') || 0;
+
     function fullPayment() {
         document.getElementById('pay_amount').value = dueAmount.toFixed(2);
         calculatePayment();
     }
     
     function calculatePayment() {
-        var payAmount = parseFloat(document.getElementById('pay_amount').value) || 0;
-        var newPaid = paidAmount + payAmount;
-        var newDue = totalAmount - newPaid;
-        var balance = payAmount > dueAmount ? payAmount - dueAmount : 0;
+        var pay = parseFloat(document.getElementById('pay_amount').value) || 0;
+        var currentDue = dueAmount - pay;
+        var balance = pay > dueAmount ? pay - dueAmount : 0;
         
-        document.getElementById('bill_due').textContent = newDue.toFixed(2);
+        document.getElementById('bill_due').textContent = (currentDue > 0 ? currentDue : 0).toFixed(2);
         document.getElementById('bill_balance').textContent = balance.toFixed(2);
     }
     
-    function submitPayment() {
+   function submitPayment() {
         var payAmount = parseFloat(document.getElementById('pay_amount').value) || 0;
-        var pmethodId = selectedPmethodId || document.getElementById('pmethod_select').value;
+        var pmethodId = document.getElementById('pmethod_select').value;
         var note = document.getElementById('payment_note').value;
         
         if(!pmethodId) {
-            alert('Please select a payment method');
+            Swal.fire({ icon: 'warning', text: 'Please select a payment method.' });
             return;
         }
         
         if(payAmount <= 0) {
-            alert('Please enter a valid payment amount');
+            Swal.fire({ icon: 'warning', text: 'Please enter a valid amount.' });
             return;
         }
-        
+
+        // Direct AJAX Submission
         $.ajax({
             url: '/pos/purchases/save_purchase.php',
             type: 'POST',
@@ -276,38 +271,50 @@ if(isset($_POST['payment_modal_btn']) && isset($_POST['invoice_id'])) {
             dataType: 'json',
             success: function(response) {
                 if(response.status == 200) {
-                    alert('Payment processed successfully!');
                     closePaymentModal();
-                    location.reload();
+                    
+                    // Dark Green Success Toast (Matching your screenshot)
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        background: '#1e3a3a', // Dark Green background from your image
+                        color: '#fff'
+                    });
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Payment Processed Successfully!'
+                    });
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire('Error', response.message, 'error');
                 }
-            },
-            error: function() {
-                alert('Error processing payment');
             }
         });
     }
-    
-    // Initialize calculation
-    calculatePayment();
     </script>
     <?php
     $html = ob_get_clean();
     echo json_encode(['status' => 200, 'html' => $html]);
     exit;
 }
-
 // ============================================
 // VIEW PURCHASE MODAL - Return HTML for view
 // ============================================
 if(isset($_POST['view_purchase_btn']) && isset($_POST['invoice_id'])) {
     $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']);
 
-    // Get purchase info
+    // Fetch main purchase information including supplier and creator details
     $purchase_query = "SELECT pi.*, s.name as supplier_name, u.name as creator_name 
-              FROM purchase_info pi
-              LEFT JOIN suppliers s ON pi.sup_id = s.id
+                       FROM purchase_info pi
+                       LEFT JOIN suppliers s ON pi.sup_id = s.id
                        LEFT JOIN users u ON pi.created_by = u.id 
                        WHERE pi.invoice_id = '$invoice_id' LIMIT 1";
     $purchase_result = mysqli_query($conn, $purchase_query);
@@ -318,175 +325,105 @@ if(isset($_POST['view_purchase_btn']) && isset($_POST['invoice_id'])) {
     }
     
     $purchase = mysqli_fetch_assoc($purchase_result);
-        
-        // Calculate totals
+    
+    // Assign global totals from the purchase_info record
+    $order_tax = floatval($purchase['order_tax'] ?? 0);
+    $shipping_charge = floatval($purchase['shipping_charge'] ?? 0);
+    $discount_amount = floatval($purchase['discount_amount'] ?? 0);
+    $grand_total = floatval($purchase['total_sell'] ?? 0);
+
+    // Fetch all items linked to this specific invoice
     $items_query = "SELECT * FROM purchase_item WHERE invoice_id = '$invoice_id'";
     $items_result = mysqli_query($conn, $items_query);
     
-    $total_amount = 0;
+    $subtotal = 0;
+    $total_item_tax = 0;
+    $items_html = "";
+    
     while($item = mysqli_fetch_assoc($items_result)) {
-        $total_amount += floatval($item['item_total']);
+        // Fix: Determine if this is a Return List view or a regular Purchase view.
+        // If coming from the Return List, we should show the 'return_quantity'.
+        // Check a flag or the current script context to decide. 
+        // For this fix, we will show 'return_quantity' if it is greater than 0, 
+        // otherwise show the full 'item_quantity'.
+        $is_return_view = (floatval($item['return_quantity']) > 0);
+        $display_qty = $is_return_view ? floatval($item['return_quantity']) : floatval($item['item_quantity']);
+        $qty_label = $is_return_view ? "Returned" : "Pieces";
+
+        $item_tax = floatval($item['item_tax'] ?? 0);
+        
+        // Fix: Calculate item subtotal using the display quantity to avoid 0.00 results
+        $item_subtotal = ($display_qty * floatval($item['item_purchase_price']));
+        
+        $subtotal += $item_subtotal;
+        $total_item_tax += $item_tax;
+
+        $items_html .= '<tr>
+            <td class="border border-slate-300 p-2 text-sm">'.htmlspecialchars($item['item_name']).' (x'.number_format($display_qty, 2).' '.$qty_label.')</td>
+            <td class="border border-slate-300 p-2 text-right text-sm">'.number_format($item['item_purchase_price'], 2).'</td>
+            <td class="border border-slate-300 p-2 text-right text-sm">'.number_format($item_tax, 2).'</td>
+            <td class="border border-slate-300 p-2 text-right text-sm font-bold">'.number_format($item['item_total'], 2).'</td>
+        </tr>';
     }
     
-    // Calculate paid amount
+    // Fetch payment history to calculate current balance and due status
     $paid_query = "SELECT COALESCE(SUM(amount), 0) as total_paid FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'";
     $paid_result = mysqli_query($conn, $paid_query);
     $paid_data = mysqli_fetch_assoc($paid_result);
     $paid_amount = floatval($paid_data['total_paid'] ?? 0);
-    $due_amount = $total_amount - $paid_amount;
     
-    // Get payment logs
-    $payment_logs_query = "SELECT pl.*, pm.name as pmethod_name 
-                           FROM purchase_logs pl 
-                           LEFT JOIN payment_methods pm ON pl.pmethod_id = pm.id 
-                           WHERE pl.ref_invoice_id = '$invoice_id' 
-                           ORDER BY pl.created_at ASC";
-    $payment_logs_result = mysqli_query($conn, $payment_logs_query);
-    
-    // Re-fetch items for display
-    mysqli_data_seek($items_result, 0);
+    $due_amount = $grand_total - $paid_amount;
     
     ob_start();
     ?>
-    <div class="space-y-6">
-        <!-- General Information -->
+    <div class="space-y-6 p-4">
         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">General Information</h3>
+            <h3 class="font-bold text-lg text-slate-800 mb-4 border-b pb-2">General Information</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                    <label class="text-xs text-slate-500 font-bold">Date</label>
-                    <p class="text-sm font-semibold"><?= date('d M Y', strtotime($purchase['purchase_date'] ?? $purchase['created_at'])); ?></p>
-                    </div>
-                    <div>
-                    <label class="text-xs text-slate-500 font-bold">Invoice Id</label>
-                    <p class="text-sm font-semibold font-mono"><?= htmlspecialchars($purchase['invoice_id']); ?></p>
-                    </div>
-                <div>
-                    <label class="text-xs text-slate-500 font-bold">Supplier</label>
-                    <p class="text-sm font-semibold"><?= htmlspecialchars($purchase['supplier_name'] ?? 'No Supplier'); ?></p>
-                </div>
-                <div>
-                    <label class="text-xs text-slate-500 font-bold">Payment Status</label>
-                    <p class="text-sm font-semibold">
-                        <span class="px-2 py-1 rounded <?= $purchase['payment_status'] == 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
-                            <?= ucfirst($purchase['payment_status']); ?>
-                        </span>
-                    </p>
+                <div><label class="text-xs text-slate-500 font-bold block">Date</label><p class="text-sm font-semibold"><?= date('d M Y', strtotime($purchase['purchase_date'] ?? $purchase['created_at'])); ?></p></div>
+                <div><label class="text-xs text-slate-500 font-bold block">Invoice Id</label><p class="text-sm font-semibold font-mono text-blue-600"><?= htmlspecialchars($purchase['invoice_id']); ?></p></div>
+                <div><label class="text-xs text-slate-500 font-bold block">Supplier</label><p class="text-sm font-semibold"><?= htmlspecialchars($purchase['supplier_name'] ?? 'No Supplier'); ?></p></div>
+                <div><label class="text-xs text-slate-500 font-bold block">Payment Status</label><span class="px-2 py-1 rounded text-xs font-bold <?= $purchase['payment_status'] == 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>"><?= ucfirst($purchase['payment_status']); ?></span></div>
             </div>
-                <div>
-                    <label class="text-xs text-slate-500 font-bold">Note</label>
-                    <p class="text-sm"><?= htmlspecialchars($purchase['purchase_note'] ?? 'N/A'); ?></p>
-                </div>
-                <div>
-                    <label class="text-xs text-slate-500 font-bold">Created By</label>
-                    <p class="text-sm font-semibold"><?= htmlspecialchars($purchase['creator_name'] ?? 'Your Name'); ?></p>
-                </div>
-            </div>
-                </div>
+        </div>
                 
-        <!-- Product List -->
-                <div>
+        <div>
             <h3 class="font-bold text-lg text-slate-800 mb-4">Product List</h3>
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
                     <thead>
                         <tr class="bg-slate-200">
                             <th class="border border-slate-300 p-2 text-left text-xs font-bold">Product</th>
-                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Cost</th>
-                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Sub Total</th>
+                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Unit Cost</th>
+                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Item Tax</th>
+                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Row Total</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <?php 
-                        mysqli_data_seek($items_result, 0);
-                        while($item = mysqli_fetch_assoc($items_result)): 
-                            $qty = floatval($item['item_quantity']) - floatval($item['return_quantity']);
-                        ?>
-                            <tr>
-                                <td class="border border-slate-300 p-2 text-sm">
-                                    <?= htmlspecialchars($item['item_name']); ?> (x<?= number_format($qty, 2); ?> Pieces)
-                                </td>
-                                <td class="border border-slate-300 p-2 text-right text-sm"><?= number_format($item['item_purchase_price'], 2); ?></td>
-                                <td class="border border-slate-300 p-2 text-right text-sm font-bold"><?= number_format($item['item_total'], 2); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
+                    <tbody><?= $items_html; ?></tbody>
                 </table>
             </div>
         </div>
         
-        <!-- Summary -->
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">Summary</h3>
-            <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                    <span class="font-bold"><?= number_format($total_amount, 2); ?></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Order Tax</span>
-                            <span>0.00</span>
-                        </div>
-                            <div class="flex justify-between">
-                    <span>Shipping Charge</span>
-                    <span>0.00</span>
-                            </div>
-                            <div class="flex justify-between">
-                    <span>Others Charge</span>
-                    <span>0.00</span>
-                            </div>
-                            <div class="flex justify-between">
-                    <span>Discount</span>
-                    <span>0.00</span>
-                            </div>
-                <div class="flex justify-between border-t pt-2">
-                    <span class="font-bold">Paid Amount</span>
-                    <span class="font-bold text-green-600"><?= number_format($paid_amount, 2); ?></span>
-                        </div>
-                <div class="flex justify-between">
-                    <span class="font-bold text-red-600">Due Amount</span>
-                    <span class="font-bold text-red-600"><?= number_format($due_amount, 2); ?></span>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="text-sm text-slate-600 italic pt-4">
+                <strong>Note:</strong> <?= htmlspecialchars($purchase['purchase_note'] ?? 'N/A'); ?><br>
+                <strong>Created By:</strong> <?= htmlspecialchars($purchase['creator_name'] ?? 'Admin'); ?>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                <div class="flex justify-between text-sm"><span>Subtotal (Excl. Tax)</span><span class="font-bold"><?= number_format($subtotal, 2); ?></span></div>
+                <div class="flex justify-between text-sm text-blue-600"><span>(+) Total Item Tax</span><span><?= number_format($total_item_tax, 2); ?></span></div>
+                <div class="flex justify-between text-sm"><span>(+) Order Tax (<?= $purchase['order_tax']; ?>%)</span><span><?= number_format(($subtotal * $order_tax / 100), 2); ?></span></div>
+                <div class="flex justify-between text-sm"><span>(+) Shipping Charge</span><span><?= number_format($shipping_charge, 2); ?></span></div>
+                <div class="flex justify-between text-sm text-red-500"><span>(-) Discount</span><span><?= number_format($discount_amount, 2); ?></span></div>
+                <div class="flex justify-between border-t border-slate-300 pt-2 font-black text-lg text-teal-700"><span>Payable Amount</span><span><?= number_format($grand_total, 2); ?></span></div>
+                <div class="flex justify-between text-sm text-green-600 font-bold"><span>Total Paid</span><span><?= number_format($paid_amount, 2); ?></span></div>
+                <div class="flex justify-between text-sm text-red-600 font-bold border-t border-dashed pt-1"><span>Due Amount</span><span><?= number_format($due_amount, 2); ?></span></div>
             </div>
         </div>
-        
-        <!-- Payments -->
-        <?php if(mysqli_num_rows($payment_logs_result) > 0): ?>
-        <div>
-            <h3 class="font-bold text-lg text-slate-800 mb-4">Payments</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse">
-                    <thead>
-                        <tr class="bg-slate-200">
-                            <th class="border border-slate-300 p-2 text-left text-xs font-bold">Description</th>
-                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Amount</th>
-                            <th class="border border-slate-300 p-2 text-right text-xs font-bold">Change</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        mysqli_data_seek($payment_logs_result, 0);
-                        while($log = mysqli_fetch_assoc($payment_logs_result)): 
-                            $log_date = date('Y-m-d H:i:s', strtotime($log['created_at']));
-                            $pmethod = htmlspecialchars($log['pmethod_name'] ?? 'Unknown');
-                        ?>
-                            <tr class="bg-green-50">
-                                <td class="border border-slate-300 p-2 text-sm">
-                                    Paid on <?= $log_date; ?> (via <?= $pmethod; ?>) by <?= htmlspecialchars($_SESSION['auth_user']['name'] ?? 'Your Name'); ?>
-                                </td>
-                                <td class="border border-slate-300 p-2 text-right text-sm font-bold"><?= number_format($log['amount'], 2); ?></td>
-                                <td class="border border-slate-300 p-2 text-right text-sm">0.00</td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-        </div>
-        </div>
-        <?php endif; ?>
     </div>
     <?php
     $html = ob_get_clean();
-        echo json_encode(['status' => 200, 'html' => $html]);
+    echo json_encode(['status' => 200, 'html' => $html]);
     exit;
 }
 
@@ -683,27 +620,65 @@ if(isset($_POST['return_modal_btn']) && isset($_POST['invoice_id'])) {
     }
         
         function submitReturn() {
-        var formData = $('#returnForm').serialize();
-            
-            $.ajax({
-            url: '/pos/purchases/save_purchase.php',
-            type: 'POST',
-            data: formData + '&process_return_btn=1&invoice_id=' + invoiceId,
-            dataType: 'json',
-                success: function(response) {
-                    if(response.status == 200) {
-                    alert('Return processed successfully!');
-                    closeReturnModal();
-                        location.reload();
-                    } else {
-                    alert('Error: ' + response.message);
-                    }
-            },
-            error: function() {
-                alert('Error processing return');
-                }
+    var formData = $('#returnForm').serialize();
+    
+    
+    if ($('#returnForm input[type="checkbox"]:checked').length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Items Selected',
+            text: 'Please select at least one item to return.',
+            confirmButtonColor: '#0d9488'
+        });
+        return;
+    }
+
+    
+    $.ajax({
+        url: '/pos/purchases/save_purchase.php',
+        type: 'POST',
+        data: formData + '&process_return_btn=1&invoice_id=' + invoiceId,
+        dataType: 'json',
+        success: function(response) {
+            if(response.status == 200) {
+                closeReturnModal();
+
+                
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: '#1e3a3a', 
+                    color: '#fff'          
+                });
+
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Purchase returned successfully!'
+                });
+
+               
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error processing return request'
             });
         }
+    });
+}
     </script>
     <?php
     $html = ob_get_clean();
@@ -791,6 +766,8 @@ if(isset($_POST['process_return_btn']) && isset($_POST['invoice_id'])) {
     
     mysqli_begin_transaction($conn);
     try {
+        $total_return_amount = 0; // Track total return value
+        
         foreach($return_items as $item_id => $data) {
             if(isset($data['selected']) && $data['selected'] == '1') {
                 $item_id = intval($item_id);
@@ -803,15 +780,35 @@ if(isset($_POST['process_return_btn']) && isset($_POST['invoice_id'])) {
                     if($item_result && mysqli_num_rows($item_result) > 0) {
                         $item = mysqli_fetch_assoc($item_result);
                         $current_return_qty = floatval($item['return_quantity']);
+                        $original_qty = floatval($item['item_quantity']);
+                        $unit_price = floatval($item['item_purchase_price']);
+                        $item_tax = floatval($item['item_tax'] ?? 0);
+                        
+                        // Calculate new return quantity
                         $new_return_qty = $current_return_qty + $return_qty;
-            
-            // Update return quantity
-                        $update_item = "UPDATE purchase_item SET return_quantity = '$new_return_qty' WHERE id = '$item_id'";
+                        
+                        // Calculate remaining quantity
+                        $remaining_qty = $original_qty - $new_return_qty;
+                        
+                        // Calculate new item_total based on remaining qty
+                        // Tax is proportionally distributed
+                        $tax_per_unit = ($original_qty > 0) ? ($item_tax / $original_qty) : 0;
+                        $new_item_total = ($remaining_qty * $unit_price) + ($remaining_qty * $tax_per_unit);
+                        
+                        // Calculate return amount (for tracking)
+                        $return_amount = ($return_qty * $unit_price) + ($return_qty * $tax_per_unit);
+                        $total_return_amount += $return_amount;
+                        
+                        // Update item: return_quantity and item_total
+                        $update_item = "UPDATE purchase_item SET 
+                                        return_quantity = '$new_return_qty',
+                                        item_total = '$new_item_total'
+                                        WHERE id = '$item_id'";
                         if(!mysqli_query($conn, $update_item)) {
                             throw new Exception(mysqli_error($conn));
                         }
-            
-            // Update product stock (reduce stock)
+                        
+                        // Update product stock (reduce stock)
                         $product_id = intval($item['item_id']);
                         $update_stock = "UPDATE products SET opening_stock = opening_stock - $return_qty WHERE id = '$product_id'";
                         if(!mysqli_query($conn, $update_stock)) {
@@ -822,8 +819,88 @@ if(isset($_POST['process_return_btn']) && isset($_POST['invoice_id'])) {
             }
         }
         
+        // Recalculate total_sell for the purchase
+        $new_total_query = "SELECT COALESCE(SUM(item_total), 0) as new_total FROM purchase_item WHERE invoice_id = '$invoice_id'";
+        $new_total_result = mysqli_query($conn, $new_total_query);
+        $new_total_data = mysqli_fetch_assoc($new_total_result);
+        $new_total_sell = floatval($new_total_data['new_total']);
+        
+        // Get order-level charges
+        $purchase_query = "SELECT order_tax, shipping_charge, discount_amount FROM purchase_info WHERE invoice_id = '$invoice_id' LIMIT 1";
+        $purchase_result = mysqli_query($conn, $purchase_query);
+        $purchase_data = mysqli_fetch_assoc($purchase_result);
+        
+        $order_tax_pct = floatval($purchase_data['order_tax'] ?? 0);
+        $shipping = floatval($purchase_data['shipping_charge'] ?? 0);
+        $discount = floatval($purchase_data['discount_amount'] ?? 0);
+        
+        // Apply order tax, shipping, discount to new total
+        $order_tax_amount = ($new_total_sell * $order_tax_pct) / 100;
+        $final_total = ($new_total_sell + $order_tax_amount + $shipping) - $discount;
+        
+        // Check if ALL items are fully returned (remaining qty = 0 for all)
+        $remaining_check = "SELECT COUNT(*) as active_items FROM purchase_item 
+                           WHERE invoice_id = '$invoice_id' 
+                           AND (item_quantity - return_quantity) > 0";
+        $remaining_result = mysqli_query($conn, $remaining_check);
+        $remaining_data = mysqli_fetch_assoc($remaining_result);
+        $active_items = intval($remaining_data['active_items']);
+        
+        // Set status based on remaining items
+        if($active_items == 0) {
+            // All items returned - mark as 'returned'
+            $new_status = 'returned';
+        } else {
+            $new_status = 'partial_return';
+        }
+
+        // Recalculate Payment Status
+        $paid_query = "SELECT COALESCE(SUM(amount), 0) as total_paid FROM purchase_logs WHERE ref_invoice_id = '$invoice_id' AND type = 'purchase'";
+        $paid_result = mysqli_query($conn, $paid_query);
+        $paid_data = mysqli_fetch_assoc($paid_result);
+        $total_paid = floatval($paid_data['total_paid']);
+
+        $due_amount = $final_total - $total_paid;
+        
+        if($due_amount > 0.001) {
+            $payment_status = 'due';
+        } elseif(abs($due_amount) <= 0.001) {
+            $payment_status = 'paid';
+        } else {
+            $payment_status = 'receivable';
+        }
+        
+        // Update purchase_info with new total and status
+        $update_purchase = "UPDATE purchase_info SET 
+                            total_sell = '$final_total',
+                            status = '$new_status',
+                            payment_status = '$payment_status'
+                            WHERE invoice_id = '$invoice_id'";
+        if(!mysqli_query($conn, $update_purchase)) {
+            throw new Exception(mysqli_error($conn));
+        }
+        
+        // Log the return in purchase_logs
+        if($total_return_amount > 0) {
+            $return_ref = 'RTN-' . strtoupper(substr(md5(microtime()), 0, 6));
+            $return_log = "INSERT INTO purchase_logs (sup_id, reference_no, ref_invoice_id, type, description, amount, store_id, created_by) 
+                          VALUES (
+                              (SELECT sup_id FROM purchase_info WHERE invoice_id = '$invoice_id' LIMIT 1),
+                              '$return_ref',
+                              '$invoice_id',
+                              'return',
+                              " . ($return_note ? "'Return: $return_note'" : "'Product return'") . ",
+                              '$total_return_amount',
+                              '$store_id',
+                              '$user_id'
+                          )";
+            mysqli_query($conn, $return_log);
+        }
+        
         mysqli_commit($conn);
-        echo json_encode(['status' => 200, 'message' => 'Return processed successfully']);
+        
+        $msg = $active_items == 0 ? 'All items returned successfully! Purchase marked as returned.' : 'Partial return processed successfully!';
+        echo json_encode(['status' => 200, 'message' => $msg]);
     } catch(Exception $e) {
         mysqli_rollback($conn);
         echo json_encode(['status' => 400, 'message' => $e->getMessage()]);
@@ -1022,6 +1099,14 @@ if(isset($_POST['save_purchase_btn']))
 
         $order_tax_amount = ($subtotal * $order_tax) / 100;
         $grand_total = ($subtotal + $order_tax_amount + $shipping_charge) - $discount_amount;
+        // 1. Insert into purchase_info
+        if ($paid_amount > ($grand_total + 0.01)) {
+        $payment_status = 'receivable'; // Overpayment condition
+    } elseif ($paid_amount < ($grand_total - 0.01)) {
+        $payment_status = 'due';
+    } else {
+        $payment_status = 'paid';
+    }
         // 1. Insert into purchase_info
         $payment_status = ($paid_amount >= $grand_total) ? 'paid' : 'due';
         $insert_info = "INSERT INTO purchase_info (invoice_id, store_id, sup_id, total_item,order_tax, shipping_charge, discount_amount, total_sell, purchase_note, payment_status, created_by, purchase_date) 
