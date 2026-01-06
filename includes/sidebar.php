@@ -158,6 +158,7 @@ $menu_items = [
         'link' => '#',
         'submenu' => [
             ['title' => 'Add User & List', 'link' => '/pos/users/add'],
+            ['title' => 'User Groups', 'link' => '/pos/users/groups'],
             ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
             ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
             ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
