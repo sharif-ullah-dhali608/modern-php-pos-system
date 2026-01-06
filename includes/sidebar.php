@@ -47,7 +47,6 @@ $menu_items = [
             ['title' => 'Due Invoice', 'link' => '/pos/purchases/list?filter=due'],
             ['title' => 'Return List', 'link' => '/pos/purchases/return-list'],
             ['title' => 'Purchase Logs', 'link' => '/pos/purchases/purchase-logs'],
-            ['title' => 'Stock Import', 'link' => '/pos/purchases/stock-import']
         ],
         'active' => (uri_has('/purchases/', $current_uri))
     ],

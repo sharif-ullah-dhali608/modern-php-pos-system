@@ -55,6 +55,7 @@ $items = [];
 $total_amount = 0;
 $total_paid = 0;
 $total_due = 0;
+$total_stock_qty = 0;
 
 if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
@@ -83,6 +84,7 @@ if($query_run) {
         $row['amount_display'] = number_format($amount, 2);
         $row['paid_display'] = number_format($paid_amount, 2);
         $row['due_display'] = number_format($due_amount, 2);
+        $row['stock_display'] = number_format($row['total_qty_bought'], 0);
         
         // Status badge logic
         // Status badge
@@ -117,6 +119,10 @@ if($query_run) {
         $total_amount += $amount;
         $total_paid += $paid_amount;
         $total_due += $due_amount;
+
+        $current_stock = floatval($row['total_qty_bought']) - floatval($row['total_qty_returned']);
+        $row['stock_display'] = number_format($current_stock, 0);
+        $total_stock_qty += $current_stock;
     }
 }
 
@@ -128,37 +134,62 @@ include('../includes/header.php');
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
 <style>
-    /* Custom style to hide original DataTable buttons but keep functionality */
-    .dt-buttons { display: none !important; }
-    
-    /* Boro Search Field Styling */
-    .dataTables_filter {
-        width: 100%;
-        margin-bottom: 20px;
+    /* 1. Table Container & Responsiveness */
+  
+    .bg-white.rounded-xl.shadow-sm.border,
+    .table-responsive-container {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: white;
+        border-radius: 15px;
     }
+    
+    
+    #purchaseTable {
+        width: 100% !important;
+        white-space: nowrap; 
+    }
+
+   
+    .dataTables_wrapper .dataTables_filter {
+        width: 100%;
+        float: none;
+        text-align: center;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: center;
+    }
+
     .dataTables_filter label {
         width: 100%;
         display: flex !important;
         align-items: center;
+        justify-content: center;
     }
+
+   
     .dataTables_filter input {
         width: 100% !important;
+        max-width: 800px; 
         height: 50px !important;
         margin-left: 0 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         border: 1px solid #e2e8f0 !important;
         padding: 0 20px !important;
         font-size: 16px !important;
         background-color: #fff !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: all 0.3s ease;
+        outline: none;
     }
+
     .dataTables_filter input:focus {
         border-color: #0d9488 !important;
         box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1) !important;
-        outline: none;
     }
-</style>
-<style>
+
+   
     .dataTables_paginate .paginate_button {
         padding: 6px 12px !important;
         margin: 0 2px !important;
@@ -166,16 +197,48 @@ include('../includes/header.php');
         border: 1px solid #e2e8f0 !important;
         cursor: pointer !important;
     }
+
     .dataTables_paginate .paginate_button.current {
         background: #4f46e5 !important;
         color: white !important;
         border: none !important;
     }
+
+   
     .dataTables_length select {
         border-radius: 8px !important;
         border: 1px solid #e2e8f0 !important;
         padding: 5px 10px !important;
+        outline: none;
     }
+
+   
+    .summary-grid {
+        display: grid;
+        grid-template-cols: repeat(1, minmax(0, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .search-container {
+        width: 100%;
+        display: flex;
+        justify-content: right;
+        margin-bottom: 25px;
+        position: sticky; 
+        left: 0;
+    }
+
+    @media (min-width: 640px) { 
+        .summary-grid { grid-template-cols: repeat(2, minmax(0, 1fr)); } 
+    }
+
+    @media (min-width: 1024px) { 
+        .summary-grid { grid-template-cols: repeat(4, minmax(0, 1fr)); } 
+    }
+
+    /* 5. Utility Styles */
+   
+    .dt-buttons { display: none !important; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -254,7 +317,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-xl border-l-4 border-indigo-500 shadow-sm transition-transform hover:scale-[1.02]">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grand Total</p>
                         <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_amount, 2); ?></h2>
@@ -266,6 +329,10 @@ include('../includes/header.php');
                     <div class="bg-white p-6 rounded-xl border-l-4 border-rose-500 shadow-sm transition-transform hover:scale-[1.02]">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Due</p>
                         <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_due, 2); ?></h2>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm transition-transform hover:scale-[1.02]">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Stock</p>
+                        <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_stock_qty, 0); ?></h2>
                     </div>
                 </div>
 
@@ -279,6 +346,7 @@ include('../includes/header.php');
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Datetime</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Invoice Id</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Supplier</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Stock</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Creator</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Invoice Paid</th>
@@ -302,6 +370,7 @@ include('../includes/header.php');
                                     <td class="p-4 text-sm text-blue-600 hover:underline cursor-pointer" onclick="window.location.href='/pos/suppliers/list'">
                                         <?= htmlspecialchars($row['supplier_display']); ?>
                                     </td>
+                                    <td class="p-4 text-sm font-bold text-slate-600"><?= $row['stock_display']; ?></td>
                                     <td class="p-4 text-sm text-blue-600 hover:underline cursor-pointer" onclick="window.location.href='/pos/users/add'">
                                         <?= htmlspecialchars($row['creator_display']); ?>
                                     </td>
@@ -342,12 +411,12 @@ include('../includes/header.php');
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
-                            <tr class="bg-slate-100 font-bold">
+                            <tr class="bg-slate-100 font-bold  w-full">
                                 <td colspan="5" class="p-4 text-right text-slate-700 border-t border-slate-200">Total:</td>
                                 <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_amount, 2); ?></td>
                                 <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_paid, 2); ?></td>
                                 <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_due, 2); ?></td>
-                                <td colspan="6" class="p-4 border-t border-slate-200"></td>
+                                <td colspan="7" class="p-4 border-t border-slate-200"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -442,7 +511,7 @@ var table = $('#purchaseTable').DataTable({
         pageLength: 10,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
         // l=length, f=filter, t=table, i=info, p=pagination
-        dom: '<"flex flex-col md:flex-row justify-between items-center gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-center gap-4 mt-4"i p>',
+        dom: '<"flex flex-col md:flex-row justify-between items-right gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-right gap-4 mt-4"i p>',     
         buttons: [
             { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
             { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
@@ -469,7 +538,7 @@ var table = $('#purchaseTable').DataTable({
 });
 // Trigger DataTable Action from Custom Dropdown Menu
 function triggerDtAction(action) {
-    const table = $('#purchaseTable').DataTable(); // নিশ্চিত করুন সঠিক আইডি ব্যবহার করছেন
+    const table = $('#purchaseTable').DataTable(); 
     
     if(action === 'print') table.button('.buttons-print').trigger();
     else if(action === 'csv') table.button('.buttons-csv').trigger();
@@ -477,7 +546,7 @@ function triggerDtAction(action) {
     else if(action === 'pdf') table.button('.buttons-pdf').trigger();
     else if(action === 'copy') table.button('.buttons-copy').trigger();
     
-    $('#exportDropdown').addClass('hidden'); // ক্লিক করার পর ড্রপডাউন বন্ধ হবে
+    $('#exportDropdown').addClass('hidden'); 
 }
 
 // Export dropdown toggle
