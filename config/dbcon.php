@@ -482,8 +482,54 @@ $purchaseImageSql = "CREATE TABLE IF NOT EXISTS purchase_image (
 
 
 
+    $userGroupSql = "CREATE TABLE IF NOT EXISTS user_groups (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
+// --- NEW: Users Table ---
+$usersSql = "CREATE TABLE IF NOT EXISTS users (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    group_id INT(11) DEFAULT NULL,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    mobile VARCHAR(50) DEFAULT NULL,
+    dob DATE DEFAULT NULL,
+    sex ENUM('M', 'F', 'O') DEFAULT 'M',
+    password VARCHAR(255) NOT NULL,
+    pass_reset_code VARCHAR(255) DEFAULT NULL,
+    reset_code_time DATETIME DEFAULT NULL,
+    login_try INT(11) DEFAULT 0,
+    last_login DATETIME DEFAULT NULL,
+    ip VARCHAR(45) DEFAULT NULL,
+    address TEXT DEFAULT NULL,
+    preference TEXT DEFAULT NULL,
+    user_image VARCHAR(255) DEFAULT NULL,
+    status TINYINT(1) DEFAULT 1 COMMENT '1=Active, 0=Inactive',
+    sort_order INT(11) DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+// --- NEW: User-Store Pivot Table (For assigning users to specific stores) ---
+$userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    user_id INT(11) NOT NULL,
+    store_id INT(11) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY user_store_unique (user_id, store_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+mysqli_query($conn, $usersSql);
+mysqli_query($conn, $userStoreMapSql);
 
 
     mysqli_query($conn, $storesSql);
@@ -501,6 +547,7 @@ $purchaseImageSql = "CREATE TABLE IF NOT EXISTS purchase_image (
     mysqli_query($conn, $purchaseItemSql);
     mysqli_query($conn, $purchaseLogsSql);
     mysqli_query($conn, $purchaseImageSql);
+    mysqli_query($conn, $userGroupSql);
 
     
     // Ensure return_quantity column exists in purchase_item table (for existing databases)
