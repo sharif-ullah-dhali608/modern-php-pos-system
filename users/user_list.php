@@ -60,7 +60,13 @@ $list_config = [
     'data' => $items,
     'delete_url' => '/pos/users/save',
     'status_url' => '/pos/users/save',
-    'primary_key' => 'id'
+    'primary_key' => 'id',
+    'permissions' => [
+        'add' => 'user_add',
+        'view' => 'user_view',
+        'edit' => 'user_edit',
+        'delete' => 'user_delete'
+    ]
 ];
 
 $page_title = "User List - Velocity POS";
@@ -76,87 +82,3 @@ include('../includes/header.php');
         </div>
     </main>
 </div>
-
-<!-- View User Modal -->
-<div id="viewUserModal" class="fixed inset-0 z-[9999] hidden overflow-y-auto overflow-x-hidden">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"></div>
-    
-    <!-- Modal Container -->
-    <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 modal-content border border-slate-100">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between bg-teal-600 px-8 py-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shadow-inner">
-                        <i class="fas fa-user-shield text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-white uppercase tracking-wider">User Account Details</h3>
-                        <p class="text-indigo-100 text-[10px] font-black uppercase opacity-80">Full Profile & Access Overview</p>
-                    </div>
-                </div>
-                <button onclick="closeViewModal()" class="w-10 h-10 rounded-xl bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-all">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <!-- Content Area (Loaded via AJAX) -->
-            <div class="p-8" id="user_view_body">
-                <div class="flex items-center justify-center py-12">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<script>
-function viewUser(id) {
-    const modal = document.getElementById('viewUserModal');
-    const content = modal.querySelector('.modal-content');
-    const body = document.getElementById('user_view_body');
-
-    // Show modal and reset body
-    modal.classList.remove('hidden');
-    body.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
-    
-    // Animate in
-    setTimeout(() => {
-        content.classList.remove('scale-95', 'opacity-0');
-        content.classList.add('scale-100', 'opacity-100');
-    }, 10);
-
-    // Fetch User Details
-    $.ajax({
-        type: "POST",
-        url: "/pos/users/fetch_user_modal.php",
-        data: { user_id: id },
-        success: function(response) {
-            body.innerHTML = response;
-        },
-        error: function() {
-            body.innerHTML = '<p class="text-center py-8 text-red-500">Failed to load user data.</p>';
-        }
-    });
-}
-
-function closeViewModal() {
-    const modal = document.getElementById('viewUserModal');
-    const content = modal.querySelector('.modal-content');
-    
-    content.classList.remove('scale-100', 'opacity-100');
-    content.classList.add('scale-95', 'opacity-0');
-    
-    setTimeout(() => {
-        modal.classList.add('hidden');
-    }, 200);
-}
-
-// Close on escape key
-document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape') closeViewModal();
-});
-</script>
