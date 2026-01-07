@@ -153,11 +153,22 @@ $menu_items = [
         'active' => (uri_has('/suppliers/', $current_uri))
     ],
     [
+        'title' => 'Customers',
+        'icon' => 'fa-user-friends', 
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Customer', 'link' => '/pos/customers/add'],
+            ['title' => 'Customer List', 'link' => '/pos/customers/list']
+        ],
+        'active' => (uri_has('/customers/', $current_uri))
+    ],
+    [
         'title' => 'Users',
         'icon' => 'fa-users',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add User & List', 'link' => '/pos/users/add'],
+            ['title' => 'Add User', 'link' => '/pos/users/add'],
+            ['title' => 'User List', 'link' => '/pos/users/list'],
             ['title' => 'User Groups', 'link' => '/pos/users/groups'],
             ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
             ['title' => 'Reset Password', 'link' => '/pos/users/reset'],

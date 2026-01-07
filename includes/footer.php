@@ -33,17 +33,28 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        Swal.fire({
-            icon: '<?= $swalIcon; ?>',
-            title: '<?= $swalTitle; ?>',
-            text: <?= $safeMessage; ?>, // Safe output
+        const msgType = '<?= $msgType; ?>';
+        const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 4000,
+            timer: 3000,
             timerProgressBar: true,
-            background: '<?= $bgColor; ?>',
-            color: '#fff'
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        Toast.fire({
+            icon: '<?= $swalIcon; ?>',
+            title: <?= $safeMessage; ?>,
+            background: msgType === 'success' ? '#059669' : '#1e293b', // Green for success, Slate for error/notice
+            color: '#fff',
+            iconColor: '#fff',
+            customClass: {
+                popup: 'rounded-2xl shadow-2xl px-5 py-2'
+            }
         });
     });
 </script>

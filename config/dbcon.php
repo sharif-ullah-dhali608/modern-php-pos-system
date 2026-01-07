@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -193,6 +193,38 @@ function ensure_core_tables(mysqli $conn) {
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: CUSTOMERS Table (STREAMLINED) ---
+    $customersSql = "CREATE TABLE IF NOT EXISTS customers (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL,
+        company_name VARCHAR(255) DEFAULT NULL,
+        code_name VARCHAR(100) DEFAULT NULL,
+        customer_group VARCHAR(100) DEFAULT '',
+        membership_level VARCHAR(50) DEFAULT '',
+        email VARCHAR(255) DEFAULT NULL,
+        fax_number VARCHAR(100) DEFAULT NULL,
+        mobile VARCHAR(50) NOT NULL,
+        alt_mobile VARCHAR(50) DEFAULT NULL,
+        address TEXT DEFAULT NULL,
+        city VARCHAR(100) DEFAULT NULL,
+        state VARCHAR(100) DEFAULT NULL,
+        country VARCHAR(100) DEFAULT 'Bangladesh',
+        details TEXT DEFAULT NULL,
+        image VARCHAR(255) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        sex VARCHAR(20) DEFAULT 'Male',
+        age INT(11) DEFAULT 0,
+        dob DATE DEFAULT NULL,
+        credit_balance DECIMAL(15,2) DEFAULT 0.00,
+        opening_balance DECIMAL(15,2) DEFAULT 0.00,
+        credit_limit DECIMAL(15,2) DEFAULT 0.00,
+        reward_points INT(11) DEFAULT 0,
+        fixed_discount DECIMAL(15,2) DEFAULT 0.00,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // Store-currency pivot (already present)
     $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
@@ -444,6 +476,21 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+        // --- NEW: Customer-Store Pivot (ADDED) ---
+    $customerStoreMapSql = "CREATE TABLE IF NOT EXISTS customer_stores_map (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        customer_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY customer_store_unique (customer_id, store_id),
+        KEY customer_id (customer_id),
+        KEY store_id (store_id),
+        CONSTRAINT customer_store_cust_fk FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE,
+        CONSTRAINT customer_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
     // --- NEW: Purchase Logs Table ---
     $purchaseLogsSql = "CREATE TABLE IF NOT EXISTS purchase_logs (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -486,6 +533,7 @@ $purchaseImageSql = "CREATE TABLE IF NOT EXISTS purchase_image (
         id INT(11) NOT NULL AUTO_INCREMENT,
         name VARCHAR(255) NOT NULL,
         slug VARCHAR(255) NOT NULL UNIQUE,
+        permission LONGTEXT DEFAULT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
@@ -495,9 +543,9 @@ $purchaseImageSql = "CREATE TABLE IF NOT EXISTS purchase_image (
 $usersSql = "CREATE TABLE IF NOT EXISTS users (
     id INT(11) NOT NULL AUTO_INCREMENT,
     group_id INT(11) DEFAULT NULL,
-    username VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    mobile VARCHAR(50) DEFAULT NULL,
+    phone VARCHAR(50) DEFAULT NULL,
     dob DATE DEFAULT NULL,
     sex ENUM('M', 'F', 'O') DEFAULT 'M',
     password VARCHAR(255) NOT NULL,
@@ -548,14 +596,26 @@ mysqli_query($conn, $userStoreMapSql);
     mysqli_query($conn, $purchaseLogsSql);
     mysqli_query($conn, $purchaseImageSql);
     mysqli_query($conn, $userGroupSql);
+    mysqli_query($conn, $customersSql); // Execute Customers
 
-    
+
+
     // Ensure return_quantity column exists in purchase_item table (for existing databases)
     $checkColumn = @mysqli_query($conn, "SHOW COLUMNS FROM purchase_item LIKE 'return_quantity'");
     if($checkColumn && mysqli_num_rows($checkColumn) == 0) {
         // Just add at the end without specifying AFTER clause to avoid issues
         @mysqli_query($conn, "ALTER TABLE purchase_item ADD COLUMN return_quantity DECIMAL(15,4) DEFAULT 0.0000");
     }
+
+    // Ensure permission column exists in user_groups table
+    $checkPermColumn = @mysqli_query($conn, "SHOW COLUMNS FROM user_groups LIKE 'permission'");
+    if($checkPermColumn && mysqli_num_rows($checkPermColumn) == 0) {
+        @mysqli_query($conn, "ALTER TABLE user_groups ADD COLUMN permission LONGTEXT DEFAULT NULL AFTER slug");
+    }
+
+
+
+
 
 
 
@@ -572,9 +632,22 @@ mysqli_query($conn, $userStoreMapSql);
     mysqli_query($conn, $supplierStoreSql);
     mysqli_query($conn, $productStoreSql);
     mysqli_query($conn, $quotationItemsSql);
+    mysqli_query($conn, $customerStoreMapSql); // Execute Customer-Store Map
+
 
 
     mysqli_query($conn, $productImagesSql);
+
+    // Seeding
+    $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";
+    mysqli_query($conn, $qG);
+    $check = mysqli_query($conn, "SELECT id FROM users LIMIT 1");
+    if(mysqli_num_rows($check) == 0) {
+        $g = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id FROM user_groups WHERE slug='admin'"));
+        $gid = $g['id'];
+        $p = password_hash('123456', PASSWORD_DEFAULT);
+        mysqli_query($conn, "INSERT INTO users (group_id, name, email, password) VALUES ('$gid', 'Admin', 'admin@store.com', '$p')");
+    }
 
 
     

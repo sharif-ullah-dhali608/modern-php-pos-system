@@ -104,7 +104,7 @@ if(isset($_POST['save_product_btn'])) {
     $currency_id = ((int)$_POST['currency_id'] > 0) ? "'".(int)$_POST['currency_id']."'" : "NULL";
     $expire_date_input = $_POST['expire_date'];
     $expire_date = !empty($expire_date_input) ? "'$expire_date_input'" : "NULL";
-    $store_ids = isset($_POST['store_ids']) ? $_POST['store_ids'] : [];
+    $store_ids = $_POST['stores'] ?? $_POST['store_ids'] ?? [];
 
     // INSERT
     $query = "INSERT INTO products (
@@ -202,7 +202,7 @@ if(isset($_POST['update_product_btn'])) {
     $currency_id = ((int)$_POST['currency_id'] > 0) ? "'".(int)$_POST['currency_id']."'" : "NULL";
     $expire_date_input = $_POST['expire_date'];
     $expire_date = !empty($expire_date_input) ? "'$expire_date_input'" : "NULL";
-    $store_ids = isset($_POST['store_ids']) ? $_POST['store_ids'] : [];
+    $store_ids = $_POST['stores'] ?? $_POST['store_ids'] ?? [];
 
     // --- A. IMAGE LOGIC (MAIN & AUTO PROMOTE) ---
     $old_thumbnail = $_POST['old_thumbnail'] ?? '';
