@@ -60,10 +60,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const storeError = document.getElementById('store-error');
 
     if(selectAllBtn) {
+        function updateSelectAllStatus() {
+            const allChecked = Array.from(storeCheckboxes).every(c => c.checked);
+            selectAllBtn.checked = allChecked;
+        }
+
+        // Run initial check
+        updateSelectAllStatus();
+
         // Select All Logic
         selectAllBtn.addEventListener('change', function() {
-            const visibleCheckboxes = document.querySelectorAll('.store-checkbox');
-            visibleCheckboxes.forEach(cb => {
+            storeCheckboxes.forEach(cb => {
                 if (cb.closest('label').style.display !== 'none') {
                     cb.checked = this.checked;
                 }
@@ -74,8 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Individual Checkbox Logic
         storeCheckboxes.forEach(cb => {
             cb.addEventListener('change', function() {
-                const allChecked = Array.from(storeCheckboxes).every(c => c.checked);
-                selectAllBtn.checked = allChecked;
+                updateSelectAllStatus();
                 if(storeError && this.checked) storeError.classList.add('hidden');
             });
         });
