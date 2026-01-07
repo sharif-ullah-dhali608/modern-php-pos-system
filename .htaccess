@@ -84,12 +84,21 @@ RewriteRule ^quotations/edit/([0-9]+)$ quotations/add_quotation.php?id=$1 [L]
 
 # --- Users & Groups Routes ---
 RewriteRule ^users/add$ users/add_user.php [L]
+RewriteRule ^users/edit/([0-9]+)$ users/add_user.php?id=$1 [L]
 RewriteRule ^users/list$ users/user_list.php [L]
 RewriteRule ^users/groups$ users/user_groups.php [L]
 RewriteRule ^users/save_group$ users/save_user_group.php [L]
 RewriteRule ^users/save$ users/save_user.php [L]
 RewriteRule ^users/verify$ users/verify_email.php [L]
 RewriteRule ^users/reset$ users/reset_password.php [L]
+
+
+# --- Customers Routes (ADDED) ---
+RewriteRule ^customers/list$ customers/customer_list.php [L]
+RewriteRule ^customers/add$ customers/add_customer.php [L]
+RewriteRule ^customers/save$ customers/save_customer.php [L]
+RewriteRule ^customers/edit/([0-9]+)$ customers/add_customer.php?id=$1 [L]
+
 
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f

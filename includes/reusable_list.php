@@ -126,11 +126,16 @@ function renderReusableList($config) {
                                             <?php 
                                             // --- Images ---
                                             elseif ($type === 'image'): 
+                                                $path = $col['path'] ?? '';
+                                                $name = $row[$config['name_field'] ?? 'name'] ?? 'C';
                                             ?>
                                                 <?php if(!empty($val)): ?>
-                                                    <img src="<?= htmlspecialchars($val); ?>" class="w-10 h-10 rounded-lg object-cover border border-slate-200" alt="Img">
+                                                    <img src="<?= htmlspecialchars($path . $val); ?>" 
+                                                         class="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-sm" 
+                                                         alt="Img"
+                                                         onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($name); ?>&background=random&size=40'; this.onerror=null;">
                                                 <?php else: ?>
-                                                    <span class="text-xs text-slate-400 italic">No Image</span>
+                                                    <img src="https://ui-avatars.com/api/?name=<?= urlencode($name); ?>&background=random&size=40" class="w-10 h-10 rounded-lg border border-slate-200" alt="Avtr">
                                                 <?php endif; ?>
 
                                             <?php 

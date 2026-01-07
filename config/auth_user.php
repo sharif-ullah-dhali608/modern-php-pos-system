@@ -50,32 +50,49 @@ if(isset($_POST['login_btn']))
         exit(0);
     }
     
-    // 3. CHECK EMAIL (Password retain logic added for failure scenarios)
-    $check_email_query = "SELECT * FROM users WHERE email='$email' LIMIT 1";
-    $check_email_run = mysqli_query($conn, $check_email_query);
+    // 3. CHECK EMAIL & PASSWORD
+    $query = "SELECT u.*, g.slug as group_slug FROM users u 
+              LEFT JOIN user_groups g ON u.group_id = g.id 
+              WHERE u.email='$email' LIMIT 1";
+    $result = mysqli_query($conn, $query);
 
-    if(mysqli_num_rows($check_email_run) > 0)
+    if(mysqli_num_rows($result) > 0)
     {
-        $data = mysqli_fetch_array($check_email_run);
+        $data = mysqli_fetch_array($result);
 
-        // NOTE: Comparing plain text passwords 
-        if($password == $data['password']) 
+        // --- PASSWORD CHECK ---
+        // Support both hashed passwords and plain text for backward compatibility (optional but recommended during transition)
+        $is_password_valid = false;
+        if (password_verify($password, $data['password'])) {
+            $is_password_valid = true;
+        } elseif ($password === $data['password']) {
+            // If it matches as plain text, we should probably re-hash it, but for now just allow login
+            $is_password_valid = true;
+        }
+
+        if($is_password_valid) 
         {
             // --- LOGIN SUCCESS ---
             $_SESSION['auth'] = true;
+            
+            // Determine role
+            $role = 'user';
+            if($data['group_slug'] == 'admin') {
+                $role = 'admin';
+            }
+
             $_SESSION['auth_user'] = [
                 'user_id' => $data['id'],
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'role_as' => $data['role_as']
+                'role_as' => $role
             ];
 
             $_SESSION['message'] = "Welcome Dashboard"; 
             $_SESSION['msg_type'] = "success";
 
-            
             unset($_SESSION['input_email']);
-            unset($_SESSION['input_password']); // Clear retained password
+            unset($_SESSION['input_password']);
             unset($_SESSION['error_field']);
 
             header("Location: /pos");
@@ -86,7 +103,7 @@ if(isset($_POST['login_btn']))
             // --- WRONG PASSWORD ---
             $_SESSION['message'] = "Invalid Email & Password!";
             $_SESSION['input_email'] = $email;    
-            $_SESSION['input_password'] = $password; // RETAIN PASSWORD
+            $_SESSION['input_password'] = $password;
             $_SESSION['error_field'] = "password"; 
             
             header("Location: /pos/login");
@@ -98,7 +115,7 @@ if(isset($_POST['login_btn']))
         // --- WRONG EMAIL ---
         $_SESSION['message'] = "Invalid Login Credentials!";
         $_SESSION['input_email'] = $email;    
-        $_SESSION['input_password'] = $password; // RETAIN PASSWORD
+        $_SESSION['input_password'] = $password;
         $_SESSION['error_field'] = "email";   
         
         header("Location: /pos/login");
