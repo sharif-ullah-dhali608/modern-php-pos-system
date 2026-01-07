@@ -30,21 +30,49 @@ function renderReusableList($config) {
 
     <div class="w-full slide-in">
         
+        <div class="w-full animate-fade-in">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-slate-800 mb-2"><?= htmlspecialchars($title); ?></h1>
-                <div class="flex items-center gap-2 text-sm text-slate-500">
+                <h1 class="text-3xl font-black text-slate-800 mb-1"><?= htmlspecialchars($title); ?></h1>
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Total <?= count($data); ?> entries</span>
                 </div>
             </div>
             
-            <?php if($add_url !== '#'): ?>
-            <a href="<?= $add_url; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 group">
-                <i class="fas fa-plus transition-transform group-hover:rotate-90"></i>
-                <span>Add New</span>
-            </a>
-            <?php endif; ?>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <button type="button" onclick="toggleExportDropdown()" class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition-all">
+                        <i class="fas fa-upload rotate-180"></i>
+                        <span>Export</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+                        <button onclick="triggerDtAction('print')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-print w-4 text-slate-500"></i> Print
+                        </button>
+                        <button onclick="triggerDtAction('csv')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-file-csv w-4 text-slate-500"></i> Csv
+                        </button>
+                        <button onclick="triggerDtAction('excel')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-file-excel w-4 text-slate-500"></i> Excel
+                        </button>
+                        <button onclick="triggerDtAction('pdf')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-file-pdf w-4 text-slate-500"></i> Pdf
+                        </button>
+                        <button onclick="triggerDtAction('copy')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-copy w-4 text-slate-500"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <?php if($add_url !== '#'): ?>
+                <a href="<?= $add_url; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+                    <i class="fas fa-plus"></i>
+                    <span>Add New</span>
+                </a>
+                <?php endif; ?>
+            </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden p-6">
@@ -172,5 +200,7 @@ function renderReusableList($config) {
     </div>
 
     <?php
+    
 }
 ?>
+

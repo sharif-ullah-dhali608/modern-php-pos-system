@@ -65,38 +65,115 @@ endif; ?>
   
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <style>
-    /* DataTables Pagination Buttons Styling */
+    /* --- INVISIBLE HORIZONTAL SCROLLBAR --- */
+    .dataTables_wrapper .overflow-x-auto, 
+    .data-table-container {
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    .dataTables_wrapper .overflow-x-auto::-webkit-scrollbar,
+    .data-table-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* --- UNIQUE SEARCH FIELD DESIGN --- */
+    .dataTables_filter {
+        position: relative;
+    }
+    .unique-search-field {
+        width: 500px !important;
+        height: 48px !important;
+        padding-left: 48px !important;
+        padding-right: 20px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease !important;
+        outline: none !important;
+    }
+    .unique-search-field:focus {
+        border-color: #0d9488 !important;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1) !important;
+        background: #ffffff !important;
+        width: 650px !important;
+    }
+    .search-icon-inside {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        z-index: 10;
+        pointer-events: none;
+    }
+    .unique-search-field:focus + .search-icon-inside {
+        color: #0d9488;
+    }
+
+    /* --- UNIQUE SHOW ENTRIES DESIGN --- */
+    .dataTables_length {
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        padding: 6px 14px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+    }
+    .dataTables_length select {
+        appearance: none;
+        background: transparent !important;
+        border: none !important;
+        color: #0d9488 !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        padding: 0 8px !important;
+        cursor: pointer;
+        outline: none !important;
+    }
+
+    /* --- PAGINATION & TABLE DESIGN --- */
     .dataTables_wrapper .dataTables_paginate .paginate_button {
         border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 5px 12px !important;
-        margin-left: 4px !important;
+        border-radius: 10px !important;
+        padding: 6px 14px !important;
+        margin-left: 5px !important;
         background: white !important;
         color: #475569 !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important; /* স্মুথ ট্রানজিশন */
+        cursor: pointer !important;
     }
-    
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
-        background: #f0fdfa !important; /* Teal-50 */
-        color: #0d9488 !important; /* Teal-600 */
-        border-color: #99f6e4 !important;
-    }
-    
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current, 
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-        background: linear-gradient(135deg, #134e4a 0%, #064e3b 100%) !important;
+
+     .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #0d9488 !important;
         color: white !important;
-        border-color: transparent !important;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+        border-color: #0d9488 !important;
+    }
+
+     .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
+        background: #0d9488 !important;
+        color: white !important;
+        border-color: #0d9488 !important;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2) !important; /* হালকা শ্যাডো ইফেক্ট */
     }
 
     .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-        color: #cbd5e1 !important;
-        cursor: not-allowed !important;
-        opacity: 0.6 !important;
+        cursor: default !important;
+        opacity: 0.5;
     }
 </style>
 
@@ -106,33 +183,76 @@ endif; ?>
             $('.data-table').DataTable({
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                buttons: [
+                    { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
+                    { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
+                    { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
+                    { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
+                    { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
+                ],
                 language: {
                     search: "",
                     searchPlaceholder: "Search records...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    lengthMenu: "<span class='text-xs font-black text-slate-400 uppercase tracking-widest mr-1'>Show</span> _MENU_ <span class='text-xs font-black text-slate-400 uppercase tracking-widest ml-1'>Entries</span>",
                     paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
+                        next: '<i class="fas fa-chevron-right text-xs"></i>',
+                        previous: '<i class="fas fa-chevron-left text-xs"></i>'
                     }
                 },
-                dom: '<"flex justify-between items-center mb-4"<"flex items-center gap-4"l><"flex items-center gap-2"f>>rt<"flex justify-between items-center mt-4"<"text-sm text-slate-500"i><"flex gap-2"p>>',
-                order: [[0, 'desc']],
+                // Updated layout for perfect alignment
+                dom: '<"flex flex-col md:flex-row justify-between items-center gap-4 mb-6"<"flex items-center"l><"relative w-full md:max-w-md"f>>rt<"flex flex-col md:flex-row justify-between items-center mt-6 gap-4"ip>',
+                order: [[1, 'desc']],
                 responsive: true,
-                autoWidth: false
+                autoWidth: false,
+                initComplete: function() {
+                    // Cleanup default DataTables text and setup unique search
+                    const searchWrapper = $('.dataTables_filter');
+                    const searchInput = searchWrapper.find('input');
+                    
+                    searchWrapper.contents().filter(function() {
+                        return this.nodeType === 3; 
+                    }).remove();
+                    
+                    searchInput.unwrap().addClass('unique-search-field');
+                    searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
+
+                    // Apply horizontal scroll container class
+                    $('.data-table').wrap('<div class="data-table-container"></div>');
+                }
             });
-            
-            const dt_styles = 'bg-white border-slate-300 text-slate-700 placeholder-slate-400 focus:ring-teal-500 rounded-lg py-2 px-4 outline-none border transition-all';
-            
-            $('.dataTables_wrapper .dataTables_filter input').addClass(dt_styles);
-            $('.dataTables_wrapper select').addClass(dt_styles);
-            $('.dataTables_wrapper .dataTables_length').find('label').addClass('text-slate-600');
-            $('.dataTables_wrapper .dataTables_info').addClass('text-slate-600 font-medium');
         }
+        // $('#selectAll').on('click', function() {
+        // $('.row-checkbox').prop('checked', $(this).prop('checked'));
     });
-    
+    function toggleExportDropdown() {
+        const dropdown = document.getElementById('exportDropdown');
+        dropdown.classList.toggle('hidden');
+        
+        const closeDropdown = (e) => {
+            if (!e.target.closest('#exportDropdown') && !e.target.closest('button[onclick="toggleExportDropdown()"]')) {
+                dropdown.classList.add('hidden');
+                document.removeEventListener('click', closeDropdown);
+            }
+        };
+        
+        if (!dropdown.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeDropdown);
+            }, 0);
+        }
+    }
+    // Trigger DataTable Action from Custom Dropdown Menu
+    function triggerDtAction(action) {
+        const table = $('.data-table').DataTable(); 
+        
+        if(action === 'print') table.button('.buttons-print').trigger();
+        else if(action === 'csv') table.button('.buttons-csv').trigger();
+        else if(action === 'excel') table.button('.buttons-excel').trigger();
+        else if(action === 'pdf') table.button('.buttons-pdf').trigger();
+        else if(action === 'copy') table.button('.buttons-copy').trigger();
+        
+        $('#exportDropdown').addClass('hidden'); 
+    }
     function openSettings() {
         Swal.fire({
             title: 'Settings',

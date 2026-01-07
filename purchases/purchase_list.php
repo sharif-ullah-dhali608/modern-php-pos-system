@@ -133,7 +133,7 @@ include('../includes/header.php');
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
-<style>
+<!-- <style>
     /* 1. Table Container & Responsiveness */
   
     .bg-white.rounded-xl.shadow-sm.border,
@@ -239,7 +239,7 @@ include('../includes/header.php');
     /* 5. Utility Styles */
    
     .dt-buttons { display: none !important; }
-</style>
+</style> -->
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -504,38 +504,190 @@ include('../includes/header.php');
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<style>
+    /* --- INVISIBLE HORIZONTAL SCROLLBAR --- */
+    .dataTables_wrapper .overflow-x-auto, 
+    #purchaseTable-container {
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    .dataTables_wrapper .overflow-x-auto::-webkit-scrollbar,
+    #purchaseTable-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* --- UNIQUE SEARCH FIELD DESIGN --- */
+    .dataTables_filter {
+        position: relative;
+    }
+    .unique-search-field {
+        width: 500px !important;
+        height: 48px !important;
+        padding-left: 48px !important;
+        padding-right: 20px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 14px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease !important;
+        outline: none !important;
+    }
+    .unique-search-field:focus {
+        border-color: #0d9488 !important;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1) !important;
+        background: #ffffff !important;
+        width: 650px !important;
+    }
+    .search-icon-inside {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        z-index: 10;
+        pointer-events: none;
+    }
+    .unique-search-field:focus + .search-icon-inside {
+        color: #0d9488;
+    }
+
+    /* --- UNIQUE SHOW ENTRIES DESIGN --- */
+    .dataTables_length {
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        padding: 6px 14px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+    }
+    .dataTables_length select {
+        appearance: none;
+        background: transparent !important;
+        border: none !important;
+        color: #0d9488 !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        padding: 0 8px !important;
+        cursor: pointer;
+        outline: none !important;
+    }
+
+    /* --- PAGINATION & TABLE DESIGN --- */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 6px 14px !important;
+        margin-left: 5px !important;
+        background: white !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important; /* স্মুথ ট্রানজিশন */
+        cursor: pointer !important;
+    }
+
+     .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #0d9488 !important;
+        color: white !important;
+        border-color: #0d9488 !important;
+    }
+
+     .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
+        background: #0d9488 !important;
+        color: white !important;
+        border-color: #0d9488 !important;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2) !important; /* হালকা শ্যাডো ইফেক্ট */
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        cursor: default !important;
+        opacity: 0.5;
+    }
+</style>
 
 <script>
-$(document).ready(function() {
-var table = $('#purchaseTable').DataTable({
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-        // l=length, f=filter, t=table, i=info, p=pagination
-        dom: '<"flex flex-col md:flex-row justify-between items-right gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-right gap-4 mt-4"i p>',     
-        buttons: [
-            { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
-            { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
-            { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
-            { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
-            { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
-        ],
-        order: [[1, 'desc']], 
-        language: {
-            search: "", 
-            searchPlaceholder: "Search for invoices, suppliers, or dates...",
-            lengthMenu: "Show _MENU_ entries"
+    $(document).ready(function() {
+        if ($('#purchaseTable').length) {
+            $('#purchaseTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                buttons: [
+                    { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
+                    { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
+                    { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
+                    { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
+                    { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
+                ],
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search records...",
+                    lengthMenu: "<span class='text-xs font-black text-slate-400 uppercase tracking-widest mr-1'>Show</span> _MENU_ <span class='text-xs font-black text-slate-400 uppercase tracking-widest ml-1'>Entries</span>",
+                    paginate: {
+                        next: '<i class="fas fa-chevron-right text-xs"></i>',
+                        previous: '<i class="fas fa-chevron-left text-xs"></i>'
+                    }
+                },
+                // Updated layout for perfect alignment
+                dom: '<"flex flex-col md:flex-row justify-between items-center gap-4 mb-6"<"flex items-center"l><"relative w-full md:max-w-md"f>>rt<"flex flex-col md:flex-row justify-between items-center mt-6 gap-4"ip>',
+                order: [[1, 'desc']],
+                responsive: true,
+                autoWidth: false,
+                initComplete: function() {
+                    // Cleanup default DataTables text and setup unique search
+                    const searchWrapper = $('.dataTables_filter');
+                    const searchInput = searchWrapper.find('input');
+                    
+                    searchWrapper.contents().filter(function() {
+                        return this.nodeType === 3; 
+                    }).remove();
+                    
+                    searchInput.unwrap().addClass('unique-search-field');
+                    searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
+
+                    // Apply horizontal scroll container class
+                    $('#purchaseTable').wrap('<div class="data-table-container"></div>');
+                }
+            });
         }
+        // $('#selectAll').on('click', function() {
+        // $('.row-checkbox').prop('checked', $(this).prop('checked'));
     });
+// <script>
+// $(document).ready(function() {
+// var table = $('#purchaseTable').DataTable({
+//         pageLength: 10,
+//         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+//         // l=length, f=filter, t=table, i=info, p=pagination
+//         dom: '<"flex flex-col md:flex-row justify-between items-right gap-4 mb-4"l f>rt<"flex flex-col md:flex-row justify-between items-right gap-4 mt-4"i p>',     
+//         buttons: [
+//             { extend: 'print', className: 'dt-print', exportOptions: { columns: ':visible' } },
+//             { extend: 'csv', className: 'dt-csv', exportOptions: { columns: ':visible' } },
+//             { extend: 'excel', className: 'dt-excel', exportOptions: { columns: ':visible' } },
+//             { extend: 'pdf', className: 'dt-pdf', exportOptions: { columns: ':visible' } },
+//             { extend: 'copy', className: 'dt-copy', exportOptions: { columns: ':visible' } }
+//         ],
+//         order: [[1, 'desc']], 
+//         language: {
+//             search: "", 
+//             searchPlaceholder: "Search for invoices, suppliers, or dates...",
+//             lengthMenu: "Show _MENU_ entries"
+//         }
+//     });
 
    
-    $('.dataTables_filter').addClass('flex-1 w-full md:max-w-2xl');
-    $('.dataTables_filter input').addClass('w-full h-12 pl-4 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-medium');
+//     $('.dataTables_filter').addClass('flex-1 w-full md:max-w-2xl');
+//     $('.dataTables_filter input').addClass('w-full h-12 pl-4 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-50 transition-all font-medium');
     
    
-    $('#selectAll').on('click', function() {
-        $('.row-checkbox').prop('checked', $(this).prop('checked'));
-    });
-});
+//     $('#selectAll').on('click', function() {
+//         $('.row-checkbox').prop('checked', $(this).prop('checked'));
+//     });
+// });
 // Trigger DataTable Action from Custom Dropdown Menu
 function triggerDtAction(action) {
     const table = $('#purchaseTable').DataTable(); 
