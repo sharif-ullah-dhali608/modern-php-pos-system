@@ -56,7 +56,7 @@ if(isset($_POST['login_btn']))
               WHERE u.email='$email' LIMIT 1";
     $result = mysqli_query($conn, $query);
 
-    if(mysqli_num_rows($result) > 0)
+      if(mysqli_num_rows($result) > 0)
     {
         $data = mysqli_fetch_array($result);
 
@@ -75,17 +75,21 @@ if(isset($_POST['login_btn']))
             // --- LOGIN SUCCESS ---
             $_SESSION['auth'] = true;
             
-            // Determine role
-            $role = 'user';
-            if($data['group_slug'] == 'admin') {
-                $role = 'admin';
+            // Determine role based on group slug (preserve group name for accurate display)
+            $group_slug = isset($data['group_slug']) ? strtolower(trim($data['group_slug'])) : '';
+            if ($group_slug === '') {
+                $role = 'user';
+            } else {
+                $role = $group_slug; // e.g., admin, salesman, cashier, etc.
             }
 
+            // Store user info in session including image so navbar can show avatar
             $_SESSION['auth_user'] = [
                 'user_id' => $data['id'],
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'role_as' => $role
+                'role_as' => $role,
+                'image' => isset($data['user_image']) ? $data['user_image'] : ''
             ];
 
             $_SESSION['message'] = "Welcome Dashboard"; 
@@ -110,6 +114,7 @@ if(isset($_POST['login_btn']))
             exit(0);
         }
     }
+
     else
     {
         // --- WRONG EMAIL ---
