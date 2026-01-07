@@ -76,300 +76,286 @@ if(!in_array($d['country'], $country_list) && !empty($d['country'])){
 include('../includes/header.php');
 ?>
 
-<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css"></noscript>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
+    /* ADD STORE DESIGN SYSTEM */
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .slide-in { animation: slideIn 0.4s ease-out forwards; opacity: 0; transform: translateY(20px); }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+
+    /* Input & Select2 Customization */
     .iti { width: 100%; }
-    .iti__flag {background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags.png");}
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-      .iti__flag {background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags@2x.png");}
-    }
+    .select2-container .select2-selection--single { height: 50px; border-radius: 0.75rem; border-color: #cbd5e1; padding-top: 10px; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { top: 12px; right: 10px; }
+    .select2-container--default .select2-selection--multiple { border-radius: 0.75rem; border-color: #cbd5e1; min-height: 50px; padding: 5px; }
+
+    /* Validation & Scroll */
+    .error-msg-text { color: #e11d48; font-size: 0.75rem; font-weight: 700; margin-top: 4px; display: none; align-items: center; gap: 4px; }
+    input.error-border, select.error-border, textarea.error-border { border-color: #e11d48 !important; background-color: #fff1f2; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     
-    /* Validation Styles */
-    input.error-border, select.error-border, textarea.error-border { border-color: #ef4444 !important; background-color: #fef2f2; }
-    .error-msg-text { color: #ef4444; font-size: 0.75rem; margin-top: 4px; display: none; }
-    
-    #valid-msg { color: #10b981; margin-top: 5px; font-size: 0.85rem; display: none; }
-    #error-msg { color: #ef4444; margin-top: 5px; font-size: 0.85rem; display: none; }
-
-    /* Section Headers */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .section-header i { color: #3b82f6; }
-
-    /* Custom scroll for store list */
-    .custom-scroll::-webkit-scrollbar { width: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-
-    /* Spinner */
+    /* Loader */
     .loader-sm {
-        border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%;
+        border: 2px solid #f3f3f3; border-top: 2px solid #0d9488; border-radius: 50%;
         width: 16px; height: 16px; animation: spin 1s linear infinite;
-        display: none; position: absolute; right: 30px; top: 12px;
+        display: none; position: absolute; right: 12px; top: 16px; z-index: 10;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Select2 Custom Teal Highlight */
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #0d9488 !important;
+        color: white !important;
+    }
 </style>
 
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
+    
     <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
-        <?php include('../includes/navbar.php'); ?>
+        <div class="navbar-fixed-top"><?php include('../includes/navbar.php'); ?></div> 
         
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
             <div class="p-6">
-                <!-- Header Section -->
-                <div class="mb-6 slide-in">
-                    <div class="flex items-center gap-4 mb-2">
+                <div class="mb-8 slide-in">
+                    <div class="flex items-center gap-4 mb-4">
                         <a href="/pos/users/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                         <div>
                             <h1 class="text-3xl font-bold text-slate-800 mb-2"><?= $page_title; ?></h1>
                             <div class="flex items-center gap-2 text-sm text-slate-500">
-                                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
                                 <span><?= $mode == 'create' ? 'Assign role and access to new user' : 'Update user profile and permissions'; ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card rounded-xl p-8 slide-in bg-white border border-slate-200 shadow-xl">
-                    <form action="/pos/users/save" method="POST" enctype="multipart/form-data" id="userForm" novalidate autocomplete="off">
-                        <?php if($mode == 'edit'): ?>
-                            <input type="hidden" name="user_id" value="<?= $d['id'] ?>">
-                            <input type="hidden" name="old_image" value="<?= $d['user_image'] ?>">
-                            <input type="hidden" name="update_user_btn" value="true">
-                        <?php else: ?>
-                            <input type="hidden" name="save_user_btn" value="true">
-                        <?php endif; ?>
+                <form action="/pos/users/save" method="POST" enctype="multipart/form-data" id="userForm" novalidate autocomplete="off">
+                    <?php if($mode == 'edit'): ?>
+                        <input type="hidden" name="user_id" value="<?= $d['id'] ?>">
+                        <input type="hidden" name="old_image" value="<?= $d['user_image'] ?>">
+                        <input type="hidden" name="update_user_btn" value="true">
+                    <?php else: ?>
+                        <input type="hidden" name="save_user_btn" value="true">
+                    <?php endif; ?>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Main Form Area -->
-                            <div class="lg:col-span-2 space-y-8 glass-card rounded-xl p-8 border border-slate-200 shadow-sm bg-white">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        
+                        <div class="lg:col-span-8 space-y-6">
+                            
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-1 bg-white">
+                                <h2 class="text-lg font-bold text-slate-800 mb-8 flex items-center gap-3">
+                                    <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 text-white flex items-center justify-center text-lg shadow-md shadow-emerald-900/40"><i class="fas fa-id-card"></i></span>
+                                    Identity & Account
+                                </h2>
                                 
-                                <!-- Identity & Account Section -->
-                                <div>
-                                    <div class="section-header">
-                                        <i class="fas fa-id-card"></i>
-                                        <span>Identity & Login Account</span>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="relative w-full group md:col-span-2">
+                                        <input type="text" name="name" id="name" value="<?= htmlspecialchars($d['name']); ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder-slate-400 font-medium" placeholder="Full Name *">
+                                        <i class="absolute right-4 top-4 text-slate-400 peer-focus:text-teal-600 transition-colors text-lg fas fa-pen-nib"></i>
+                                        <div class="error-msg-text" id="error-name"><i class="fas fa-exclamation-circle"></i> Full name is required</div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div class="md:col-span-2">
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Full Name <span class="text-red-600">*</span></label>
-                                            <input type="text" name="name" id="name" value="<?= htmlspecialchars($d['name']); ?>" 
-                                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-semibold text-sm"
-                                                placeholder="e.g. John Doe">
-                                            <div class="error-msg-text" id="error-name">Full name is required</div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Email Address <span class="text-red-600">*</span></label>
-                                            <input type="email" name="email" id="email" value="<?= htmlspecialchars($d['email']); ?>" 
-                                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                                                placeholder="email@example.com">
-                                            <div class="error-msg-text" id="error-email">Valid email is required</div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Phone Number <span class="text-red-600">*</span></label>
-                                            <div class="relative">
-                                                <input type="hidden" name="phone" id="full_phone" value="<?= htmlspecialchars($d['phone']); ?>">
-                                                <input type="tel" id="phone" 
-                                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                                                    placeholder="017...">
-                                                <div class="flex justify-between items-center mt-1">
-                                                    <span id="valid-msg" class="hide text-[10px] text-green-600"><i class="fas fa-check-circle"></i> Valid</span>
-                                                    <span id="error-msg" class="hide text-[10px] text-red-600"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Password <?= $mode=='create'?'<span class="text-red-600">*</span>':'(Leave blank to keep old)' ?></label>
-                                            <input type="password" name="password" id="password" 
-                                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                                                placeholder="Min 6 characters">
-                                            <div class="error-msg-text" id="error-password">Password must be at least 6 characters</div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Role & Personal Section -->
-                                <div>
-                                    <div class="section-header">
-                                        <i class="fas fa-user-shield"></i>
-                                        <span>Role & Personal Details</span>
+                                    <div class="relative w-full group">
+                                        <input type="email" name="email" id="email" value="<?= htmlspecialchars($d['email']); ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all placeholder-slate-400" placeholder="Email Address *">
+                                        <i class="absolute right-4 top-4 text-slate-400 peer-focus:text-teal-600 transition-colors text-lg fas fa-envelope"></i>
+                                        <div class="error-msg-text" id="error-email"><i class="fas fa-exclamation-circle"></i> Valid email is required</div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">User Group / Role <span class="text-red-600">*</span></label>
-                                            <select name="group_id" id="group_id" class="select2 w-full">
-                                                <option value="">-- Select Group --</option>
-                                                <?php 
-                                                $groups = mysqli_query($conn, "SELECT id, name FROM user_groups");
-                                                while($g = mysqli_fetch_assoc($groups)): ?>
-                                                    <option value="<?= $g['id'] ?>" <?= $d['group_id']==$g['id']?'selected':'' ?>><?= $g['name'] ?></option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                            <div class="error-msg-text" id="error-group_id">Please select a user group</div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Date of Birth <span class="text-red-600">*</span></label>
-                                            <input type="date" name="dob" id="dob" value="<?= htmlspecialchars($d['dob']); ?>" 
-                                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm">
-                                            <div class="error-msg-text" id="error-dob">Date of birth is required</div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Gender <span class="text-red-600">*</span></label>
-                                            <select name="sex" id="sex" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-sm">
-                                                <option value="Male" <?= $d['sex']=='Male'?'selected':'' ?>>Male</option>
-                                                <option value="Female" <?= $d['sex']=='Female'?'selected':'' ?>>Female</option>
-                                                <option value="Other" <?= $d['sex']=='Other'?'selected':'' ?>>Other</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Location Details Section -->
-                                <div>
-                                    <div class="section-header">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>Location Details</span>
+                                    <div class="relative w-full group">
+                                        <input type="hidden" name="phone" id="full_phone" value="<?= htmlspecialchars($d['phone']); ?>">
+                                        <input type="tel" id="phone" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all placeholder-slate-400" placeholder="017...">
+                                        
+                                        <div class="flex justify-between items-center mt-1">
+                                            <span id="valid-msg" class="hide text-[10px] text-green-600 font-bold hidden"><i class="fas fa-check-circle"></i> Valid</span>
+                                            <span id="error-msg" class="hide text-[10px] text-rose-600 font-bold hidden"></span>
+                                        </div>
                                     </div>
-                                    <div class="grid grid-cols-1 gap-5">
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Full Address</label>
-                                            <textarea name="address" rows="2" 
-                                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                                                placeholder="Street, Area, etc."><?= htmlspecialchars($d['address']); ?></textarea>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                            <div>
-                                                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">City <span class="text-red-600">*</span></label>
-                                                <input type="text" name="city" id="city" value="<?= htmlspecialchars($d['city']); ?>" 
-                                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                                                    placeholder="City">
-                                                <div class="error-msg-text" id="error-city">Required</div>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">State <span class="text-red-600">*</span></label>
-                                                <div class="relative">
-                                                    <div id="state_loader" class="loader-sm"></div>
-                                                    <select name="state" id="state_select" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium <?= empty($d['state']) ? 'hidden' : ''; ?>">
-                                                        <?php if(!empty($d['state'])): ?>
-                                                            <option value="<?= htmlspecialchars($d['state']); ?>"><?= $d['state']; ?></option>
-                                                        <?php else: ?>
-                                                            <option value="">Select State</option>
-                                                        <?php endif; ?>
-                                                    </select>
-                                                    <input type="text" name="state_text" id="state_text" 
-                                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm <?= !empty($d['state']) ? 'hidden' : ''; ?>" 
-                                                        placeholder="Enter State" value="<?= htmlspecialchars($d['state']); ?>">
-                                                </div>
-                                                <div class="error-msg-text" id="error-state">Required</div>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Country <span class="text-red-600">*</span></label>
-                                                <select name="country" id="country_select" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium">
-                                                    <option value="">Select Country</option>
-                                                    <?php foreach($country_list as $country): ?>
-                                                        <option value="<?= $country; ?>" <?= ($d['country'] == $country) ? 'selected' : ''; ?>><?= $country; ?></option>
-                                                    <?php endforeach; ?>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                                <div class="error-msg-text" id="error-country_select">Required</div>
-                                            </div>
-                                        </div>
+
+                                    <div class="relative w-full group">
+                                        <input type="password" name="password" id="password" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all placeholder-slate-400" 
+                                            placeholder="Password <?= $mode=='create'?'*':'(Leave blank to keep)'; ?>">
+                                        <button type="button" id="togglePassword" class="absolute right-4 top-4 text-slate-400 hover:text-teal-600 transition-colors text-lg">
+                                            <i class="fas fa-eye" id="eyeIcon"></i>
+                                        </button>
+                                        <div class="error-msg-text" id="error-password"><i class="fas fa-exclamation-circle"></i> Min 6 characters required</div>
+                                    </div>
+
+                                    <div class="relative w-full group">
+                                        <input type="password" name="confirm_password" id="confirm_password" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all placeholder-slate-400" 
+                                            placeholder="Confirm Password <?= $mode=='create'?'*':''; ?>">
+                                        <div class="error-msg-text" id="error-confirm_password"><i class="fas fa-exclamation-circle"></i> Passwords do not match</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Sidebar Section -->
-                            <div class="space-y-6">
-                                <!-- Profile Photo Section -->
-                                <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm bg-white">
-                                    <label class="block text-sm font-semibold text-slate-700 mb-4 text-left">User Photo</label>
-                                    
-                                    <div id="image-drop-zone" class="relative border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all cursor-pointer overflow-hidden min-h-[160px] flex flex-col items-center justify-center p-4">
-                                        <input type="file" name="user_image" id="user-image-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" onchange="previewImage(this)">
-                                        
-                                        <div id="upload-placeholder" class="text-center <?= !empty($d['user_image']) ? 'hidden' : ''; ?>">
-                                            <div class="w-16 h-16 bg-white text-slate-400 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
-                                                <i class="fas fa-image text-2xl"></i>
-                                            </div>
-                                            <p class="text-sm font-semibold text-slate-700">Click to upload photo</p>
-                                            <p class="text-xs text-slate-400 mt-1">Select user profile picture</p>
-                                        </div>
-
-                                        <div id="preview-container" class="relative group <?= empty($d['user_image']) ? 'hidden' : ''; ?>">
-                                            <img id="profile-preview" src="<?= !empty($d['user_image']) ? $d['user_image'] : ''; ?>" 
-                                                 class="max-h-32 rounded-lg shadow-sm object-cover" alt="Profile"
-                                                 onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($d['name']); ?>&background=random&size=100'; this.onerror=null;">
-                                            <div class="mt-2 text-center">
-                                                 <span class="text-xs font-semibold text-blue-600 group-hover:underline">Click to change</span>
-                                            </div>
-                                        </div>
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-2 bg-white">
+                                <h2 class="text-lg font-bold text-slate-800 mb-8 flex items-center gap-3">
+                                    <span class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center text-lg shadow-md shadow-teal-600/40"><i class="fas fa-user-shield"></i></span>
+                                    Role & Personal Details
+                                </h2>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="relative w-full group">
+                                        <select name="group_id" id="group_id" class="select2 w-full">
+                                            <option value="">-- Select Role --</option>
+                                            <?php 
+                                            $groups = mysqli_query($conn, "SELECT id, name FROM user_groups");
+                                            while($g = mysqli_fetch_assoc($groups)): ?>
+                                                <option value="<?= $g['id'] ?>" <?= $d['group_id']==$g['id']?'selected':'' ?>><?= $g['name'] ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                        <div class="error-msg-text" id="error-group_id"><i class="fas fa-exclamation-circle"></i> Role required</div>
                                     </div>
-                                    <p class="text-xs text-slate-400 mt-3 italic text-center"><i class="fas fa-info-circle mr-1"></i> Max size: 2MB (JPG, PNG)</p>
-                                </div>
 
-                                <!-- Assign Store Section -->
-                                <div class="relative">
-                                    <?php 
-                                        $store_label = "Assign Stores"; 
-                                        $search_placeholder = "Search Store...";
-                                        include('../includes/store_select_component.php'); 
-                                    ?>
-                                    <div class="error-msg-text" id="error-store">Assign at least one store</div>
-                                </div>
+                                    <div class="relative w-full group">
+                                        <input type="date" name="dob" id="dob" value="<?= htmlspecialchars($d['dob']); ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all">
+                                        <div class="error-msg-text" id="error-dob"><i class="fas fa-exclamation-circle"></i> Min 18 years required</div>
+                                    </div>
 
-                                <!-- Status Section -->
-                                <?php 
-                                    $current_status = $d['status'];  
-                                    $status_title = "User";      
-                                    $card_id = "status-card";
-                                    $label_id = "status-label";
-                                    $input_id = "status_input";
-                                    $toggle_id = "status_toggle";
-
-                                    include('../includes/status_card.php'); 
-                                ?>
-
-                                <!-- Sort Order -->
-                                <div class="glass-card rounded-xl p-6 border border-slate-200 shadow-sm bg-white">                          
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Sort Order <span class="text-red-600">*</span></label>
-                                        <input type="number" name="sort_order" id="sort_order" value="<?= htmlspecialchars($d['sort_order']); ?>" 
-                                            class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
-                                            min="0">
-                                        <div class="error-msg-text" id="error-sort_order">Sort Order is required</div>
+                                    <div class="relative w-full group">
+                                        <select name="sex" id="sex" class="select2 peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all cursor-pointer">
+                                            <option value="Male" <?= $d['sex']=='Male'?'selected':'' ?>>Male</option>
+                                            <option value="Female" <?= $d['sex']=='Female'?'selected':'' ?>>Female</option>
+                                            <option value="Other" <?= $d['sex']=='Other'?'selected':'' ?>>Other</option>
+                                        </select>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Form Actions -->
-                                <div class="grid grid-cols-2 gap-3 pt-2">
-                                    <button type="button" onclick="processUserForm()"
-                                        class="col-span-1 bg-teal-800 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all">
-                                        <i class="fas fa-save mr-2"></i> <?= $btn_text; ?>
-                                    </button>
-                                    
-                                    <a href="/pos/users/list" 
-                                        class="col-span-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg shadow-md transition-all text-center flex items-center justify-center">
-                                        <i class="fas fa-times-circle mr-2"></i> Cancel
-                                    </a>
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-3 bg-white">
+                                <h2 class="text-lg font-bold text-slate-800 mb-8 flex items-center gap-3">
+                                    <span class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shadow-md shadow-rose-600/40"><i class="fas fa-map-marked-alt"></i></span>
+                                    Location Details
+                                </h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="md:col-span-2 relative w-full group">
+                                        <textarea name="address" rows="2" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all resize-none" 
+                                            placeholder="Full Address"><?= htmlspecialchars($d['address']); ?></textarea>
+                                        <i class="absolute right-4 top-4 text-slate-400 fas fa-map-pin"></i>
+                                    </div>
+
+                                    <div class="relative w-full group">
+                                        <input type="text" name="city" id="city" value="<?= htmlspecialchars($d['city']); ?>" 
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all" placeholder="City *">
+                                        <div class="error-msg-text" id="error-city"><i class="fas fa-exclamation-circle"></i> Required</div>
+                                    </div>
+
+                                    <div class="relative w-full group">
+                                        <div id="state_loader" class="loader-sm"></div>
+                                        <select name="state" id="state_select" class="select2 peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all cursor-pointer <?= empty($d['state']) ? 'hidden' : ''; ?>">
+                                            <?php if(!empty($d['state'])): ?>
+                                                <option value="<?= htmlspecialchars($d['state']); ?>"><?= $d['state']; ?></option>
+                                            <?php else: ?>
+                                                <option value="">Select State</option>
+                                            <?php endif; ?>
+                                        </select>
+                                        <input type="text" name="state_text" id="state_text" value="<?= htmlspecialchars($d['state']); ?>"
+                                            class="peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all <?= !empty($d['state']) ? 'hidden' : ''; ?>" placeholder="State/Province *">
+                                        <div class="error-msg-text" id="error-state"><i class="fas fa-exclamation-circle"></i> Required</div>
+                                    </div>
+
+                                    <div class="relative w-full group">
+                                        <select name="country" id="country_select" class="select2 peer block py-3.5 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-600 transition-all cursor-pointer">
+                                            <option value="">Select Country *</option>
+                                            <?php foreach($country_list as $country): ?>
+                                                <option value="<?= $country; ?>" <?= ($d['country'] == $country) ? 'selected' : ''; ?>><?= $country; ?></option>
+                                            <?php endforeach; ?>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <div class="error-msg-text" id="error-country_select"><i class="fas fa-exclamation-circle"></i> Required</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="lg:col-span-4 space-y-6">
+                            
+                            <?php 
+                                $current_status = $d['status'];  
+                                $status_title = "User";      
+                                $card_id = "status-card";
+                                $label_id = "status-label";
+                                $input_id = "status_input";
+                                $toggle_id = "status_toggle";
+
+                                include('../includes/status_card.php'); 
+                            ?>
+
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-2 bg-white">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Profile Photo</h3>
+                                
+                                <div id="image-drop-zone" class="relative border-2 border-dashed border-slate-300 rounded-xl hover:border-teal-500 transition-colors bg-slate-50 flex flex-col items-center justify-center p-6 text-center cursor-pointer group h-48 overflow-hidden">
+                                    <input type="file" name="user_image" id="user-image-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" onchange="previewImage(this)">
+                                    
+                                    <div id="upload-placeholder" class="<?= !empty($d['user_image']) ? 'hidden' : ''; ?>">
+                                        <div class="w-12 h-12 bg-white text-slate-400 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-slate-200 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-camera text-xl"></i>
+                                        </div>
+                                        <p class="text-sm font-semibold text-slate-600">Click to Upload</p>
+                                        <p class="text-xs text-slate-400">Max 2MB</p>
+                                    </div>
+
+                                    <div id="preview-container" class="absolute inset-0 w-full h-full <?= empty($d['user_image']) ? 'hidden' : ''; ?>">
+                                        <img id="profile-preview" src="<?= !empty($d['user_image']) ? $d['user_image'] : ''; ?>" class="w-full h-full object-cover rounded-xl">
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="text-white text-sm font-bold"><i class="fas fa-pen"></i> Change</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-3 bg-white">
+                                <?php 
+                                    $store_label = "Assign Stores"; 
+                                    $search_placeholder = "Search Store...";
+                                    include('../includes/store_select_component.php'); 
+                                ?>
+                                <div class="error-msg-text" id="error-store"><i class="fas fa-exclamation-circle"></i> Select at least one store</div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 shadow-lg border border-slate-200 slide-in delay-3 bg-white">
+                                <div class="relative w-full group">
+                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Sort Order</label>
+                                    <input type="number" name="sort_order" id="sort_order" value="<?= htmlspecialchars($d['sort_order']); ?>" 
+                                        class="peer block py-3 px-4 w-full text-sm text-slate-800 bg-white rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-600 font-bold" min="0">
+                                    <div class="error-msg-text" id="error-sort_order"><i class="fas fa-exclamation-circle"></i> Required</div>
+                                </div>
+                            </div>
+
+                            <div class="slide-in delay-3 pt-1">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button type="button" onclick="processUserForm()" 
+                                        class="col-span-1 py-3.5 rounded-xl bg-[#064e3b] hover:bg-[#053d2e] text-white font-bold text-base shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group">
+                                        <i class="fas fa-save"></i>
+                                        <span><?= $btn_text; ?></span>
+                                    </button>
+                                    
+                                    <button type="reset" onclick="location.reload()" 
+                                        class="col-span-1 py-3.5 rounded-xl bg-red-800 hover:bg-red-700 text-white font-bold text-base shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group">
+                                        <i class="fas fa-undo"></i>
+                                        <span>Reset</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </main>
@@ -399,7 +385,23 @@ include('../includes/header.php');
     }
 
 $(document).ready(function() {
-    $('.select2').select2({ width: '100%', placeholder: 'Search and Select Role...' });
+    $('.select2').each(function() {
+        let placeholder = $(this).find('option:first').text() || 'Search and Select...';
+        if(placeholder.includes('-- Select') || placeholder.includes('Select ')) {
+            // Keep it
+        } else {
+            placeholder = 'Select...';
+        }
+        $(this).select2({ width: '100%', placeholder: placeholder });
+    });
+
+    // DOB Max Date Restriction (18 Years)
+    const dobInput = document.getElementById('dob');
+    if(dobInput) {
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        dobInput.max = maxDate.toISOString().split('T')[0];
+    }
 
     // 1. PHONE VALIDATION SETUP
     let iti; 
@@ -451,7 +453,42 @@ $(document).ready(function() {
     };
     initPhone();
 
-    // 2. FORM SUBMISSION LOGIC
+    // 2. PASSWORD TOGGLE & MATCHING LOGIC
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirm_password');
+    const toggleBtn = document.getElementById('togglePassword');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const errConfirm = document.getElementById('error-confirm_password');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            confirmInput.setAttribute('type', type);
+            eyeIcon.classList.toggle('fa-eye');
+            eyeIcon.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    const validateMatch = () => {
+        if (confirmInput.value.length > 0) {
+            if (passwordInput.value !== confirmInput.value) {
+                confirmInput.classList.add('error-border');
+                errConfirm.style.display = 'block';
+            } else {
+                confirmInput.classList.remove('error-border');
+                errConfirm.style.display = 'none';
+            }
+        } else {
+            confirmInput.classList.remove('error-border');
+            errConfirm.style.display = 'none';
+        }
+    };
+
+    passwordInput.addEventListener('input', validateMatch);
+    confirmInput.addEventListener('input', validateMatch);
+
+    // 3. FORM SUBMISSION LOGIC
     window.processUserForm = function() {
         let isValid = true;
         
@@ -470,11 +507,25 @@ $(document).ready(function() {
             }
         };
 
-        // Required Field Validation
         showError('name', document.getElementById('name').value.trim() === "");
         showError('city', document.getElementById('city').value.trim() === "");
         showError('sort_order', document.getElementById('sort_order').value === "");
-        showError('dob', document.getElementById('dob').value === "");
+        
+        // DOB check with 18+ validation
+        const dobVal = document.getElementById('dob').value;
+        if(dobVal === "") {
+            showError('dob', true);
+        } else {
+            const dob = new Date(dobVal);
+            const today = new Date();
+            const minAgeDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+            if(dob > minAgeDate) {
+                showError('dob', true);
+                document.getElementById('error-dob').innerHTML = '<i class="fas fa-exclamation-circle"></i> User must be 18+';
+            } else {
+                showError('dob', false);
+            }
+        }
 
         // State Validation (Select or Text)
         const stateSelectElement = document.getElementById('state_select');
@@ -503,10 +554,13 @@ $(document).ready(function() {
 
         // Password Validation (only for create mode or if typed)
         const password = document.getElementById('password');
+        const confirm = document.getElementById('confirm_password');
         if("<?= $mode ?>" === "create") {
             showError('password', password.value.trim().length < 6);
+            showError('confirm_password', confirm.value !== password.value);
         } else if(password.value.trim() !== "") {
             showError('password', password.value.trim().length < 6);
+            showError('confirm_password', confirm.value !== password.value);
         }
 
         // Group Validation
@@ -533,11 +587,20 @@ $(document).ready(function() {
         if(isValid) {
             document.getElementById('userForm').submit();
         } else {
-            Swal.fire({
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
                 icon: 'error',
-                title: 'Validation Error',
-                text: 'Please check the form for missing or invalid information.',
-                confirmButtonColor: '#0d9488'
+                title: 'Please check the form for errors!',
+                background: '#1e293b',
+                color: '#fff',
+                iconColor: '#fff',
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

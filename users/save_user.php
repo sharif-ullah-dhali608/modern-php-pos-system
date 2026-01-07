@@ -27,7 +27,7 @@ if(isset($_POST['save_user_btn'])) {
     $city = mysqli_real_escape_string($conn, $_POST['city'] ?? '');
     $state = mysqli_real_escape_string($conn, $_POST['state'] ?? '');
     $country = mysqli_real_escape_string($conn, $_POST['country'] ?? '');
-    $status = mysqli_real_escape_string($conn, $_POST['status'] ?? '1');
+    $status = (int)($_POST['status'] ?? 1);
     $sort_order = (int)($_POST['sort_order'] ?? 0);
     $store_ids = $_POST['stores'] ?? $_POST['store_ids'] ?? [];
 
@@ -78,7 +78,7 @@ if(isset($_POST['update_user_btn'])) {
     $city = mysqli_real_escape_string($conn, $_POST['city'] ?? '');
     $state = mysqli_real_escape_string($conn, $_POST['state'] ?? '');
     $country = mysqli_real_escape_string($conn, $_POST['country'] ?? '');
-    $status = mysqli_real_escape_string($conn, $_POST['status'] ?? '1');
+    $status = (int)($_POST['status'] ?? 1);
     $sort_order = (int)($_POST['sort_order'] ?? 0);
     
     $image = $_POST['old_image'];
@@ -115,6 +115,44 @@ if(isset($_POST['update_user_btn'])) {
         $_SESSION['message'] = "User Updated Successfully!";
         $_SESSION['msg_type'] = "success";
         header("Location: /pos/users/list");
+        exit(0);
     }
 }
+
+// 3. TOGGLE USER STATUS
+if(isset($_POST['toggle_status_btn'])) {
+    $user_id = (int)$_POST['item_id'];
+    $status = (int)$_POST['status'];
+    
+    $query = "UPDATE users SET status='$status' WHERE id='$user_id'";
+    if(mysqli_query($conn, $query)) {
+        $_SESSION['message'] = "User status updated successfully!";
+        $_SESSION['msg_type'] = "success";
+    } else {
+        $_SESSION['message'] = "Error updating status: " . mysqli_error($conn);
+        $_SESSION['msg_type'] = "error";
+    }
+    header("Location: /pos/users/list");
+    exit(0);
+}
+
+// 4. DELETE USER
+if(isset($_POST['delete_btn'])) {
+    $user_id = (int)$_POST['delete_id'];
+    
+    $query = "DELETE FROM users WHERE id='$user_id'";
+    if(mysqli_query($conn, $query)) {
+        $_SESSION['message'] = "User deleted successfully!";
+        $_SESSION['msg_type'] = "success";
+    } else {
+        $_SESSION['message'] = "Error deleting user: " . mysqli_error($conn);
+        $_SESSION['msg_type'] = "error";
+    }
+    header("Location: /pos/users/list");
+    exit(0);
+}
+
+// Catch-all redirect
+header("Location: /pos/users/list");
+exit(0);
 ?>

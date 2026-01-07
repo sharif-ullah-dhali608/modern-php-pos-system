@@ -555,6 +555,9 @@ $usersSql = "CREATE TABLE IF NOT EXISTS users (
     last_login DATETIME DEFAULT NULL,
     ip VARCHAR(45) DEFAULT NULL,
     address TEXT DEFAULT NULL,
+    city VARCHAR(100) DEFAULT NULL,
+    state VARCHAR(100) DEFAULT NULL,
+    country VARCHAR(100) DEFAULT NULL,
     preference TEXT DEFAULT NULL,
     user_image VARCHAR(255) DEFAULT NULL,
     status TINYINT(1) DEFAULT 1 COMMENT '1=Active, 0=Inactive',
@@ -611,6 +614,20 @@ mysqli_query($conn, $userStoreMapSql);
     $checkPermColumn = @mysqli_query($conn, "SHOW COLUMNS FROM user_groups LIKE 'permission'");
     if($checkPermColumn && mysqli_num_rows($checkPermColumn) == 0) {
         @mysqli_query($conn, "ALTER TABLE user_groups ADD COLUMN permission LONGTEXT DEFAULT NULL AFTER slug");
+    }
+
+    // Ensure city, state, country exist in users table
+    $checkUsersCity = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'city'");
+    if($checkUsersCity && mysqli_num_rows($checkUsersCity) == 0) {
+        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN city VARCHAR(100) DEFAULT NULL AFTER address");
+    }
+    $checkUsersState = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'state'");
+    if($checkUsersState && mysqli_num_rows($checkUsersState) == 0) {
+        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN state VARCHAR(100) DEFAULT NULL AFTER city");
+    }
+    $checkUsersCountry = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'country'");
+    if($checkUsersCountry && mysqli_num_rows($checkUsersCountry) == 0) {
+        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN country VARCHAR(100) DEFAULT NULL AFTER state");
     }
 
 
