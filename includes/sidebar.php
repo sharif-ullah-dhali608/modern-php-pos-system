@@ -17,6 +17,28 @@ $menu_items = [
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
     [
+        'title' => 'Sell',
+        'icon' => 'fa-cash-register',
+        'link' => '#',
+        'submenu' => [ 
+            ['title' => 'Sell List', 'link' => '/pos/sell/list'],
+            ['title' => 'Return List', 'link' => '/pos/sell/return'],
+            ['title' => 'Sell Log', 'link' => '/pos/sell/log'],
+        ],
+        'active' => (uri_has('/sell/', $current_uri))
+    ],
+    [
+        'title' => 'Giftcard',
+        'icon' => 'fa-credit-card',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Giftcard', 'link' => '/pos/giftcard/add'],
+            ['title' => 'Giftcard List', 'link' => '/pos/giftcard/list'],
+            ['title' => 'Giftcard Topup', 'link' => '/pos/giftcard/topup'],
+        ],
+        'active' => (uri_has('/giftcard/', $current_uri))
+    ],
+    [
         'title' => 'Products',
         'icon' => 'fa-box',
         'link' => '#',

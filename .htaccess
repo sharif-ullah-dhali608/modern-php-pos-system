@@ -23,6 +23,17 @@ RewriteRule ^payment-methods/add$ payment_methods/add_payment_method.php [L]
 RewriteRule ^payment-methods/save$ payment_methods/save_payment_method.php [L]
 RewriteRule ^payment-methods/edit/([0-9]+)$ payment_methods/add_payment_method.php?id=$1 [L]
 
+# --- Giftcard Routes (added) ---
+RewriteRule ^giftcard/list$ giftcard/giftcard_list.php [L]
+RewriteRule ^giftcard/add$ giftcard/add_giftcard.php [L,QSA]
+RewriteRule ^giftcard/save$ giftcard/save_giftcard.php [L,QSA]
+RewriteRule ^giftcard/edit$ giftcard/add_giftcard.php [L,QSA]
+RewriteRule ^giftcard/edit/([0-9]+)$ giftcard/add_giftcard.php?id=$1 [L]
+RewriteRule ^giftcard/view/([0-9]+)$ giftcard/fetch_giftcard_modal.php?id=$1 [L]
+RewriteRule ^giftcard/popup-list$ giftcard/giftcard_popup_list.php [L]
+RewriteRule ^giftcard/topup$ giftcard/giftcard_popup_list.php [L]
+RewriteRule ^giftcard/topup/([0-9]+)$ giftcard/fetch_giftcard_modal.php?id=$1 [L]
+
 RewriteRule ^units/list$ units/unit_list.php [L]
 RewriteRule ^units/edit/([0-9]+)$ units/add_unit.php?id=$1 [L]
 RewriteRule ^units/add/([0-9]+)$ units/add_unit.php?id=$1 [L]
