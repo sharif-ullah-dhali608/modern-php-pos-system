@@ -226,6 +226,36 @@ function ensure_core_tables(mysqli $conn) {
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Giftcards Table ---
+    $giftcardsSql = "CREATE TABLE IF NOT EXISTS giftcards (
+        id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        card_no VARCHAR(64) NOT NULL UNIQUE,
+        value DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+        balance DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+        customer_id INT DEFAULT NULL,
+        expiry_date DATE NULL,
+        image VARCHAR(255) DEFAULT NULL,
+        created_by INT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+        status TINYINT(1) NOT NULL DEFAULT 1,
+        PRIMARY KEY (id),
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Giftcard Topups Table ---
+    $giftcardTopupsSql = "CREATE TABLE IF NOT EXISTS giftcard_topups (
+        id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        giftcard_id INT UNSIGNED NOT NULL,
+        amount DECIMAL(12,2) NOT NULL,
+        note TEXT NULL,
+        created_by INT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        INDEX (giftcard_id),
+        CONSTRAINT fk_giftcard_topups_giftcard FOREIGN KEY (giftcard_id) REFERENCES giftcards(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
     // Store-currency pivot (already present)
     $storeCurrencySql = "CREATE TABLE IF NOT EXISTS store_currency (
         id INT(11) NOT NULL AUTO_INCREMENT,
@@ -654,6 +684,8 @@ mysqli_query($conn, $userStoreMapSql);
 
 
     mysqli_query($conn, $productImagesSql);
+    mysqli_query($conn, $giftcardsSql);
+    mysqli_query($conn, $giftcardTopupsSql);
 
     // Seeding
     $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";
