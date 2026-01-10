@@ -1,8 +1,4 @@
 <?php
-/**
- * Giftcard Topup List - Topup History
- * Uses reusable_list.php component
- */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
