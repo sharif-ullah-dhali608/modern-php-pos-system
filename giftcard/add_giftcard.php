@@ -79,12 +79,39 @@ include('../includes/header.php');
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
             <div class="p-4 md:p-6 max-w-7xl mx-auto">
                 
-                <?php if(isset($_SESSION['message'])): ?>
-                    <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 <?php echo ($_SESSION['msg_type'] ?? 'success') == 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'; ?>" role="alert">
-                        <i class="fas <?php echo ($_SESSION['msg_type'] ?? 'success') == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
-                        <span class="font-medium"><?= $_SESSION['message']; ?></span>
-                    </div>
-                    <?php unset($_SESSION['message']); unset($_SESSION['msg_type']); ?>
+                <?php if(isset($_SESSION['message'])): 
+                    $msgType = isset($_SESSION['msg_type']) ? $_SESSION['msg_type'] : "error";
+                    $swalIcon = ($msgType == "success") ? "success" : "error";
+                    $bgColor = ($msgType == "success") ? "#059669" : "#1e293b";
+                    $safeMessage = json_encode($_SESSION['message']);
+                ?>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    Toast.fire({
+                        icon: '<?= $swalIcon; ?>',
+                        title: <?= $safeMessage; ?>,
+                        background: '<?= $bgColor; ?>',
+                        color: '#fff',
+                        iconColor: '#fff',
+                        customClass: {
+                            popup: 'rounded-2xl shadow-2xl px-5 py-2'
+                        }
+                    });
+                });
+                </script>
+                <?php unset($_SESSION['message']); unset($_SESSION['msg_type']); ?>
                 <?php endif; ?>
 
                 <div class="mb-6 slide-in flex flex-col md:flex-row md:items-center justify-between gap-4">

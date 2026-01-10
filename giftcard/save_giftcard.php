@@ -296,7 +296,7 @@ $value = floatval($_POST['value'] ?? 0);
 $balance = floatval($_POST['balance'] ?? 0);
 $customer_id = intval($_POST['customer_id'] ?? 0);
 $expiry_date = mysqli_real_escape_string($conn, $_POST['expiry_date'] ?? '');
-$status = mysqli_real_escape_string($conn, $_POST['giftcard-status-input'] ?? '1');
+$status = mysqli_real_escape_string($conn, $_POST['status'] ?? '1');
 $giftcard_id = intval($_POST['giftcard_id'] ?? 0);
 
 // Validate required fields
