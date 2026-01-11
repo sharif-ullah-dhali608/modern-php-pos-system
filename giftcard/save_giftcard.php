@@ -295,6 +295,8 @@ $card_no = mysqli_real_escape_string($conn, trim($_POST['card_no'] ?? ''));
 $value = floatval($_POST['value'] ?? 0);
 $balance = floatval($_POST['balance'] ?? 0);
 $customer_id = intval($_POST['customer_id'] ?? 0);
+// Convert 0 to NULL for customer_id to avoid foreign key constraint issues
+$customer_id_value = $customer_id > 0 ? $customer_id : 'NULL';
 $expiry_date = mysqli_real_escape_string($conn, $_POST['expiry_date'] ?? '');
 $status = mysqli_real_escape_string($conn, $_POST['status'] ?? '1');
 $giftcard_id = intval($_POST['giftcard_id'] ?? 0);
@@ -414,7 +416,7 @@ if(!$giftcard_id) {
     
     // Insert giftcard
     $insert_query = "INSERT INTO giftcards (card_no, value, balance, customer_id, expiry_date, image, created_by, status, created_at, updated_at) 
-                     VALUES ('$card_no', $value, $balance, $customer_id, '$expiry_date', '$image_path', $user_id, '$status', NOW(), NOW())";
+                     VALUES ('$card_no', $value, $balance, $customer_id_value, '$expiry_date', '$image_path', $user_id, '$status', NOW(), NOW())";
     
     if(mysqli_query($conn, $insert_query)) {
         $new_giftcard_id = mysqli_insert_id($conn);
@@ -422,11 +424,37 @@ if(!$giftcard_id) {
         $_SESSION['message'] = "Giftcard created successfully (Card #: $card_no)";
         $_SESSION['msg_type'] = "success";
         
+        // Check if this is an AJAX request
+        if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            // Return JSON for AJAX
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'msg_type' => 'success',
+                'message' => "Giftcard created successfully (Card #: $card_no)",
+                'giftcard_id' => $new_giftcard_id
+            ]);
+            exit(0);
+        }
+        
         header("Location: /pos/giftcard/list");
         exit(0);
     } else {
         $_SESSION['message'] = "Error creating giftcard: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
+        
+        // Check if this is an AJAX request
+        if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            // Return JSON for AJAX
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'msg_type' => 'error',
+                'message' => "Error creating giftcard: " . mysqli_error($conn)
+            ]);
+            exit(0);
+        }
+        
         header("Location: /pos/giftcard/add");
         exit(0);
     }
@@ -476,7 +504,7 @@ else {
                      SET card_no='$card_no', 
                          value=$value, 
                          balance=$balance, 
-                         customer_id=$customer_id, 
+                         customer_id=$customer_id_value, 
                          expiry_date='$expiry_date', 
                          image='$image_path', 
                          status='$status', 

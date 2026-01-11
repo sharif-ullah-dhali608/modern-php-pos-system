@@ -17,6 +17,12 @@ $menu_items = [
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
     [
+        'title' => 'POS',
+        'icon' => 'fa-cash-register',
+        'link' => '/pos/pos/',
+        'active' => (uri_has('/pos/pos', $current_uri))
+    ],
+    [
         'title' => 'Sell',
         'icon' => 'fa-cash-register',
         'link' => '#',
