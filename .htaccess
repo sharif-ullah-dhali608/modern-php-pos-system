@@ -86,6 +86,10 @@ RewriteRule ^purchases/return-list$ purchases/return_list.php [L]
 RewriteRule ^purchases/purchase-logs$ purchases/purchase_logs.php [L]
 RewriteRule ^purchases/stock-import$ purchases/stock_import.php [L]
 
+# --- POS Routes (ADDED) ---
+RewriteRule ^pos/?$ pos/pos.php [L]
+RewriteRule ^pos/save$ pos/save_sale.php [L]
+
 # --- Quotations Routes (ADDED) ---
 RewriteRule ^quotations/list$ quotations/quotation_list.php [L]
 RewriteRule ^quotations/add$ quotations/add_quotation.php [L]

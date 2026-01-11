@@ -19,7 +19,7 @@ if($query_run) {
         // Format values
         $row['value_formatted'] = 'USD ' . number_format((float)$row['value'], 2);
         $row['balance_formatted'] = 'USD ' . number_format((float)$row['balance'], 2);
-        $row['expiry_formatted'] = date('d M, Y', strtotime($row['expiry_date']));
+        $row['expiry_formatted'] = !empty($row['expiry_date']) ? date('d M, Y', strtotime($row['expiry_date'])) : 'N/A';
         
         // Status Badge (Clickable to toggle)
         $row['status_badge'] = $row['status'] == 1 ? 

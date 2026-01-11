@@ -687,6 +687,94 @@ mysqli_query($conn, $userStoreMapSql);
     mysqli_query($conn, $giftcardsSql);
     mysqli_query($conn, $giftcardTopupsSql);
 
+    // --- NEW: Selling Info Table (POS Sale Headers) ---
+    $sellingInfoSql = "CREATE TABLE IF NOT EXISTS selling_info (
+        info_id INT(11) NOT NULL AUTO_INCREMENT,
+        invoice_id VARCHAR(50) NOT NULL UNIQUE,
+        edit_counter INT(11) DEFAULT 0,
+        inv_type VARCHAR(20) DEFAULT 'sale',
+        store_id INT(11) NOT NULL,
+        customer_id INT(11) DEFAULT NULL,
+        customer_mobile VARCHAR(50) DEFAULT NULL,
+        ref_invoice_id VARCHAR(50) DEFAULT NULL,
+        ref_case_id VARCHAR(50) DEFAULT NULL,
+        invoice_note TEXT DEFAULT NULL,
+        total_items DECIMAL(15,2) DEFAULT 0.00,
+        discount_amount DECIMAL(15,2) DEFAULT 0.00,
+        tax_amount DECIMAL(15,2) DEFAULT 0.00,
+        shipping_charge DECIMAL(15,2) DEFAULT 0.00,
+        other_charge DECIMAL(15,2) DEFAULT 0.00,
+        grand_total DECIMAL(15,2) DEFAULT 0.00,
+        is_installment TINYINT(1) DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'active',
+        purchased_id INT(11) DEFAULT NULL,
+        payment_status VARCHAR(20) DEFAULT 'due',
+        checkout_status VARCHAR(20) DEFAULT NULL,
+        created_by INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (info_id),
+        KEY store_id (store_id),
+        KEY customer_id (customer_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Selling Item Table (POS Sale Line Items) ---
+    $sellingItemSql = "CREATE TABLE IF NOT EXISTS selling_item (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        invoice_id VARCHAR(50) NOT NULL,
+        invoice_type VARCHAR(20) DEFAULT 'sale',
+        store_id INT(11) NOT NULL,
+        item_id INT(11) NOT NULL,
+        item_name VARCHAR(255) NOT NULL,
+        qty_sold DECIMAL(15,4) DEFAULT 0.0000,
+        price_sold DECIMAL(15,4) DEFAULT 0.0000,
+        subtotal DECIMAL(15,4) DEFAULT 0.0000,
+        item_discount_percent DECIMAL(10,2) DEFAULT 0.00,
+        discount_flat DECIMAL(15,4) DEFAULT 0.0000,
+        tax_type VARCHAR(20) DEFAULT 'exclusive',
+        tax_rate DECIMAL(10,2) DEFAULT 0.00,
+        return_item DECIMAL(15,4) DEFAULT 0.0000,
+        hold_status TINYINT(1) DEFAULT 0,
+        created_by INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY invoice_id (invoice_id),
+        KEY item_id (item_id),
+        KEY store_id (store_id),
+        FOREIGN KEY (item_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Sell Logs Table (Payment Transactions) ---
+    $sellLogsSql = "CREATE TABLE IF NOT EXISTS sell_logs (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        customer_id INT(11) DEFAULT NULL,
+        reference_no VARCHAR(50) NOT NULL,
+        ref_invoice_id VARCHAR(50) NOT NULL,
+        type VARCHAR(20) DEFAULT 'sale',
+        pmethod_id INT(11) DEFAULT NULL,
+        description TEXT DEFAULT NULL,
+        amount DECIMAL(15,4) DEFAULT 0.0000,
+        store_id INT(11) NOT NULL,
+        created_by INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY customer_id (customer_id),
+        KEY ref_invoice_id (ref_invoice_id),
+        KEY pmethod_id (pmethod_id),
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+        FOREIGN KEY (pmethod_id) REFERENCES payment_methods(id) ON DELETE SET NULL,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    mysqli_query($conn, $sellingInfoSql);
+    mysqli_query($conn, $sellingItemSql);
+    mysqli_query($conn, $sellLogsSql);
+
     // Seeding
     $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";
     mysqli_query($conn, $qG);
