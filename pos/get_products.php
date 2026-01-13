@@ -5,14 +5,29 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $items_per_page = 20;
 $offset = ($page - 1) * $items_per_page;
 $store_id = isset($_GET['store_id']) ? (int)$_GET['store_id'] : 0;
+$category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
+$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
 
-$where_clause = "";
+$where_conditions = ["p.status = 1"];
 $join_clause = "";
 
+// Store filter
 if($store_id > 0) {
     $join_clause = " JOIN product_store_map psm ON p.id = psm.product_id ";
-    $where_clause = " WHERE psm.store_id = $store_id ";
+    $where_conditions[] = "psm.store_id = $store_id";
 }
+
+// Category filter
+if($category_id > 0) {
+    $where_conditions[] = "p.category_id = $category_id";
+}
+
+// Search filter
+if(!empty($search)) {
+    $where_conditions[] = "(p.product_name LIKE '%$search%' OR p.product_code LIKE '%$search%')";
+}
+
+$where_clause = " WHERE " . implode(" AND ", $where_conditions);
 
 $products = [];
 $products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name 
@@ -21,11 +36,11 @@ $products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name
                   LEFT JOIN units u ON p.unit_id = u.id 
                   $join_clause
                   $where_clause
-                  ORDER BY p.id DESC 
+                  ORDER BY p.product_name ASC 
                   LIMIT $offset, $items_per_page";
 $products_result = mysqli_query($conn, $products_query);
 
-if(mysqli_num_rows($products_result) > 0){
+if($products_result && mysqli_num_rows($products_result) > 0){
     while($item = mysqli_fetch_assoc($products_result)){
         $products[] = $item;
     }
@@ -34,8 +49,9 @@ if(mysqli_num_rows($products_result) > 0){
 // Total products for pagination calculation
 $total_products_query = "SELECT COUNT(*) as total FROM products p $join_clause $where_clause";
 $total_products_result = mysqli_query($conn, $total_products_query);
-$total_products = mysqli_fetch_assoc($total_products_result)['total'];
-$total_pages = ceil($total_products / $items_per_page);
+$total_products = mysqli_fetch_assoc($total_products_result)['total'] ?? 0;
+$total_pages = max(1, ceil($total_products / $items_per_page));
+
 
 $response = [
     'html' => '',
@@ -44,9 +60,21 @@ $response = [
 
 // Generate Product Grid HTML
 ob_start();
-foreach($products as $product): ?>
-    <div class="product-card" onclick="addToCart(<?= $product['id']; ?>, '<?= htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', <?= $product['selling_price']; ?>)">
-        <?php if(!empty($product['image']) && file_exists("../uploads/".$product['image'])): ?>
+foreach($products as $product): 
+    $stock = floatval($product['opening_stock']);
+    $alert_qty = floatval($product['alert_quantity'] ?? 5);
+    $is_out_of_stock = $stock <= 0;
+    $is_low_stock = $stock > 0 && $stock <= $alert_qty;
+?>
+    <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" data-id="<?= $product['id']; ?>" data-stock="<?= $stock; ?>">
+        <?php if($is_out_of_stock): ?>
+            <div class="stock-badge out-of-stock">Out of Stock</div>
+        <?php elseif($is_low_stock): ?>
+            <div class="stock-badge low-stock">Low Stock</div>
+        <?php endif; ?>
+        <?php if(!empty($product['thumbnail']) && file_exists("../".$product['thumbnail'])): ?>
+            <img src="../<?= $product['thumbnail']; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
+        <?php elseif(!empty($product['image']) && file_exists("../uploads/".$product['image'])): ?>
             <img src="../uploads/<?= $product['image']; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
         <?php else: ?>
             <img src="../assets/images/no-image.png" alt="No Image">
@@ -56,9 +84,15 @@ foreach($products as $product): ?>
             <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
             <div class="stock">Stock: <?= $product['opening_stock']; ?> <?= $product['unit_name'] ?? 'pcs'; ?></div>
         </div>
-        <button class="add-btn" onclick="event.stopPropagation(); addToCart(<?= $product['id']; ?>, '<?= htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', <?= $product['selling_price']; ?>)">
-            <i class="fas fa-cart-plus"></i> Add To Cart
-        </button>
+        <?php if($is_out_of_stock): ?>
+            <button class="add-btn out-of-stock-btn" disabled>
+                <i class="fas fa-ban"></i> Out of Stock
+            </button>
+        <?php else: ?>
+            <button class="add-btn" onclick="event.stopPropagation(); addToCart(<?= $product['id']; ?>, '<?= htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', <?= $product['selling_price']; ?>)">
+                <i class="fas fa-cart-plus"></i> Add To Cart
+            </button>
+        <?php endif; ?>
     </div>
 <?php endforeach;
 $response['html'] = ob_get_clean();

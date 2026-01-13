@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../config/dbcon.php');
+require_once('../config/dbcon.php');
 
 header('Content-Type: application/json');
 
@@ -38,6 +38,12 @@ switch($action) {
     case 'resume_held_order':
         resumeHeldOrder($conn);
         break;
+    case 'register_payment':
+        registerPayment($conn, $user_id);
+        break;
+    case 'delete_held_order':
+        deleteHeldOrder($conn);
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -58,9 +64,12 @@ function processPayment($conn, $user_id) {
     $cart = json_decode($_POST['cart'], true);
     $customer_id = intval($_POST['customer_id']) ?: null;
     $store_id = intval($_POST['store_id']);
-    $payment_method_id = intval($_POST['payment_method_id']);
-    $discount = floatval($_POST['discount']);
+    $payment_method_input = $_POST['payment_method_id'] ?? '';
+    $payment_method_id = 'NULL'; // Default to NULL for SQL
+    
+    // ... (rest of variables)
     $tax_percent = floatval($_POST['tax_percent']);
+    $discount = floatval($_POST['discount']);
     $shipping = floatval($_POST['shipping']);
     $other_charge = floatval($_POST['other_charge']);
     $amount_received = floatval($_POST['amount_received']);
@@ -71,31 +80,122 @@ function processPayment($conn, $user_id) {
         return;
     }
     
+    // Validate store_id exists
+    if ($store_id) {
+        $store_check = mysqli_query($conn, "SELECT id FROM stores WHERE id = $store_id");
+        if (mysqli_num_rows($store_check) == 0) {
+            echo json_encode(['success' => false, 'message' => "Invalid store selected (ID: $store_id)"]);
+            return;
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Please select a store']);
+        return;
+    }
+    
+    // Calculate totals first to check for due payment
+    $subtotal = 0;
+    foreach($cart as $item) {
+        $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
+    }
+    $tax_amount = ($subtotal * $tax_percent) / 100;
+    $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
+    
+    // Check if Walking Customer is trying to make due payment
+    // Allow a small epsilon for floating point comparison issues
+    if (($customer_id === null || $customer_id == 0) && ($amount_received < ($grand_total - 0.01))) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Walking Customer cannot make due payments. Please pay the full amount.',
+            'is_walking_customer_error' => true
+        ]);
+        return;
+    }
+    
     mysqli_begin_transaction($conn);
     
     try {
-        // Calculate totals
+        // 1. Calculate totals first
         $subtotal = 0;
         foreach($cart as $item) {
-            $subtotal += $item['price'] * $item['qty'];
+            $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
         }
         $tax_amount = ($subtotal * $tax_percent) / 100;
         $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
         
-        // Generate invoice ID
+        // 2. Generate invoice ID and get mobile
         $invoice_id = generateInvoiceId($conn);
-        
-        // Get customer mobile if customer selected
         $customer_mobile = '';
         if($customer_id) {
             $cq = mysqli_query($conn, "SELECT mobile FROM customers WHERE id = $customer_id");
-            if($cr = mysqli_fetch_assoc($cq)) {
-                $customer_mobile = $cr['mobile'];
-            }
+            if($cr = mysqli_fetch_assoc($cq)) $customer_mobile = $cr['mobile'];
+        } else {
+            $customer_mobile = isset($_POST['walking_customer_mobile']) ? mysqli_real_escape_string($conn, $_POST['walking_customer_mobile']) : '';
         }
-        
-        // Insert selling_info
+
+        // 3. Process Payments & Log them
+        $payments = json_decode($_POST['payments'] ?? '[]', true);
+        $total_paid_from_applied = 0;
         $customer_id_sql = $customer_id ? $customer_id : 'NULL';
+
+        foreach ($payments as $p) {
+            $p_type = $p['type'];
+            $p_amount = floatval($p['amount']);
+            if ($p_amount <= 0) continue;
+            
+            $total_paid_from_applied += $p_amount;
+            $p_method_id = 'NULL';
+
+            if ($p_type === 'giftcard') {
+                if (!$customer_id) throw new Exception("Customer required for Gift Card payment");
+                $remaining_deduct = $p_amount;
+                $cards = mysqli_query($conn, "SELECT id, balance FROM giftcards WHERE customer_id = $customer_id AND status = 1 AND balance > 0 ORDER BY expiry_date ASC");
+                while($card = mysqli_fetch_assoc($cards)) {
+                    if ($remaining_deduct <= 0) break;
+                    $deduct = min($remaining_deduct, $card['balance']);
+                    mysqli_query($conn, "UPDATE giftcards SET balance = balance - $deduct WHERE id = {$card['id']}");
+                    $remaining_deduct -= $deduct;
+                }
+                if ($remaining_deduct > 0.01) throw new Exception("Insufficient Gift Card balance");
+                $pm_query = mysqli_query($conn, "SELECT id FROM payment_methods WHERE code = 'giftcard' LIMIT 1");
+                if ($pm = mysqli_fetch_assoc($pm_query)) $p_method_id = $pm['id'];
+
+            } elseif ($p_type === 'opening_balance') {
+                if (!$customer_id) throw new Exception("Customer required for Opening Balance payment");
+                $cust_query = mysqli_query($conn, "SELECT opening_balance FROM customers WHERE id = $customer_id");
+                $cust_row = mysqli_fetch_assoc($cust_query);
+                $current_wallet = floatval($cust_row['opening_balance'] ?? 0);
+                if ($current_wallet < $p_amount) throw new Exception("Insufficient Opening Balance");
+                mysqli_query($conn, "UPDATE customers SET opening_balance = opening_balance - $p_amount WHERE id = $customer_id");
+                $pm_query = mysqli_query($conn, "SELECT id FROM payment_methods WHERE code = 'credit' LIMIT 1");
+                if ($pm = mysqli_fetch_assoc($pm_query)) $p_method_id = $pm['id'];
+            }
+
+            $p_ref_no = 'PAY' . date('YmdHis') . rand(10, 99);
+            mysqli_query($conn, "INSERT INTO sell_logs 
+                (customer_id, reference_no, ref_invoice_id, type, pmethod_id, amount, store_id, created_by, description) 
+                VALUES ($customer_id_sql, '$p_ref_no', '$invoice_id', 'payment', $p_method_id, $p_amount, $store_id, $user_id, 'Applied $p_type')");
+        }
+
+        // Process Primary Payment
+        if ($amount_received > 0) {
+            $payment_method_id = 'NULL';
+            if ($payment_method_input !== 'credit') {
+                $payment_method_id = intval($payment_method_input);
+                if ($payment_method_id == 0) $payment_method_id = 'NULL';
+            } else {
+                 $pm_query = mysqli_query($conn, "SELECT id FROM payment_methods WHERE code = 'credit' LIMIT 1");
+                 if ($pm = mysqli_fetch_assoc($pm_query)) $payment_method_id = $pm['id'];
+            }
+            $primary_ref_no = 'PAY' . date('YmdHis') . 'PRI';
+            mysqli_query($conn, "INSERT INTO sell_logs 
+                (customer_id, reference_no, ref_invoice_id, type, pmethod_id, amount, store_id, created_by) 
+                VALUES ($customer_id_sql, '$primary_ref_no', '$invoice_id', 'payment', $payment_method_id, $amount_received, $store_id, $user_id)");
+        }
+
+        $total_amount_paid = $total_paid_from_applied + $amount_received;
+        $payment_status = ($total_amount_paid >= $grand_total - 0.01) ? 'paid' : 'due';
+
+        // 4. Record selling_info
         $info_sql = "INSERT INTO selling_info 
             (invoice_id, inv_type, store_id, customer_id, customer_mobile, total_items, 
              discount_amount, tax_amount, shipping_charge, other_charge, grand_total,
@@ -103,54 +203,37 @@ function processPayment($conn, $user_id) {
             VALUES 
             ('$invoice_id', 'sale', $store_id, $customer_id_sql, '$customer_mobile', $subtotal,
              $discount, $tax_amount, $shipping, $other_charge, $grand_total,
-             'completed', 'paid', $user_id, '$sale_date')";
+             'completed', '$payment_status', $user_id, '$sale_date')";
         
-        if(!mysqli_query($conn, $info_sql)) {
-            throw new Exception('Failed to create sale record: ' . mysqli_error($conn));
-        }
+        if(!mysqli_query($conn, $info_sql)) throw new Exception('Failed to create sale: ' . mysqli_error($conn));
         
-        // Insert selling_items
+        // 5. Record items & stock
         foreach($cart as $item) {
             $item_id = intval($item['id']);
             $item_name = mysqli_real_escape_string($conn, $item['name']);
             $qty = floatval($item['qty']);
             $price = floatval($item['price']);
             $item_subtotal = $qty * $price;
-            
-            $item_sql = "INSERT INTO selling_item 
-                (invoice_id, invoice_type, store_id, item_id, item_name, qty_sold, 
-                 price_sold, subtotal, created_by) 
-                VALUES 
-                ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty,
-                 $price, $item_subtotal, $user_id)";
-            
-            if(!mysqli_query($conn, $item_sql)) {
-                throw new Exception('Failed to add item: ' . mysqli_error($conn));
-            }
-            
-            // Update product stock
+            $item_sql = "INSERT INTO selling_item (invoice_id, invoice_type, store_id, item_id, item_name, qty_sold, price_sold, subtotal, created_by) 
+                        VALUES ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty, $price, $item_subtotal, $user_id)";
+            if(!mysqli_query($conn, $item_sql)) throw new Exception('Failed to add item: ' . mysqli_error($conn));
             mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock - $qty WHERE id = $item_id");
         }
         
-        // Insert sell_logs for payment
-        $ref_no = 'PAY' . date('YmdHis');
-        $log_sql = "INSERT INTO sell_logs 
-            (customer_id, reference_no, ref_invoice_id, type, pmethod_id, amount, store_id, created_by) 
-            VALUES 
-            ($customer_id_sql, '$ref_no', '$invoice_id', 'payment', $payment_method_id, $amount_received, $store_id, $user_id)";
-        
-        if(!mysqli_query($conn, $log_sql)) {
-            throw new Exception('Failed to log payment: ' . mysqli_error($conn));
+        // 6. Update customer current_due
+        if ($customer_id) {
+            $due_unpaid = $grand_total - $total_amount_paid;
+            if ($due_unpaid != 0) mysqli_query($conn, "UPDATE customers SET current_due = current_due + $due_unpaid WHERE id = $customer_id");
         }
         
         mysqli_commit($conn);
-        
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Sale completed successfully',
-            'invoice_id' => $invoice_id,
-            'grand_total' => $grand_total
-        ]);
+        $new_balance = 0;
+        if ($customer_id) {
+            $nb_res = mysqli_query($conn, "SELECT current_due FROM customers WHERE id = $customer_id");
+            $nb_row = mysqli_fetch_assoc($nb_res);
+            $new_balance = floatval($nb_row['current_due']);
+        }
+        echo json_encode(['success' => true, 'message' => 'Sale completed', 'invoice_id' => $invoice_id, 'grand_total' => $grand_total, 'new_balance' => $new_balance]);
         
     } catch(Exception $e) {
         mysqli_rollback($conn);
@@ -163,55 +246,84 @@ function holdOrder($conn, $user_id) {
     $cart = json_decode($_POST['cart'], true);
     $customer_id = intval($_POST['customer_id']) ?: null;
     $store_id = intval($_POST['store_id']);
-    $note = mysqli_real_escape_string($conn, $_POST['note']);
+    $note = mysqli_real_escape_string($conn, $_POST['note']); // reference
     
     if(empty($cart)) {
         echo json_encode(['success' => false, 'message' => 'Cart is empty']);
         return;
     }
     
+    // Generate ref_no (like 46c660 in image)
+    $ref_no = substr(md5(uniqid()), 0, 8);
+    
+    // Get Customer Mobile and Name
+    $customer_name = 'Walking Customer';
+    $customer_mobile = '0170000000000';
+    if($customer_id) {
+        $c_res = mysqli_query($conn, "SELECT name, mobile FROM customers WHERE id = $customer_id");
+        if($row = mysqli_fetch_assoc($c_res)) {
+            $customer_name = $row['name'];
+            $customer_mobile = $row['mobile'];
+        }
+    }
+    $order_title = "hold-" . $customer_name;
+    
+    // Totals
+    $discount = floatval($_POST['discount'] ?? 0);
+    $tax_percent = floatval($_POST['tax_percent'] ?? 0);
+    $tax_amount = floatval($_POST['tax_amount'] ?? 0);
+    $shipping = floatval($_POST['shipping'] ?? 0);
+    $other_charge = floatval($_POST['other_charge'] ?? 0);
+    $grand_total = floatval($_POST['grand_total'] ?? 0);
+    
+    $subtotal = 0;
+    foreach($cart as $item) {
+        $subtotal += floatval($item['price']) * floatval($item['qty']);
+    }
+
     mysqli_begin_transaction($conn);
     
     try {
-        // Calculate totals
-        $subtotal = 0;
-        foreach($cart as $item) {
-            $subtotal += $item['price'] * $item['qty'];
-        }
-        
-        // Generate invoice ID
-        $invoice_id = 'HOLD' . date('YmdHis');
-        
-        // Insert selling_info with hold status
-        $customer_id_sql = $customer_id ? $customer_id : 'NULL';
-        $info_sql = "INSERT INTO selling_info 
-            (invoice_id, inv_type, store_id, customer_id, invoice_note, total_items, 
-             grand_total, status, payment_status, created_by) 
-            VALUES 
-            ('$invoice_id', 'sale', $store_id, $customer_id_sql, '$note', $subtotal,
-             $subtotal, 'hold', 'due', $user_id)";
+        // 1. Insert into holding_info
+        $c_id_sql = $customer_id ? $customer_id : 'NULL';
+        $info_sql = "INSERT INTO holding_info 
+            (store_id, order_title, ref_no, customer_id, customer_mobile, invoice_note, total_items, created_by) 
+            VALUES ($store_id, '$order_title', '$ref_no', $c_id_sql, '$customer_mobile', '$note', " . count($cart) . ", $user_id)";
         
         if(!mysqli_query($conn, $info_sql)) {
-            throw new Exception('Failed to hold order: ' . mysqli_error($conn));
+            throw new Exception('Failed to save holding info: ' . mysqli_error($conn));
         }
+
+        // 2. Insert into holding_price
+        $price_sql = "INSERT INTO holding_price 
+            (ref_no, store_id, subtotal, discount_type, discount_amount, item_tax, order_tax, shipping_type, shipping_amount, others_charge, payable_amount) 
+            VALUES ('$ref_no', $store_id, $subtotal, 'plain', $discount, 0, $tax_amount, 'plain', $shipping, $other_charge, $grand_total)";
         
-        // Insert selling_items with hold_status = 1
+        if(!mysqli_query($conn, $price_sql)) {
+            throw new Exception('Failed to save holding price: ' . mysqli_error($conn));
+        }
+
+        // 3. Insert into holding_item
         foreach($cart as $item) {
             $item_id = intval($item['id']);
             $item_name = mysqli_real_escape_string($conn, $item['name']);
             $qty = floatval($item['qty']);
             $price = floatval($item['price']);
-            $item_subtotal = $qty * $price;
+            $item_total = $qty * $price;
             
-            $item_sql = "INSERT INTO selling_item 
-                (invoice_id, invoice_type, store_id, item_id, item_name, qty_sold, 
-                 price_sold, subtotal, hold_status, created_by) 
-                VALUES 
-                ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty,
-                 $price, $item_subtotal, 1, $user_id)";
+            // Get product extra details (category, brand, etc)
+            $p_res = mysqli_query($conn, "SELECT category_id, brand_id, supplier_id FROM products WHERE id = $item_id");
+            $p_data = mysqli_fetch_assoc($p_res);
+            $cat_id = intval($p_data['category_id'] ?? 1);
+            $brand_id = intval($p_data['brand_id'] ?? 1);
+            $sup_id = intval($p_data['supplier_id'] ?? 1);
+            
+            $item_sql = "INSERT INTO holding_item 
+                (ref_no, store_id, item_id, category_id, brand_id, sup_id, item_name, item_price, item_quantity, item_total) 
+                VALUES ('$ref_no', $store_id, $item_id, $cat_id, $brand_id, $sup_id, '$item_name', $price, $qty, $item_total)";
             
             if(!mysqli_query($conn, $item_sql)) {
-                throw new Exception('Failed to add item: ' . mysqli_error($conn));
+                throw new Exception('Failed to save holding item: ' . mysqli_error($conn));
             }
         }
         
@@ -220,7 +332,7 @@ function holdOrder($conn, $user_id) {
         echo json_encode([
             'success' => true, 
             'message' => 'Order held successfully',
-            'invoice_id' => $invoice_id
+            'ref_no' => $ref_no
         ]);
         
     } catch(Exception $e) {
@@ -387,22 +499,39 @@ function searchProducts($conn) {
 function getHeldOrders($conn) {
     $store_id = intval($_POST['store_id'] ?? 0);
     
-    $sql = "SELECT si.*, c.name as customer_name 
-            FROM selling_info si 
-            LEFT JOIN customers c ON si.customer_id = c.id 
-            WHERE si.status = 'hold'";
+    $sql = "SELECT hi.*, hp.*, 
+                   COALESCE(c.name, 'Walking Customer') as customer_name,
+                   COALESCE(c.mobile, '0170000000000') as customer_phone,
+                   COALESCE(c.current_due, 0) as customer_balance
+            FROM holding_info hi 
+            JOIN holding_price hp ON hi.ref_no = hp.ref_no
+            LEFT JOIN customers c ON hi.customer_id = c.id 
+            WHERE 1=1";
     if($store_id) {
-        $sql .= " AND si.store_id = $store_id";
+        $sql .= " AND hi.store_id = $store_id";
     }
-    $sql .= " ORDER BY si.created_at DESC";
+    $sql .= " ORDER BY hi.created_at DESC";
     
     $result = mysqli_query($conn, $sql);
     $orders = [];
     while($row = mysqli_fetch_assoc($result)) {
+        // Map fields to match what frontend expects
+        $row['invoice_id'] = $row['ref_no'];
+        $row['grand_total'] = floatval($row['payable_amount']);
+        $row['tax_amount'] = floatval($row['order_tax']);
+        $row['shipping_charge'] = floatval($row['shipping_amount']);
+        $row['other_charge'] = floatval($row['others_charge']);
+        $row['discount_amount'] = floatval($row['discount_amount']);
+        $row['subtotal'] = floatval($row['subtotal']);
+        
         // Get items
-        $items_result = mysqli_query($conn, "SELECT * FROM selling_item WHERE invoice_id = '{$row['invoice_id']}'");
+        $items_result = mysqli_query($conn, "SELECT * FROM holding_item WHERE ref_no = '{$row['ref_no']}'");
         $row['items'] = [];
         while($item = mysqli_fetch_assoc($items_result)) {
+            // Map fields for frontend
+            $item['price_sold'] = $item['item_price'];
+            $item['qty_sold'] = $item['item_quantity'];
+            $item['subtotal'] = $item['item_total'];
             $row['items'][] = $item;
         }
         $orders[] = $row;
@@ -413,36 +542,63 @@ function getHeldOrders($conn) {
 
 // Resume held order
 function resumeHeldOrder($conn) {
-    $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']);
+    $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']); // This is ref_no
     
     // Get order info
-    $order_result = mysqli_query($conn, "SELECT * FROM selling_info WHERE invoice_id = '$invoice_id' AND status = 'hold'");
+    $sql = "SELECT hi.*, hp.*, 
+                   COALESCE(c.name, 'Walking Customer') as customer_name,
+                   COALESCE(c.mobile, '0170000000000') as customer_phone,
+                   COALESCE(c.current_due, 0) as customer_balance
+            FROM holding_info hi 
+            JOIN holding_price hp ON hi.ref_no = hp.ref_no
+            LEFT JOIN customers c ON hi.customer_id = c.id 
+            WHERE hi.ref_no = '$invoice_id'";
+    
+    $order_result = mysqli_query($conn, $sql);
     if(mysqli_num_rows($order_result) == 0) {
         echo json_encode(['success' => false, 'message' => 'Order not found']);
         return;
     }
     
-    $order = mysqli_fetch_assoc($order_result);
+    $row = mysqli_fetch_assoc($order_result);
+    // Map fields for frontend
+    $row['invoice_id'] = $row['ref_no'];
+    $row['grand_total'] = floatval($row['payable_amount']);
+    $row['tax_amount'] = floatval($row['order_tax']);
+    $row['shipping_charge'] = floatval($row['shipping_amount']);
+    $row['other_charge'] = floatval($row['others_charge']);
+    $row['discount_amount'] = floatval($row['discount_amount']);
+    $row['subtotal'] = floatval($row['subtotal']);
+    $row['tax_percent'] = 0; 
     
     // Get items
-    $items_result = mysqli_query($conn, "SELECT * FROM selling_item WHERE invoice_id = '$invoice_id'");
+    $items_result = mysqli_query($conn, "SELECT * FROM holding_item WHERE ref_no = '$invoice_id'");
     $items = [];
     while($item = mysqli_fetch_assoc($items_result)) {
         $items[] = [
             'id' => $item['item_id'],
             'name' => $item['item_name'],
-            'price' => floatval($item['price_sold']),
-            'qty' => intval($item['qty_sold'])
+            'price' => floatval($item['item_price']),
+            'qty' => floatval($item['item_quantity'])
         ];
     }
     
-    // Delete hold records
-    mysqli_query($conn, "DELETE FROM selling_item WHERE invoice_id = '$invoice_id'");
-    mysqli_query($conn, "DELETE FROM selling_info WHERE invoice_id = '$invoice_id'");
+    // Delete hold records from all 3 tables
+    mysqli_begin_transaction($conn);
+    try {
+        mysqli_query($conn, "DELETE FROM holding_item WHERE ref_no = '$invoice_id'");
+        mysqli_query($conn, "DELETE FROM holding_price WHERE ref_no = '$invoice_id'");
+        mysqli_query($conn, "DELETE FROM holding_info WHERE ref_no = '$invoice_id'");
+        mysqli_commit($conn);
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo json_encode(['success' => false, 'message' => 'Failed to delete holding records']);
+        return;
+    }
     
     echo json_encode([
         'success' => true, 
-        'order' => $order,
+        'order' => $row,
         'items' => $items
     ]);
 }
@@ -507,6 +663,86 @@ function quickAddGiftcard($conn, $user_id) {
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to create giftcard: ' . mysqli_error($conn)]);
+    }
+}
+
+function registerPayment($conn, $user_id) {
+    $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']);
+    $amount = floatval($_POST['amount']);
+    $pmethod_id = intval($_POST['payment_method_id']);
+    $note = mysqli_real_escape_string($conn, $_POST['note'] ?? '');
+    $store_id = intval($_POST['store_id']);
+    $customer_id = intval($_POST['customer_id']);
+    
+    if($amount <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Amount must be greater than 0']);
+        return;
+    }
+    
+    mysqli_begin_transaction($conn);
+    
+    try {
+        // 1. Log Payment
+        $ref_no = 'PAY' . date('YmdHis');
+        $customer_id_sql = $customer_id > 0 ? $customer_id : 'NULL';
+        
+        $log_sql = "INSERT INTO sell_logs 
+            (customer_id, reference_no, ref_invoice_id, type, pmethod_id, amount, store_id, created_by, description) 
+            VALUES 
+            ($customer_id_sql, '$ref_no', '$invoice_id', 'payment', $pmethod_id, $amount, $store_id, $user_id, '$note')";
+        
+        if(!mysqli_query($conn, $log_sql)) {
+            throw new Exception('Failed to record payment log: ' . mysqli_error($conn));
+        }
+        
+        // Update customer due balance (Debt reduction)
+        if ($customer_id) {
+            mysqli_query($conn, "UPDATE customers SET current_due = current_due - $amount WHERE id = $customer_id");
+        }
+        
+        // 2. Update Invoice Status in selling_info
+        // We need to check if it's now fully paid
+        $query = "SELECT si.*, 
+                  (si.grand_total - IFNULL((SELECT SUM(grand_total) FROM selling_info WHERE ref_invoice_id = si.invoice_id AND inv_type = 'return'), 0)) as net_amount,
+                  IFNULL((SELECT SUM(amount) FROM sell_logs WHERE ref_invoice_id = si.invoice_id AND type = 'payment'), 0) as paid_amount
+                  FROM selling_info si 
+                  WHERE si.invoice_id = '$invoice_id'";
+        
+        $res = mysqli_query($conn, $query);
+        $invoice = mysqli_fetch_assoc($res);
+        
+        if($invoice) {
+            $new_status = ($invoice['paid_amount'] >= $invoice['net_amount'] - 0.01) ? 'paid' : 'due';
+            mysqli_query($conn, "UPDATE selling_info SET payment_status = '$new_status' WHERE invoice_id = '$invoice_id'");
+        }
+        
+        mysqli_commit($conn);
+        echo json_encode(['success' => true, 'message' => 'Payment registered successfully']);
+        
+    } catch(Exception $e) {
+        mysqli_rollback($conn);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+// Delete held order
+function deleteHeldOrder($conn) {
+    if(!isset($_POST['invoice_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Invoice ID missing']);
+        return;
+    }
+    $invoice_id = mysqli_real_escape_string($conn, $_POST['invoice_id']); // This is ref_no
+    
+    mysqli_begin_transaction($conn);
+    try {
+        mysqli_query($conn, "DELETE FROM holding_item WHERE ref_no = '$invoice_id'");
+        mysqli_query($conn, "DELETE FROM holding_price WHERE ref_no = '$invoice_id'");
+        mysqli_query($conn, "DELETE FROM holding_info WHERE ref_no = '$invoice_id'");
+        mysqli_commit($conn);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
 }
 ?>

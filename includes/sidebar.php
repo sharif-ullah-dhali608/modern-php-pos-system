@@ -78,18 +78,18 @@ $menu_items = [
         ],
         'active' => (uri_has('/purchases/', $current_uri))
     ],
-    [
-        'title' => 'Invoice',
-        'icon' => 'fa-file-invoice-dollar',
-        'link' => '#',
-        'submenu' => [
-            ['title' => 'List', 'link' => '/pos/invoice/list'],
-            ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
-            ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
-            ['title' => 'Add', 'link' => '/pos/invoice/add']
-        ],
-        'active' => (uri_has('/invoice/', $current_uri))
-    ],
+    // [
+    //     'title' => 'Invoice',
+    //     'icon' => 'fa-file-invoice-dollar',
+    //     'link' => '#',
+    //     'submenu' => [
+    //         ['title' => 'List', 'link' => '/pos/invoice/list'],
+    //         ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
+    //         ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
+    //         ['title' => 'Add', 'link' => '/pos/invoice/add']
+    //     ],
+    //     'active' => (uri_has('/invoice/', $current_uri))
+    // ],
     [
         'title' => 'Stores',
         'icon' => 'fa-store',
@@ -198,10 +198,10 @@ $menu_items = [
             ['title' => 'Add User', 'link' => '/pos/users/add'],
             ['title' => 'User List', 'link' => '/pos/users/list'],
             ['title' => 'User Groups', 'link' => '/pos/users/groups'],
-            ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
-            ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
-            ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
-            ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
+            // ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
+            // ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
+            // ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
+            // ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
         ],
         'active' => (uri_has('/users/', $current_uri))
     ],
