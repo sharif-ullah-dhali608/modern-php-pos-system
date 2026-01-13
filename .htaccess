@@ -96,6 +96,13 @@ RewriteRule ^quotations/add$ quotations/add_quotation.php [L]
 RewriteRule ^quotations/save_code\.php$ quotations/save_quotation.php [L]
 RewriteRule ^quotations/edit/([0-9]+)$ quotations/add_quotation.php?id=$1 [L]
 
+# --- Sell & Invoice Routes (Admin Pages) ---
+RewriteRule ^sell/list$ admin/invoice.php [L]
+RewriteRule ^sell/return$ admin/sell_return.php [L]
+RewriteRule ^sell/log$ admin/sell_log.php [L]
+RewriteRule ^invoice/list$ admin/invoice.php [L]
+RewriteRule ^invoice/view/([a-zA-Z0-9-]+)$ admin/invoice_view.php?id=$1 [L]
+
 
 # --- Users & Groups Routes ---
 RewriteRule ^users/add$ users/add_user.php [L]

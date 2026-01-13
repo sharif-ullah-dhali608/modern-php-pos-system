@@ -220,6 +220,7 @@ function ensure_core_tables(mysqli $conn) {
         dob DATE DEFAULT NULL,
         credit_balance DECIMAL(15,2) DEFAULT 0.00,
         opening_balance DECIMAL(15,2) DEFAULT 0.00,
+        current_due DECIMAL(15,2) DEFAULT 0.00,
         credit_limit DECIMAL(15,2) DEFAULT 0.00,
         reward_points INT(11) DEFAULT 0,
         fixed_discount DECIMAL(15,2) DEFAULT 0.00,
@@ -660,6 +661,12 @@ mysqli_query($conn, $userStoreMapSql);
         @mysqli_query($conn, "ALTER TABLE users ADD COLUMN country VARCHAR(100) DEFAULT NULL AFTER state");
     }
 
+    // Ensure current_due column exists in customers table (for transaction-based dues)
+    $checkCurrentDue = @mysqli_query($conn, "SHOW COLUMNS FROM customers LIKE 'current_due'");
+    if($checkCurrentDue && mysqli_num_rows($checkCurrentDue) == 0) {
+        @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN current_due DECIMAL(15,2) DEFAULT 0.00 AFTER opening_balance");
+    }
+
 
 
 
@@ -774,6 +781,68 @@ mysqli_query($conn, $userStoreMapSql);
     mysqli_query($conn, $sellingInfoSql);
     mysqli_query($conn, $sellingItemSql);
     mysqli_query($conn, $sellLogsSql);
+
+    $holdingInfoSql = "CREATE TABLE IF NOT EXISTS holding_info (
+        info_id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        order_title VARCHAR(255) DEFAULT NULL,
+        ref_no VARCHAR(50) NOT NULL,
+        customer_id INT(11) DEFAULT NULL,
+        customer_mobile VARCHAR(50) DEFAULT NULL,
+        invoice_note TEXT DEFAULT NULL,
+        total_items INT(11) DEFAULT 0,
+        created_by INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (info_id),
+        UNIQUE KEY idx_unique_hold_info_ref (ref_no),
+        KEY idx_hold_info_store (store_id),
+        KEY idx_hold_info_customer (customer_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    $holdingItemSql = "CREATE TABLE IF NOT EXISTS holding_item (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        ref_no VARCHAR(50) NOT NULL,
+        store_id INT(11) NOT NULL,
+        item_id INT(11) NOT NULL,
+        category_id INT(11) DEFAULT NULL,
+        brand_id INT(11) DEFAULT NULL,
+        sup_id INT(11) DEFAULT NULL,
+        item_name VARCHAR(255) NOT NULL,
+        item_price DECIMAL(15,2) DEFAULT 0.00,
+        item_quantity DECIMAL(15,2) DEFAULT 0.00,
+        item_total DECIMAL(15,2) DEFAULT 0.00,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY idx_hold_item_ref (ref_no),
+        KEY idx_hold_item_id (item_id),
+        FOREIGN KEY (item_id) REFERENCES products(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    $holdingPriceSql = "CREATE TABLE IF NOT EXISTS holding_price (
+        price_id INT(11) NOT NULL AUTO_INCREMENT,
+        ref_no VARCHAR(50) NOT NULL,
+        store_id INT(11) NOT NULL,
+        subtotal DECIMAL(15,2) DEFAULT 0.00,
+        discount_type VARCHAR(20) DEFAULT 'plain',
+        discount_amount DECIMAL(15,2) DEFAULT 0.00,
+        item_tax DECIMAL(15,2) DEFAULT 0.00,
+        order_tax DECIMAL(15,2) DEFAULT 0.00,
+        cgst DECIMAL(15,2) DEFAULT 0.00,
+        sgst DECIMAL(15,2) DEFAULT 0.00,
+        igst DECIMAL(15,2) DEFAULT 0.00,
+        shipping_type VARCHAR(20) DEFAULT 'plain',
+        shipping_amount DECIMAL(15,2) DEFAULT 0.00,
+        others_charge DECIMAL(15,2) DEFAULT 0.00,
+        payable_amount DECIMAL(15,2) DEFAULT 0.00,
+        PRIMARY KEY (price_id),
+        UNIQUE KEY idx_unique_hold_price_ref (ref_no)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    mysqli_query($conn, $holdingInfoSql);
+    mysqli_query($conn, $holdingItemSql);
+    mysqli_query($conn, $holdingPriceSql);
 
     // Seeding
     $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";

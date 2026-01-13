@@ -29,9 +29,9 @@ function initStatusToggle(cardId, toggleId, inputId, labelId) {
     const statusInput = document.getElementById(inputId);
     const statusLabel = document.getElementById(labelId);
     const statusCard = document.getElementById(cardId);
-    const statusTextHeader = statusCard.querySelector('h3');
+    const statusTextHeader = statusCard ? statusCard.querySelector('h3') : null;
 
-    if(statusToggle) {
+    if(statusToggle && statusCard) {
         statusToggle.addEventListener('change', function() {
             if(this.checked) {
                 statusInput.value = "1";
