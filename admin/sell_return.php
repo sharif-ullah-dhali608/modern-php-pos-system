@@ -30,23 +30,22 @@ while ($row = mysqli_fetch_assoc($result)) {
 $config = [
     'title' => 'Sell Return List',
     'table_id' => 'sell_return_table',
-    'add_url' => '#', // No add button requested for return list usually
+    'add_url' => '#', // No add button for return list
     'edit_url' => '#',
-    'delete_url' => '#', // Implement delete logic if needed
-    'view_url' => '/pos/invoice/view', 
+    'delete_url' => '/pos/admin/sell_return_delete.php',
+    'view_url' => '/pos/admin/sell_return_view.php', 
     'primary_key' => 'info_id',
     'name_field' => 'invoice_id',
     'data' => $data,
+    'action_buttons' => ['view', 'delete'], // Only view and delete
     'columns' => [
         ['label' => 'Date Time', 'key' => 'created_at'],
         ['label' => 'Customer Name', 'key' => 'customer_name'],
-        // ['label' => 'Ref No.', 'key' => 'ref_invoice_id'], // Adjust based on requirement
         ['label' => 'Old Invoice Id', 'key' => 'ref_invoice_id'],
-        ['label' => 'Purchase Invoice Id', 'key' => 'purchased_id'], // Placeholder column
         ['label' => 'Return Note', 'key' => 'invoice_note'],
         ['label' => 'Amount', 'key' => 'grand_total', 'type' => 'text'],
         ['label' => 'Returned By', 'key' => 'return_by'],
-        ['label' => 'View', 'key' => 'actions', 'type' => 'actions']
+        ['label' => 'Actions', 'key' => 'actions', 'type' => 'actions']
     ]
 ];
 ?>

@@ -30,14 +30,32 @@ if(!empty($search)) {
 $where_clause = " WHERE " . implode(" AND ", $where_conditions);
 
 $products = [];
-$products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name 
-                  FROM products p 
-                  LEFT JOIN categories c ON p.category_id = c.id 
-                  LEFT JOIN units u ON p.unit_id = u.id 
-                  $join_clause
-                  $where_clause
-                  ORDER BY p.product_name ASC 
-                  LIMIT $offset, $items_per_page";
+
+// Build query based on store selection
+if($store_id > 0) {
+    // Store-specific: Get stock from product_store_map
+    $products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name,
+                      COALESCE(psm.stock, 0) as store_stock
+                      FROM products p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      LEFT JOIN units u ON p.unit_id = u.id 
+                      JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = $store_id
+                      $where_clause
+                      ORDER BY p.product_name ASC 
+                      LIMIT $offset, $items_per_page";
+} else {
+    // All Stores: Use global opening_stock
+    $products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name,
+                      p.opening_stock as store_stock
+                      FROM products p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      LEFT JOIN units u ON p.unit_id = u.id 
+                      $join_clause
+                      $where_clause
+                      ORDER BY p.product_name ASC 
+                      LIMIT $offset, $items_per_page";
+}
+
 $products_result = mysqli_query($conn, $products_query);
 
 if($products_result && mysqli_num_rows($products_result) > 0){
@@ -61,7 +79,7 @@ $response = [
 // Generate Product Grid HTML
 ob_start();
 foreach($products as $product): 
-    $stock = floatval($product['opening_stock']);
+    $stock = floatval($product['store_stock'] ?? $product['opening_stock']);
     $alert_qty = floatval($product['alert_quantity'] ?? 5);
     $is_out_of_stock = $stock <= 0;
     $is_low_stock = $stock > 0 && $stock <= $alert_qty;
@@ -82,7 +100,7 @@ foreach($products as $product):
         <div class="info">
             <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
             <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
-            <div class="stock">Stock: <?= $product['opening_stock']; ?> <?= $product['unit_name'] ?? 'pcs'; ?></div>
+            <div class="stock">Stock: <?= number_format($stock, 0); ?> <?= $product['unit_name'] ?? 'pcs'; ?></div>
         </div>
         <?php if($is_out_of_stock): ?>
             <button class="add-btn out-of-stock-btn" disabled>

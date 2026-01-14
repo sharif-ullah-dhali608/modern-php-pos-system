@@ -2514,200 +2514,8 @@ input[type=number] {
 </div>
 
 <!-- Payment Modal -->
-<div class="pos-modal" id="paymentModal">
-    <div class="pos-modal-content" style="max-width: 900px;">
-        <div class="pos-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-            <h3><i class="fas fa-credit-card"></i> Payment - <span id="payment-customer-name">Walking Customer</span> (<span id="payment-customer-id">0170000000000</span>)</h3>
-            <button class="close-btn" onclick="closeModal('paymentModal')" style="display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-times" style="font-size: 16px;"></i>
-            </button>        
-        </div>
-        <div class="pos-modal-body" style="padding: 0;">
-            <div style="display: grid; grid-template-columns: 250px 1fr; min-height: 500px;">
-                <!-- Left Sidebar - Payment Methods -->
-                <div style="background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 20px;">
-                    <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Payment Method:</h4>
-                    <div class="payment-methods-grid">
-                        <!-- Special Payment Methods (Hidden by default) -->
-                        <div id="pm-opening-balance" class="sidebar-payment-method" data-id="opening_balance" onclick="selectPaymentMethod(this, 'opening_balance')" style="display: none;">
-                            <div class="pm-content">
-                                <i class="fas fa-wallet"></i>
-                                <span class="pm-name">Opening Balance</span>
-                                <span class="pm-balance">Bal: <span id="pm-opening-balance-value">0.00</span></span>
-                            </div>
-                        </div>
+<?php include('../includes/payment_modal.php'); ?>
 
-                        <div id="pm-giftcard" class="sidebar-payment-method" data-id="giftcard" onclick="selectPaymentMethod(this, 'giftcard')" style="display: none;">
-                            <div class="pm-content">
-                                <i class="fas fa-gift"></i>
-                                <span class="pm-name">Gift Card</span>
-                                <span class="pm-balance">Bal: <span id="pm-giftcard-balance">0.00</span></span>
-                            </div>
-                        </div>
-
-                        <div id="pm-credit" class="sidebar-payment-method" data-id="credit" onclick="selectPaymentMethod(this, 'credit')" style="display: none;">
-                             <div class="pm-content">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span class="pm-name">Pay Later</span>
-                                <span class="pm-balance">Due: <span id="pm-credit-balance">0.00</span></span>
-                            </div>
-                        </div>
-                        <?php 
-                        mysqli_data_seek($payment_methods_result, 0);
-                        while($pm = mysqli_fetch_assoc($payment_methods_result)): 
-                            $icon = 'fa-money-bill';
-                            if(strtolower($pm['code']) == 'cash') $icon = 'fa-money-bill-wave';
-                            elseif(strtolower($pm['code']) == 'card') $icon = 'fa-credit-card';
-                            elseif(strtolower($pm['code']) == 'bank') $icon = 'fa-university';
-                            elseif(strtolower($pm['code']) == 'bkash' || strtolower($pm['code']) == 'mobile') $icon = 'fa-mobile-alt';
-                            elseif(strtolower($pm['code']) == 'giftcard') $icon = 'fa-gift';
-                        ?>
-                            <div class="sidebar-payment-method" data-id="<?= $pm['id']; ?>" onclick="selectPaymentMethod(this, <?= $pm['id']; ?>)">
-                                <div class="pm-content">
-                                    <i class="fas <?= $icon; ?>"></i>
-                                    <span class="pm-name"><?= htmlspecialchars($pm['name']); ?></span>
-                                </div>
-                            </div>
-                        <?php endwhile; ?>
-                    </div>
-                </div>
-                
-                <!-- Right Panel - Order Details -->
-                <div style="padding: 20px;">
-                    <!-- Payment Method Buttons -->
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b;">Payment Method:</h4>
-                        <div style="display: inline-flex; gap: 10px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
-                            <button class="payment-type-btn active" data-type="full" onclick="setPaymentType('full')" style="padding: 10px 30px; border: none; background: #10b981; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
-                                <i class="fas fa-check-circle"></i> FULL PAYMENT
-                            </button>
-                            <button class="payment-type-btn" data-type="due" onclick="setPaymentType('due')" style="padding: 10px 30px; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
-                                <i class="fas fa-minus-circle"></i> FULL DUE
-                            </button>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer;">
-                                <input type="checkbox" id="sell-with-installment" style="width: 16px; height: 16px;">
-                                <i class="fas fa-sync-alt"></i> Sell With Installment
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- Order Details Section -->
-                    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
-                        <!-- Left: Payment Input -->
-                        <div>
-                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                <button class="tab-btn active" onclick="switchTab('pay')" style="flex: 1; padding: 10px; border: none; background: #e0f2fe; color: #0369a1; border-radius: 6px; cursor: pointer; font-weight: 500;">Pay Amount</button>
-                                <button class="tab-btn" onclick="switchTab('input')" style="flex: 1; padding: 10px; border: none; background: #f1f5f9; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500;">Input Amount</button>
-                            </div>
-                            
-                            <!-- Pay Amount View (Default) -->
-                            <div id="tab-pay-amount" style="margin-bottom: 15px; background: #e0f2fe; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 13px; color: #0369a1; margin-bottom: 5px;">Total Payable</div>
-                                <div style="font-size: 24px; font-weight: bold; color: #0369a1;" id="display-payable-amount">0.00</div>
-                            </div>
-                            
-                            <!-- Input Amount View (Hidden) -->
-                            <div id="tab-input-amount" style="margin-bottom: 15px; display: none;">
-                                <label style="display: block; margin-bottom: 8px; color: #475569; font-weight: 500;">Received Amount</label>
-                                <input type="number" id="amount-received" step="0.01" oninput="calculateChange()" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 16px; font-weight: 500;" placeholder="0.00">
-                                <div style="margin-top: 5px; font-size: 13px; color: #64748b;">Change Return: <span id="change-amount" style="font-weight: 600; color: #0d9488;">0.00</span></div>
-                            </div>
-                            
-                            <div class="payment-input-group" style="margin-bottom: 15px;">
-                                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #475569; font-weight: 500;">
-                                    <i class="fas fa-pencil-alt"></i> Note Here
-                                </label>
-                                <textarea id="payment-note" rows="3" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; resize: vertical;" placeholder="Add payment note..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <!-- Right: Order Summary -->
-                        <div>
-                            <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-align: right;">Order Details</h4>
-                            <div id="payment-cart-items" style="margin-bottom: 15px; max-height: 100px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; background: #f8fafc;">
-                                <!-- Cart items will be inserted here -->
-                            </div>
-                            
-                            <div id="applied-payments-section" style="margin-bottom: 12px; display: none; background: #f0fdf4; border: 1px dashed #10b981; border-radius: 8px; padding: 12px;">
-                                <h4 style="margin: 0 0 8px 0; font-size: 11px; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Applied Payments:</h4>
-                                <div id="applied-payments-list" style="display: flex; flex-direction: column; gap: 6px;">
-                                    <!-- Applied payments will appear here -->
-                                </div>
-                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(16, 185, 129, 0.2); display: flex; justify-content: space-between; font-weight: 700; color: #065f46; font-size: 12px;">
-                                    <span>Total Applied:</span>
-                                    <span id="total-applied-amount">৳0.00</span>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 13px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Subtotal</span>
-                                    <span id="payment-subtotal" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Discount</span>
-                                    <span id="payment-discount" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Order Tax</span>
-                                    <span id="payment-tax" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Shipping Charge</span>
-                                    <span id="payment-shipping" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Other Charge</span>
-                                    <span id="payment-other" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Interest Amount</span>
-                                    <span id="payment-interest" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b; font-weight: 600;">Payable Amount</span>
-                                    <span id="payment-payable" style="color: #1e293b; font-weight: 600;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Previous Due</span>
-                                    <span id="payment-previous-due" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 4px;">
-                                    <span style="color: #1e293b; font-weight: 700;">Total Payable Amount</span>
-                                    <span id="payment-total-payable" style="color: #0d9488; font-weight: 700;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Current Paid Amount</span>
-                                    <span id="payment-paid" style="color: #10b981; font-weight: 600;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #64748b;">Due Amount</span>
-                                    <span id="payment-due" style="color: #ef4444; font-weight: 600;">0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="color: #64748b;">Balance</span>
-                                    <span id="payment-balance" style="color: #1e293b; font-weight: 500;">0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Bottom Buttons -->
-                    <div style="display: flex; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <button onclick="closeModal('paymentModal')" style="flex: 1; padding: 12px; border: none; background: #ef4444; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
-                            <i class="fas fa-times"></i> Close
-                        </button>
-                        <button class="complete-btn" onclick="completeSale()" style="flex: 1; padding: 12px; border: none; background: #10b981; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
-                            <i class="fas fa-check-circle"></i> Checkout
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Hold Order Modal (Premium Teal Redesign) -->
 <div class="pos-modal" id="holdModal">
@@ -3839,6 +3647,10 @@ function prepareAndOpenPaymentModal() {
         return;
     }
 
+    // Reset applied payments when opening modal fresh
+    appliedPayments = [];
+    updateAppliedPaymentsUI();
+
     customerId = parseInt(document.getElementById('selected_customer_id').value) || 0;
 
     // Get customer credit (spendable) and giftcard balance
@@ -4062,12 +3874,23 @@ function updateAppliedPaymentsUI() {
     });
     
     totalLabel.textContent = '৳' + total.toFixed(2);
+    
+    // START FIX: Reset input amount to 0 when applied payments exist
+    if (appliedPayments.length > 0) {
+        document.getElementById('amount-received').value = '0.00';
+        updatePaymentCalculations(0);
+    } else {
+        // If no applied payments, maybe reset to full amount?
+        // Or just let updatePaymentCalculations handle it (checked via undefined)
+        updatePaymentCalculations(); 
+    }
+    // END FIX
 }
 
 function removeAppliedPayment(index) {
     appliedPayments.splice(index, 1);
-    updateAppliedPaymentsUI();
-    updatePaymentCalculations();
+    updateAppliedPaymentsUI(); 
+    // updateAppliedPaymentsUI calls updatePaymentCalculations now, so no need to call it twice here
 }
 
 function setPaymentType(type) {
@@ -4230,6 +4053,12 @@ function updatePaymentCalculations(paidAmount) {
     document.getElementById('payment-paid').textContent = totalPaid.toFixed(2);
     document.getElementById('payment-due').textContent = due.toFixed(2);
     document.getElementById('payment-balance').textContent = balance.toFixed(2);
+
+    // Update the big display to reflect what is actually being paid
+    if(document.getElementById('display-payable-amount')) {
+        const displayAmount = totalPaid > 0 ? totalPaid : totalPayable;
+        document.getElementById('display-payable-amount').textContent = displayAmount.toFixed(2);
+    }
     
     // Update checkout button state for Walking Customer (who can't have due)
     const completeBtn = document.querySelector('.complete-btn');
@@ -4441,10 +4270,20 @@ function completeSale() {
     // If explicit 0 was entered in input tab, we respect it (likely a credit sale/due).
     // BUT if we are on "Pay Amount" tab (which implies full payment view) OR "Full Payment" is toggled,
     // and the input value is somehow 0 or not updated, force it to totalPayableWithDue.
-    if (isFullPaymentTab || isFullPaymentType) {
+    // IMPORTANT: Don't override if there are already applied payments (bKash, Nagad, etc.)
+    const hasAppliedPayments = appliedPayments && appliedPayments.length > 0;
+    const appliedTotal = appliedPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    
+    if ((isFullPaymentTab || isFullPaymentType) && !hasAppliedPayments) {
         if (amountVal === 0 || isNaN(amountVal)) {
             amountVal = totalPayableWithDue;
         }
+    }
+    
+    // If applied payments exist, only add remaining amount if amount-received has explicit value
+    // Otherwise keep amount_received as 0 (payments are in appliedPayments)
+    if (hasAppliedPayments && (amountVal === 0 || isNaN(amountVal))) {
+        amountVal = 0;
     }
     // Safety for floating point weirdness
     amountVal = parseFloat(amountVal.toFixed(2));
@@ -4463,6 +4302,10 @@ function completeSale() {
     formData.append('payments', JSON.stringify(appliedPayments));
     formData.append('sale_date', document.getElementById('sale-date').value);
     formData.append('walking_customer_mobile', document.getElementById('selected-customer-phone').textContent || '');
+    
+    // Add previous due amount for proper due handling
+    const previousDue = parseFloat(document.getElementById('payment-previous-due')?.textContent) || 0;
+    formData.append('previous_due', previousDue);
     
     fetch('/pos/pos/save_sale.php', {
         method: 'POST',
@@ -5469,131 +5312,7 @@ document.getElementById('customer-search-input')?.addEventListener('input', func
 </script>
 
 <!-- Invoice Modal -->
-<div class="pos-modal" id="invoiceModal">
-    <div class="pos-modal-content" style="max-width: 400px; padding: 0; border-radius: 0;">
-        <div class="pos-modal-header" style="background: #84cc16; color: white; padding: 10px 15px; border-radius: 0; justify-content: space-center;">
-            <div style="font-size: 14px; font-weight: 500;">
-                <i class="fas fa-eye"></i> <span id="inv-modal-id">12026/00000008</span>
-            </div>
-            <button class="close-btn" onclick="window.location.reload()" style="display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-times" style="font-size: 16px;"></i>
-            </button>   
-        </div>
-        <div class="pos-modal-body" style="padding: 20px; text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000;">
-            <div id="invoice-content">
-                <div style="margin-bottom: 10px;">
-                    <img src="/pos/assets/images/logo-fav.png" style="max-height: 50px; display: block; margin: 0 auto 5px; ">
-                    <h2 id="inv-store-name" style="margin: 0; font-weight: bold; font-size: 18px; color: #ea580c;">Modern POS</h2>
-                    <h3 id="inv-store-address" style="margin: 5px 0 0 0; font-size: 14px;">STORE 01</h3>
-                    <div id="inv-store-city">Earth</div>
-                    <div id="inv-store-contact">Mobile: --, Email: --</div>
-                </div>
-                
-                <div style="text-align: center; margin-bottom: 15px; line-height: 1.4;">
-                    <div>Invoice ID: <span id="inv-id"></span></div>
-                    <div>Date: <span id="inv-date"></span></div>
-                    <div>Customer: <span id="inv-customer"></span></div>
-                    <div>Phone: <span id="inv-phone"></span></div>
-                </div>
-                
-                <div style="text-align: center; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px;">INVOICE</div>
-                
-                <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 1px dashed #000;">
-                            <th style="text-align: left; padding: 5px 0;">Item</th>
-                            <th style="text-align: right; padding: 5px 0;">Qty</th>
-                            <th style="text-align: right; padding: 5px 0;">Price</th>
-                            <th style="text-align: right; padding: 5px 0;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inv-items">
-                        <!-- Items will be populated here -->
-                    </tbody>
-                </table>
-                
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr><td style="text-align: right; padding: 2px;">Subtotal:</td><td style="text-align: right; padding: 2px;" id="inv-subtotal">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Discount:</td><td style="text-align: right; padding: 2px;" id="inv-discount">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Tax:</td><td style="text-align: right; padding: 2px;" id="inv-tax">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Shipping:</td><td style="text-align: right; padding: 2px;" id="inv-shipping">0.00</td></tr>
-                        <tr style="border-top: 1px solid #000; font-weight: bold;"><td style="text-align: right; padding: 5px 2px;">Grand Total:</td><td style="text-align: right; padding: 5px 2px;" id="inv-grand-total">0.00</td></tr>
-                        <tr style="border-top: 1px dashed #000;"><td style="text-align: right; padding: 5px 2px;">Paid Amount:</td><td style="text-align: right; padding: 5px 2px;" id="inv-paid">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Due:</td><td style="text-align: right; padding: 2px;" id="inv-due">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Previous Due:</td><td style="text-align: right; padding: 2px;" id="inv-prev-due">0.00</td></tr>
-                        <tr style="border-top: 1px solid #000; font-weight: bold; color: #dc2626;"><td style="text-align: right; padding: 5px 2px;">Total Due:</td><td style="text-align: right; padding: 5px 2px;" id="inv-total-due">0.00</td></tr>
-                    </table>
-                </div>
-                
-                <div style="font-style: italic; font-size: 10px; margin-bottom: 10px;">In Text: <span id="inv-in-words">Amount in words here</span></div>
-                
-                <!-- Payment methods -->
-                <div style="margin-bottom: 10px;">
-                     <div style="font-weight: bold; border-bottom: 1px dashed #000; margin-bottom: 5px;">Payments</div>
-                     <table style="width: 100%; font-size: 10px;">
-                        <tr>
-                            <td style="text-align: left;" id="inv-payment-method">Cash</td>
-                            <td style="text-align: right;" id="inv-payment-amount">0.00</td>
-                        </tr>
-                     </table>
-                </div>
-
-                <div style="text-align: center; margin-top: 20px; font-size: 10px;">
-                    Thank you for shopping with us!
-                </div>
-                
-                <!-- Barcode placeholder -->
-                 <div style="margin: 10px 0; display: flex; justify-content: center; width: 100%;">
-                    <svg id="inv-barcode"></svg>
-                 </div>
-            </div>
-            
-            <div class="no-print" style="margin-top: 20px; display: flex; flex-direction: row; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 10px;">
-                <button onclick="window.print()" style="background: #0ea5e9; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
-                    <i class="fas fa-print"></i> Print
-                </button>
-                <button style="background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
-                    <i class="fas fa-envelope"></i> Email
-                </button>
-                <button onclick="window.location.reload()" style="background: #64748b; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
-                    <i class="fas fa-times"></i> Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-@media print {
-    html, body {
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-    }
-    .app-wrapper, .navbar-fixed-top, #sidebar, #main-content > *:not(#invoiceModal), .pos-header-bar, .search-bar, .category-filter, .product-grid-wrapper, .pos-sidebar, .pos-footer {
-        display: none !important;
-    }
-    #invoiceModal {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-    }
-    #invoiceModal .pos-modal-content {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-    }
-    .pos-modal-header, .pos-modal-body > div:last-child { 
-        display: none !important; 
-    }
-}
-</style>
+<?php include('../includes/invoice_modal.php'); ?>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="/pos/assets/js/invoice_modal.js"></script>

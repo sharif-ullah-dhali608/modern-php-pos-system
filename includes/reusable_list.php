@@ -21,6 +21,15 @@ function renderReusableList($config) {
     // Key Fields
     $primary_key = $config['primary_key'] ?? 'id';
     $name_field  = $config['name_field'] ?? 'name';
+    
+    // New Features
+    $extra_buttons = $config['extra_buttons'] ?? [];
+    $filters = $config['filters'] ?? [];
+    $summary_cards = $config['summary_cards'] ?? [];
+    
+    // Action Buttons Control: array of allowed actions ['view', 'edit', 'delete']
+    // Default: all buttons if URLs are provided
+    $action_buttons = $config['action_buttons'] ?? ['view', 'edit', 'delete'];
     ?>
 
     <style>
@@ -72,8 +81,53 @@ function renderReusableList($config) {
                     <span>Add New</span>
                 </a>
                 <?php endif; ?>
+                
+                <?php // Extra Buttons (Pay All, etc.)
+                foreach($extra_buttons as $btn): ?>
+                    <button type="button" onclick="<?= $btn['onclick'] ?? ''; ?>" class="<?= $btn['class'] ?? 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all'; ?>">
+                        <?php if(isset($btn['icon'])): ?><i class="<?= $btn['icon']; ?>"></i><?php endif; ?>
+                        <span><?= $btn['label']; ?></span>
+                    </button>
+                <?php endforeach; ?>
+                
+                <?php // Filter Dropdowns
+                foreach($filters as $filter): ?>
+                    <div class="relative">
+                        <button type="button" onclick="toggleFilterDropdown('<?= $filter['id']; ?>')" class="inline-flex items-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition-all">
+                            <i class="fas fa-filter"></i>
+                            <span><?= $filter['label']; ?></span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="<?= $filter['id']; ?>" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+                            <?php if(isset($filter['searchable']) && $filter['searchable']): ?>
+                            <div class="p-2 border-b border-slate-100">
+                                <input type="text" placeholder="Search..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" onkeyup="filterDropdownOptions(this, '<?= $filter['id']; ?>')">
+                            </div>
+                            <?php endif; ?>
+                            <div class="max-h-60 overflow-y-auto filter-options">
+                                <?php foreach($filter['options'] as $opt): ?>
+                                    <a href="<?= $opt['url']; ?>" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors <?= (isset($opt['active']) && $opt['active']) ? 'bg-teal-50 text-teal-700 font-semibold' : ''; ?>" data-text="<?= strtolower($opt['label']); ?>">
+                                        <?= $opt['label']; ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
+        
+        <?php // Summary Cards
+        if(!empty($summary_cards)): ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-<?= count($summary_cards); ?> gap-6 mb-6">
+            <?php foreach($summary_cards as $card): ?>
+            <div class="bg-white rounded-xl shadow-sm border-l-4 <?= $card['border_color'] ?? 'border-teal-500'; ?> p-5">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"><?= $card['label']; ?></div>
+                <div class="text-2xl font-black text-slate-800"><?= $card['value']; ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden p-6">
             
@@ -103,20 +157,24 @@ function renderReusableList($config) {
                                             // --- Action Buttons ---
                                             if ($key === 'actions' || $type === 'actions'): ?>
                                                 <div class="flex items-center gap-3">
-                                                    <?php if($view_url): ?>
+                                                    <?php if($view_url && in_array('view', $action_buttons)): ?>
                                                         <a href="<?= $view_url; ?>/<?= $id; ?>" class="p-2 text-blue-500 hover:bg-blue-50 rounded transition" title="View">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     <?php endif; ?>
 
+                                                    <?php if($edit_url !== '#' && in_array('edit', $action_buttons)): ?>
                                                     <a href="<?= $edit_url; ?>/<?= $id; ?>" class="p-2 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    <?php endif; ?>
                                                     
+                                                    <?php if($delete_url !== '#' && in_array('delete', $action_buttons)): ?>
                                                     <button type="button" onclick="confirmDelete(<?= $id; ?>, '<?= addslashes($row[$name_field] ?? 'Item'); ?>', '<?= $delete_url; ?>')" 
                                                             class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
+                                                    <?php endif; ?>
                                                 </div>
 
                                             <?php 
@@ -203,4 +261,43 @@ function renderReusableList($config) {
     
 }
 ?>
+
+<script>
+// Toggle Filter Dropdown
+function toggleFilterDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const allDropdowns = document.querySelectorAll('[id^="filter_"]');
+    
+    // Close other dropdowns
+    allDropdowns.forEach(dd => {
+        if(dd.id !== id) dd.classList.add('hidden');
+    });
+    
+    dropdown.classList.toggle('hidden');
+}
+
+// Filter dropdown options by search
+function filterDropdownOptions(input, dropdownId) {
+    const filter = input.value.toLowerCase();
+    const dropdown = document.getElementById(dropdownId);
+    const options = dropdown.querySelectorAll('.filter-options a');
+    
+    options.forEach(opt => {
+        const text = opt.getAttribute('data-text') || opt.textContent.toLowerCase();
+        if(text.includes(filter)) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
+        }
+    });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if(!e.target.closest('[onclick*="toggleFilterDropdown"]') && !e.target.closest('[id^="filter_"]')) {
+        document.querySelectorAll('[id^="filter_"]').forEach(dd => dd.classList.add('hidden'));
+    }
+});
+</script>
+
 

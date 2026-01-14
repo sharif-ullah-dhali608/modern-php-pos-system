@@ -7,53 +7,59 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-$invoice_id = $_GET['id'] ?? '';
-
-// Fallback: Check standard URL path if GET is empty (e.g. /invoice_view.php/1)
-if(empty($invoice_id) && isset($_SERVER['PATH_INFO'])){
-    $invoice_id = trim($_SERVER['PATH_INFO'], '/');
+// Get return ID from URL
+$id = 0;
+if(isset($_GET['id'])) {
+    $id = intval($_GET['id']);
+} else {
+    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $segments = explode('/', trim($path, '/'));
+    $last_segment = end($segments);
+    if(is_numeric($last_segment)) {
+        $id = intval($last_segment);
+    }
 }
 
-if(empty($invoice_id)){
-    echo "Invalid Invoice ID";
-    exit;
+if($id <= 0) {
+    header("Location: sell_return.php");
+    exit(0);
 }
 
-// Fetch Selling Info
-// Note: Adjusted query to use `invoice_id` if that's what's passed, or `info_id`. 
-// The link in invoice.php uses 'info_id' but let's support both or check what's passed.
+// Get return info with all related data
 $query = "SELECT si.*, c.name as customer_name, c.mobile as customer_phone, c.address as customer_address, 
-          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email
+          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email,
+          u.name as created_by_name
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN stores s ON si.store_id = s.id
-          WHERE si.info_id = '$invoice_id' OR si.invoice_id = '$invoice_id'";
+          LEFT JOIN users u ON si.created_by = u.id
+          WHERE si.info_id = $id AND si.inv_type = 'return'";
 
 $result = mysqli_query($conn, $query);
-$invoice = mysqli_fetch_assoc($result);
+$return = mysqli_fetch_assoc($result);
 
-if(!$invoice){
-    echo "Invoice not found";
+if(!$return) {
+    echo "Return record not found";
     exit;
 }
 
 // Fetch Items
-$items_query = "SELECT * FROM selling_item WHERE invoice_id = '{$invoice['invoice_id']}'";
+$items_query = "SELECT * FROM selling_item WHERE invoice_id = '{$return['invoice_id']}'";
 $items_result = mysqli_query($conn, $items_query);
 
-// Fetch Payments
-$payments_query = "SELECT sl.*, pm.name as pmethod_name 
-                   FROM sell_logs sl 
-                   LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id
-                   WHERE sl.ref_invoice_id = '{$invoice['invoice_id']}'";
-$payments_result = mysqli_query($conn, $payments_query);
+// Get original invoice info if available
+$original_invoice = null;
+if(!empty($return['ref_invoice_id'])) {
+    $orig_query = mysqli_query($conn, "SELECT * FROM selling_info WHERE invoice_id = '{$return['ref_invoice_id']}'");
+    $original_invoice = mysqli_fetch_assoc($orig_query);
+}
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice - <?= $invoice['invoice_id']; ?></title>
+    <title>Return - <?= $return['invoice_id']; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -62,11 +68,11 @@ $payments_result = mysqli_query($conn, $payments_query);
         body { background: #526658; font-family: 'Inter', sans-serif; min-height: 100vh; padding: 20px; }
         .receipt-container {
             background: white;
-            max-width: 480px; /* Receipt width */
+            max-width: 480px;
             margin: 0 auto;
-            padding: 20px; /* Reduced padding for compact look */
+            padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            font-size: 11px; /* Small font like POS receipt */
+            font-size: 11px;
             color: #000;
         }
         .mono { font-family: 'Courier Prime', monospace; }
@@ -82,7 +88,6 @@ $payments_result = mysqli_query($conn, $payments_query);
             body { background: white; padding: 0; }
             .receipt-container { box-shadow: none; max-width: 100%; margin: 0; padding: 0; }
             .no-print { display: none !important; }
-            /* Force background colors */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -99,42 +104,57 @@ $payments_result = mysqli_query($conn, $payments_query);
                 <img src="/pos/assets/images/logo-fav.png" style="max-height: 50px;" alt="Logo">
             </div>
             
-            <h1 class="font-bold text-sm uppercase mt-1"><?= htmlspecialchars($invoice['store_name'] ?? 'STORE NAME'); ?></h1>
+            <h1 class="font-bold text-sm uppercase mt-1"><?= htmlspecialchars($return['store_name'] ?? 'STORE NAME'); ?></h1>
             <div class="text-[10px] text-gray-600">
-                <?= htmlspecialchars($invoice['store_address'] ?? 'Store Address'); ?><br>
-                Mobile: <?= htmlspecialchars($invoice['store_phone'] ?? ''); ?>, Email: <?= htmlspecialchars($invoice['store_email'] ?? ''); ?>
+                <?= htmlspecialchars($return['store_address'] ?? 'Store Address'); ?><br>
+                Mobile: <?= htmlspecialchars($return['store_phone'] ?? ''); ?>, Email: <?= htmlspecialchars($return['store_email'] ?? ''); ?>
             </div>
+        </div>
+
+        <!-- Return Badge -->
+        <div class="text-center mb-3">
+            <span class="inline-block bg-red-100 text-red-700 px-4 py-1 rounded-full text-xs font-bold uppercase">
+                <i class="fas fa-undo-alt mr-1"></i> SELL RETURN
+            </span>
         </div>
 
         <!-- Info Grid -->
         <div class="mb-3 leading-tight text-[10px]">
             <table style="width: 100%">
                 <tr>
-                    <td style="width: 25%">Invoice ID:</td>
-                    <td class="font-bold"><?= $invoice['invoice_id']; ?></td>
+                    <td style="width: 30%">Return ID:</td>
+                    <td class="font-bold"><?= $return['invoice_id']; ?></td>
                 </tr>
                 <tr>
                     <td>Date:</td>
-                    <td><?= date('d M Y h:i A', strtotime($invoice['created_at'])); ?></td>
+                    <td><?= date('d M Y h:i A', strtotime($return['created_at'])); ?></td>
+                </tr>
+                <tr>
+                    <td>Original Invoice:</td>
+                    <td class="font-bold"><?= htmlspecialchars($return['ref_invoice_id'] ?? 'N/A'); ?></td>
                 </tr>
                 <tr>
                     <td>Customer:</td>
-                    <td><?= htmlspecialchars($invoice['customer_name'] ?? 'Walking Customer'); ?></td>
+                    <td><?= htmlspecialchars($return['customer_name'] ?? 'Walking Customer'); ?></td>
                 </tr>
                 <tr>
                     <td>Phone:</td>
-                    <td><?= htmlspecialchars($invoice['customer_phone'] ?? $invoice['customer_mobile'] ?? 'N/A'); ?></td>
+                    <td><?= htmlspecialchars($return['customer_phone'] ?? $return['customer_mobile'] ?? 'N/A'); ?></td>
                 </tr>
                 <tr>
                     <td>Address:</td>
-                    <td><?= htmlspecialchars($invoice['customer_address'] ?? '-'); ?></td>
+                    <td><?= htmlspecialchars($return['customer_address'] ?? '-'); ?></td>
+                </tr>
+                <tr>
+                    <td>Returned By:</td>
+                    <td><?= htmlspecialchars($return['created_by_name'] ?? 'N/A'); ?></td>
                 </tr>
             </table>
         </div>
 
         <!-- Items Table -->
         <div class="mb-2">
-            <h3 class="text-center font-bold uppercase border-bottom-dashed mb-1 pb-1">Invoice</h3>
+            <h3 class="text-center font-bold uppercase border-bottom-dashed mb-1 pb-1">Returned Items</h3>
             <table>
                 <thead>
                     <tr>
@@ -152,10 +172,7 @@ $payments_result = mysqli_query($conn, $payments_query);
                     ?>
                     <tr>
                         <td><?= $sl++; ?></td>
-                        <td>
-                            <?= htmlspecialchars($item['item_name']); ?>
-                            <div class="text-[9px] text-gray-500"><?= $item['description'] ?? ''; ?></div>
-                        </td>
+                        <td><?= htmlspecialchars($item['item_name']); ?></td>
                         <td class="text-right"><?= number_format($item['qty_sold'], 2); ?></td>
                         <td class="text-right"><?= number_format($item['price_sold'], 2); ?></td>
                         <td class="text-right"><?= number_format($item['subtotal'], 2); ?></td>
@@ -169,60 +186,37 @@ $payments_result = mysqli_query($conn, $payments_query);
         <div class="border-top-dashed pt-1 mb-2">
             <table style="width: 100%; font-weight: 500;">
                 <tr>
-                    <td class="text-right" style="width: 60%">Total Amt:</td>
-                    <td class="text-right"><?= number_format($invoice['total_items'] ?? 0, 2); ?></td> <!-- Assuming total_items holds subtotal in this logic or derived -->
+                    <td class="text-right" style="width: 60%">Subtotal:</td>
+                    <td class="text-right"><?= number_format($return['total_items'] ?? 0, 2); ?></td>
                 </tr>
-                <!-- Since total_items name is ambiguous in schema (count or sum?), schema says decimal, usually means amount -->
-                <!-- Let's calculate from grand total backwards if needed or use fields -->
                 
-                <?php if($invoice['tax_amount'] > 0): ?>
+                <?php if($return['tax_amount'] > 0): ?>
                 <tr>
-                    <td class="text-right">Order Tax:</td>
-                    <td class="text-right"><?= number_format($invoice['tax_amount'], 2); ?></td>
+                    <td class="text-right">Tax:</td>
+                    <td class="text-right"><?= number_format($return['tax_amount'], 2); ?></td>
                 </tr>
                 <?php endif; ?>
                 
-                <?php if($invoice['discount_amount'] > 0): ?>
+                <?php if($return['discount_amount'] > 0): ?>
                 <tr>
                     <td class="text-right">Discount:</td>
-                    <td class="text-right"><?= number_format($invoice['discount_amount'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-                
-                <?php if($invoice['shipping_charge'] > 0): ?>
-                <tr>
-                    <td class="text-right">Shipping Chrg:</td>
-                    <td class="text-right"><?= number_format($invoice['shipping_charge'], 2); ?></td>
+                    <td class="text-right"><?= number_format($return['discount_amount'], 2); ?></td>
                 </tr>
                 <?php endif; ?>
 
                 <tr class="font-bold border-top-dashed border-bottom-dashed">
-                    <td class="text-right py-1">Total Due:</td>
-                    <td class="text-right py-1"><?= number_format($invoice['grand_total'], 2); ?></td>
-                </tr>
-                
-                <!-- Paid logic -->
-                <!-- We need to sum payments -->
-                 <?php
-                 // Reset payment pointer for displaying later
-                 mysqli_data_seek($payments_result, 0);
-                 $total_paid = 0;
-                 while($pay = mysqli_fetch_assoc($payments_result)){
-                     $total_paid += $pay['amount'];
-                 }
-                 $due = $invoice['grand_total'] - $total_paid;
-                 ?>
-                 
-                <tr>
-                    <td class="text-right pt-1">Amount Paid:</td>
-                    <td class="text-right pt-1"><?= number_format($total_paid, 2); ?></td>
-                </tr>
-                <tr>
-                    <td class="text-right">Due:</td>
-                    <td class="text-right"><?= number_format($due, 2); ?></td>
+                    <td class="text-right py-1 text-red-600">Total Return Amount:</td>
+                    <td class="text-right py-1 text-red-600"><?= number_format($return['grand_total'], 2); ?></td>
                 </tr>
             </table>
         </div>
+
+        <!-- Return Note -->
+        <?php if(!empty($return['invoice_note'])): ?>
+        <div class="mb-3 p-2 bg-gray-50 rounded text-[10px]">
+            <strong>Return Note:</strong> <?= htmlspecialchars($return['invoice_note']); ?>
+        </div>
+        <?php endif; ?>
         
         <!-- In Words -->
         <div class="text-[9px] italic mb-3 text-gray-500">
@@ -234,72 +228,27 @@ $payments_result = mysqli_query($conn, $payments_query);
                     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
                     const formatTrio = (trio) => {
                         let res = '';
-                        if (trio[0] !== '0') {
-                            res += single[parseInt(trio[0])] + ' Hundred ';
-                        }
-                        if (trio[1] === '1') {
-                            res += double[parseInt(trio[2])];
-                        } else {
-                            res += tens[parseInt(trio[1])] + (trio[1] !== '0' && trio[2] !== '0' ? '-' : '') + single[parseInt(trio[2])];
-                        }
+                        if (trio[0] !== '0') res += single[parseInt(trio[0])] + ' Hundred ';
+                        if (trio[1] === '1') res += double[parseInt(trio[2])];
+                        else res += tens[parseInt(trio[1])] + (trio[1] !== '0' && trio[2] !== '0' ? '-' : '') + single[parseInt(trio[2])];
                         return res.trim();
                     };
-
                     let [integer, decimal] = num.toFixed(2).split('.');
                     integer = integer.padStart(12, '0');
                     const units = ['Billion', 'Million', 'Thousand', ''];
                     let result = '';
-
                     for (let i = 0; i < 4; i++) {
                         let trio = integer.substring(i * 3, i * 3 + 3);
                         let word = formatTrio(trio);
-                        if (word) {
-                            result += word + ' ' + units[i] + ' ';
-                        }
+                        if (word) result += word + ' ' + units[i] + ' ';
                     }
-
                     result = result.trim() || 'Zero';
-                    
-                    if (decimal !== '00') {
-                        let decimalWord = formatTrio('0' + decimal);
-                        result += ' and ' + decimalWord + ' Cents';
-                    }
-                    
+                    if (decimal !== '00') result += ' and ' + formatTrio('0' + decimal) + ' Cents';
                     return result + ' Only';
                 }
-                
-                document.getElementById('in-words').textContent = numberToWords(<?= (float)($invoice['grand_total'] ?? 0); ?>); 
+                document.getElementById('in-words').textContent = numberToWords(<?= (float)($return['grand_total'] ?? 0); ?>); 
             </script>
         </div>
-
-        <!-- Payments -->
-        <?php if(mysqli_num_rows($payments_result) > 0): ?>
-        <div class="mb-3">
-            <h4 class="font-bold border-bottom-dashed mb-1">Payments</h4>
-            <table>
-                <thead>
-                   <tr>
-                       <th>SL</th>
-                       <th>Method</th>
-                       <th class="text-right">Amount</th>
-                   </tr> 
-                </thead>
-                <tbody>
-                    <?php 
-                    mysqli_data_seek($payments_result, 0);
-                    $p_sl = 1;
-                    while($pay = mysqli_fetch_assoc($payments_result)): 
-                    ?>
-                    <tr>
-                        <td><?= $p_sl++; ?></td>
-                        <td><?= htmlspecialchars($pay['pmethod_name'] ?? 'Cash'); ?> <span class="text-[9px] text-gray-400"><?= date('d M Y', strtotime($pay['created_at'])); ?></span></td>
-                        <td class="text-right"><?= number_format($pay['amount'], 2); ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php endif; ?>
 
         <!-- Footer -->
         <div class="text-center mt-4">
@@ -310,7 +259,6 @@ $payments_result = mysqli_query($conn, $payments_query);
                 Thank you for choosing us!<br>
                 For Support: support@pos.com
             </div>
-            <div class="text-[8px] text-gray-400 mt-1">@codecanoyn.net</div>
         </div>
 
         <!-- Action Buttons (Screen Only) -->
@@ -321,7 +269,7 @@ $payments_result = mysqli_query($conn, $payments_query);
             <button class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded font-bold text-xs transition flex items-center justify-center">
                 <i class="fas fa-envelope mr-1"></i> Email
             </button>
-            <a href="/pos/sell/list" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded font-bold text-xs transition flex items-center justify-center">
+            <a href="/pos/sell/return" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded font-bold text-xs transition flex items-center justify-center">
                 <i class="fas fa-arrow-left mr-1"></i> Back
             </a>
         </div>
@@ -329,7 +277,7 @@ $payments_result = mysqli_query($conn, $payments_query);
     </div>
 
     <script>
-        JsBarcode("#barcode", "<?= $invoice['invoice_id']; ?>", {
+        JsBarcode("#barcode", "<?= $return['invoice_id']; ?>", {
             format: "CODE128",
             lineColor: "#000",
             width: 2,
