@@ -417,11 +417,12 @@ function ensure_core_tables(mysqli $conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 
-     // --- Product-Store Pivot Table ---
+     // --- Product-Store Pivot Table (with stock) ---
     $productStoreSql = "CREATE TABLE IF NOT EXISTS product_store_map (
         id INT(11) NOT NULL AUTO_INCREMENT,
         product_id INT(11) NOT NULL,
         store_id INT(11) NOT NULL,
+        stock DECIMAL(15,4) DEFAULT 0.0000,
         PRIMARY KEY (id),
         UNIQUE KEY product_store_unique (product_id, store_id),
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -666,6 +667,26 @@ mysqli_query($conn, $userStoreMapSql);
     if($checkCurrentDue && mysqli_num_rows($checkCurrentDue) == 0) {
         @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN current_due DECIMAL(15,2) DEFAULT 0.00 AFTER opening_balance");
     }
+
+    // Ensure stock column exists in product_store_map table (for store-wise stock tracking)
+    $checkPsmStock = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'stock'");
+    if($checkPsmStock && mysqli_num_rows($checkPsmStock) == 0) {
+        @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN stock DECIMAL(15,4) DEFAULT 0.0000 AFTER store_id");
+        
+        // Sync existing products' opening_stock to product_store_map.stock
+        // This only runs once when stock column is first added
+        @mysqli_query($conn, "UPDATE product_store_map psm 
+                              JOIN products p ON psm.product_id = p.id 
+                              SET psm.stock = p.opening_stock 
+                              WHERE psm.stock = 0 OR psm.stock IS NULL");
+    }
+    
+    // One-time sync: If product_store_map.stock is 0 but products.opening_stock has value, sync it
+    // This helps with existing installations
+    @mysqli_query($conn, "UPDATE product_store_map psm 
+                          JOIN products p ON psm.product_id = p.id 
+                          SET psm.stock = p.opening_stock 
+                          WHERE psm.stock = 0 AND p.opening_stock > 0");
 
 
 

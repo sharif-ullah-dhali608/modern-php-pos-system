@@ -10,19 +10,51 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Invoices List";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+?>
+<link rel="stylesheet" href="/pos/assets/css/payment_modal.css">
+<?php
+
+// Filter parameters
+$filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
+$filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
+
+// Fetch Customers for filter dropdown
+$customers_list = [];
+$cust_result = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+while($c = mysqli_fetch_assoc($cust_result)) $customers_list[] = $c;
+
+// Today's date for filter
+$today = date('Y-m-d');
 
 // Fetch Data
 // net_amount: Total after returns
-// paid_amount: Total from sell_logs (payments)
+// paid_amount: Total from sell_logs (all payment types)
 $query = "SELECT si.*, c.name as customer_name,
           (SELECT SUM(qty_sold - return_item) FROM selling_item WHERE invoice_id = si.invoice_id) as item_count,
           (si.grand_total - IFNULL((SELECT SUM(grand_total) FROM selling_info WHERE ref_invoice_id = si.invoice_id AND inv_type = 'return'), 0)) as net_amount,
-          IFNULL((SELECT SUM(amount) FROM sell_logs WHERE ref_invoice_id = si.invoice_id AND type = 'payment'), 0) as paid_amount
+          IFNULL((SELECT SUM(amount) FROM sell_logs WHERE ref_invoice_id = si.invoice_id AND type IN ('payment', 'full_payment', 'partial_payment', 'due_paid')), 0) as paid_amount
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
-          WHERE si.inv_type = 'sale' 
-          HAVING item_count > 0
-          ORDER BY si.created_at DESC";
+          WHERE si.inv_type = 'sale' ";
+
+// Apply filters
+if($filter_customer > 0) {
+    $query .= " AND si.customer_id = $filter_customer ";
+}
+if($filter_status == 'today') {
+    $query .= " AND DATE(si.created_at) = '$today' ";
+}
+
+$query .= "HAVING item_count > 0 ";
+
+// Filter by payment status after HAVING
+if($filter_status == 'due') {
+    $query .= " AND (net_amount - paid_amount) > 0.01 ";
+} elseif($filter_status == 'paid') {
+    $query .= " AND (net_amount - paid_amount) <= 0.01 ";
+}
+
+$query .= "ORDER BY si.created_at DESC";
 
 $result = mysqli_query($conn, $query);
 
@@ -46,7 +78,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     // Pay Button
     if($display_status != 'paid') {
          // JavaScript Triggered Pay Icon
-         $row['pay_btn'] = '<button onclick="openPaymentModal(\''.$row['invoice_id'].'\', '.$row['current_due'].', '.$row['info_id'].', '.$row['store_id'].', '.($row['customer_id'] ?: '0').')" class="inline-block p-2 text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition" title="Pay"><i class="fas fa-money-bill"></i></button>';
+         $row['pay_btn'] = '<button onclick="openInvoicePaymentModal(\''.$row['invoice_id'].'\', '.$row['current_due'].', '.$row['info_id'].', '.$row['store_id'].', '.($row['customer_id'] ?: '0').')" class="inline-block p-2 text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition" title="Pay"><i class="fas fa-money-bill"></i></button>';
     } else {
         $row['pay_btn'] = '<span class="text-slate-400">-</span>';
     }
@@ -61,17 +93,66 @@ while ($row = mysqli_fetch_assoc($result)) {
     $data[] = $row;
 }
 
+// Calculate Summary Totals
+$summary_grand_total = 0;
+$summary_total_paid = 0;
+$summary_total_due = 0;
+$summary_total_invoices = count($data);
+
+foreach($data as $invoice) {
+    $summary_grand_total += $invoice['net_amount'];
+    $summary_total_paid += $invoice['paid_amount'];
+    $summary_total_due += $invoice['current_due'];
+}
+
+// Build filter options
+$status_filter_options = [
+    ['label' => 'Today Invoice', 'url' => '?status=today' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'today'],
+    ['label' => 'All Invoice', 'url' => '?status=all' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'all'],
+    ['label' => 'Due Invoice', 'url' => '?status=due' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'due'],
+    ['label' => 'Paid Invoice', 'url' => '?status=paid' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'paid'],
+];
+
+$customer_filter_options = [['label' => 'All Customers', 'url' => '?status='.$filter_status, 'active' => $filter_customer == 0]];
+foreach($customers_list as $cust) {
+    $customer_filter_options[] = [
+        'label' => $cust['name'],
+        'url' => '?status='.$filter_status.'&customer_id='.$cust['id'],
+        'active' => $filter_customer == $cust['id']
+    ];
+}
+
 // Prepare Config
 $config = [
     'title' => 'Invoices List',
     'table_id' => 'invoice_table',
     'add_url' => '/pos/pos', 
-    'edit_url' => '/pos/admin/invoice_edit.php',
-    'delete_url' => '/pos/admin/invoice_delete.php',
+    'edit_url' => '/pos/admin/edit',
+    'delete_url' => '/pos/admin/delete',
     'view_url' => '/pos/invoice/view',
     'primary_key' => 'info_id',
     'name_field' => 'invoice_id',
     'data' => $data,
+    
+    // New: Extra Buttons
+    'extra_buttons' => [
+        ['label' => 'Pay All', 'icon' => 'fas fa-dollar-sign', 'onclick' => 'payAllDue()', 'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all']
+    ],
+    
+    // New: Filters
+    'filters' => [
+        ['id' => 'filter_status', 'label' => 'Filter', 'options' => $status_filter_options],
+        ['id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options]
+    ],
+    
+    // New: Summary Cards
+    'summary_cards' => [
+        ['label' => 'Grand Total', 'value' => number_format($summary_grand_total, 2), 'border_color' => 'border-teal-500'],
+        ['label' => 'Total Paid', 'value' => number_format($summary_total_paid, 2), 'border_color' => 'border-emerald-500'],
+        ['label' => 'Total Due', 'value' => number_format($summary_total_due, 2), 'border_color' => 'border-amber-500'],
+        ['label' => 'Total Invoices', 'value' => number_format($summary_total_invoices), 'border_color' => 'border-red-500']
+    ],
+    
     'columns' => [
         ['label' => 'Invoice Id', 'key' => 'invoice_id'],
         ['label' => 'Date Time', 'key' => 'created_at'],
@@ -110,132 +191,152 @@ $config = [
     </main>
 </div>
 
-<!-- Payment Modal -->
-<div id="paymentModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closePaymentModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-emerald-600 px-4 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white"><i class="fas fa-money-bill-wave mr-2"></i> Register Payment</h3>
-                <button onclick="closePaymentModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6">
-                <form id="paymentForm">
-                    <input type="hidden" id="pay_invoice_id" name="invoice_id">
-                    <input type="hidden" id="pay_info_id" name="info_id">
-                    <input type="hidden" id="pay_store_id" name="store_id">
-                    <input type="hidden" id="pay_customer_id" name="customer_id">
+<!-- Hidden Balance Fields (Legacy Compatibility) -->
+<input type="hidden" id="customer_opening_balance" value="0">
+<input type="hidden" id="customer_giftcard_balance" value="0">
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Invoice ID</label>
-                        <input type="text" id="display_invoice_id" class="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-gray-900" readonly>
-                    </div>
+<?php 
+// Prepare data for payment modal - reset the result pointer for the loop
+$payment_methods_result = mysqli_query($conn, "SELECT id, name, code FROM payment_methods WHERE status = 1 ORDER BY sort_order ASC");
+include('../includes/payment_modal.php'); 
+include('../includes/invoice_modal.php'); 
+?>
 
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Amount</label>
-                            <input type="text" id="display_due_amount" class="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-red-600 font-bold" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Paying Amount</label>
-                            <input type="number" id="pay_amount" name="amount" step="0.01" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 font-bold" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                        <select id="pay_pmethod_id" name="payment_method_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500" required>
-                            <option value="">Select Method</option>
-                            <?php foreach($payment_methods as $pm): ?>
-                                <option value="<?= $pm['id']; ?>"><?= htmlspecialchars($pm['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Note (Optional)</label>
-                        <textarea id="pay_note" name="note" rows="2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Payment reference, etc."></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button type="button" onclick="closePaymentModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-                        <button type="submit" class="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition font-bold flex items-center gap-2">
-                             <span id="payBtnText">Complete Payment</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="/pos/assets/js/invoice_modal.js"></script>
+<script src="/pos/assets/js/payment_modal.js"></script>
 <script>
-function openPaymentModal(invoiceId, dueAmount, infoId, storeId, customerId) {
-    document.getElementById('pay_invoice_id').value = invoiceId;
-    document.getElementById('display_invoice_id').value = invoiceId;
-    document.getElementById('display_due_amount').value = parseFloat(dueAmount).toFixed(2);
-    document.getElementById('pay_amount').value = parseFloat(dueAmount).toFixed(2);
-    document.getElementById('pay_info_id').value = infoId;
-    document.getElementById('pay_store_id').value = storeId;
-    document.getElementById('pay_customer_id').value = customerId;
-    
-    document.getElementById('paymentModal').classList.remove('hidden');
-    document.getElementById('pay_amount').focus();
+// Global variables for submission
+let currentInvoiceId = '';
+let currentInfoId = '';
+let currentStoreId = '';
+let currentCustomerId = '';
+
+function openInvoicePaymentModal(invoiceId, dueAmount, infoId, storeId, customerId) {
+    currentInvoiceId = invoiceId;
+    currentInfoId = infoId;
+    currentStoreId = storeId;
+    currentCustomerId = customerId;
+
+    // Call shared initialization
+    window.openPaymentModal({
+        totalPayable: parseFloat(dueAmount),
+        previousDue: 0, // In invoice list, we are paying a specific invoice's current due
+        customerId: customerId,
+        customerName: `Invoice ${invoiceId}`, // Could fetch name from row if needed
+        onSubmit: submitInvoicePayment
+    });
 }
 
-function closePaymentModal() {
-    document.getElementById('paymentModal').classList.add('hidden');
-    document.getElementById('paymentForm').reset();
-}
-
-document.getElementById('paymentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const btnText = document.getElementById('payBtnText');
-    const originalText = btnText.innerHTML;
-    btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    btnText.parentElement.disabled = true;
-
-    const formData = new FormData(this);
+function submitInvoicePayment(paymentData) {
+    const formData = new FormData();
     formData.append('action', 'register_payment');
+    formData.append('invoice_id', currentInvoiceId);
+    formData.append('info_id', currentInfoId);
+    formData.append('store_id', currentStoreId);
+    formData.append('customer_id', currentCustomerId);
+    formData.append('amount_received', paymentData.amountReceived);
+    formData.append('payment_method_id', paymentData.selectedPaymentMethod || '');
+    formData.append('payments', JSON.stringify(paymentData.appliedPayments));
+    formData.append('note', paymentData.note);
+
+    const btn = document.querySelector('.complete-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
 
     fetch('/pos/pos/save_sale.php', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
         if(data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Payment recorded successfully',
-                confirmButtonColor: '#059669'
-            }).then(() => {
-                window.location.reload();
+            // Close payment modal
+            closeModal('paymentModal');
+            
+            // Show Invoice Modal with the payment data
+            window.openInvoiceModal({
+                invoiceId: data.invoice_id || currentInvoiceId,
+                store: {
+                    name: data.store_name || 'Modern POS',
+                    address: data.store_address || '',
+                    city: data.store_city || '',
+                    phone: data.store_phone || '',
+                    email: data.store_email || ''
+                },
+                customer: {
+                    name: data.customer_name || 'Customer',
+                    phone: data.customer_phone || ''
+                },
+                items: data.items || [],
+                totals: {
+                    subtotal: parseFloat(data.subtotal) || 0,
+                    discount: parseFloat(data.discount) || 0,
+                    tax: parseFloat(data.tax) || 0,
+                    shipping: parseFloat(data.shipping) || 0,
+                    grandTotal: parseFloat(data.grand_total) || 0,
+                    paid: parseFloat(data.paid) || 0,
+                    due: parseFloat(data.due) || 0,
+                    previousDue: 0,
+                    totalDue: parseFloat(data.due) || 0
+                },
+                paymentMethod: 'Payment',
+                onClose: () => window.location.reload()
             });
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Error recording payment',
-                confirmButtonColor: '#059669'
-            });
+            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// Pay All Due Invoices
+function payAllDue() {
+    const totalDue = <?= $summary_total_due; ?>;
+    
+    if(totalDue <= 0) {
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Server error occurred',
+            icon: 'info',
+            title: 'No Due Amount',
+            text: 'All invoices are already paid!',
             confirmButtonColor: '#059669'
         });
-    })
-    .finally(() => {
-        btnText.innerHTML = originalText;
-        btnText.parentElement.disabled = false;
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Pay All Due Invoices?',
+        html: `<div class="text-left">
+            <p class="mb-2">Total Due Amount: <strong class="text-red-600">৳${totalDue.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></p>
+            <p class="text-sm text-slate-500">This will open individual payment modals for each due invoice.</p>
+        </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Proceed',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748b'
+    }).then((result) => {
+        if(result.isConfirmed) {
+            // Find first due invoice and open modal
+            const firstDueBtn = document.querySelector('button[onclick*="openInvoicePaymentModal"]');
+            if(firstDueBtn) {
+                firstDueBtn.click();
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Due Invoice',
+                    text: 'All visible invoices are paid.',
+                    confirmButtonColor: '#059669'
+                });
+            }
+        }
     });
-});
+}
 </script>

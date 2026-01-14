@@ -74,9 +74,24 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
                     throw new Exception("Error updating original item: " . mysqli_error($conn));
                 }
 
-                // Update product stock (Increment opening_stock as it's a return)
+                // Update global product stock (Increment opening_stock as it's a return)
                 if(!mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock + $qty WHERE id = $item_id")){
                     throw new Exception("Error updating product stock: " . mysqli_error($conn));
+                }
+                
+                // Update store-specific stock in product_store_map
+                // First check if mapping exists
+                $psm_check = mysqli_query($conn, "SELECT id FROM product_store_map WHERE product_id = $item_id AND store_id = $store_id");
+                if($psm_check && mysqli_num_rows($psm_check) > 0) {
+                    // Update existing mapping
+                    if(!mysqli_query($conn, "UPDATE product_store_map SET stock = stock + $qty WHERE product_id = $item_id AND store_id = $store_id")){
+                        throw new Exception("Error updating store stock: " . mysqli_error($conn));
+                    }
+                } else {
+                    // Create mapping with returned stock
+                    if(!mysqli_query($conn, "INSERT INTO product_store_map (product_id, store_id, stock) VALUES ($item_id, $store_id, $qty)")){
+                        throw new Exception("Error creating store stock mapping: " . mysqli_error($conn));
+                    }
                 }
             }
         }
@@ -96,30 +111,36 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
              throw new Exception("Error creating return invoice: " . mysqli_error($conn));
         }
 
-        // 3. Update customer balance based on original invoice payment status
+        // 3. Update customer balance - Smart distribution of return amount
+        // Logic: First clear any current_due, then add remaining to opening_balance (wallet)
         if($customer_id > 0) {
-            // Check original invoice payment status
-            $orig_inv_query = mysqli_query($conn, "SELECT payment_status FROM selling_info WHERE invoice_id = '$original_invoice_id'");
-            $orig_inv = mysqli_fetch_assoc($orig_inv_query);
-            $orig_payment_status = $orig_inv['payment_status'] ?? 'paid';
+            // Get customer's current due
+            $cust_query = mysqli_query($conn, "SELECT current_due FROM customers WHERE id = $customer_id");
+            $cust_data = mysqli_fetch_assoc($cust_query);
+            $current_due = floatval($cust_data['current_due'] ?? 0);
             
-            if($orig_payment_status == 'paid') {
-                // If original was PAID: Add return amount to opening_balance as credit (negative balance = credit)
-                if(!mysqli_query($conn, "UPDATE customers SET opening_balance = opening_balance - $total_return_amount WHERE id = $customer_id")) {
-                    throw new Exception("Error updating customer credit balance: " . mysqli_error($conn));
-                }
-            } else {
-                // If original was DUE: Deduct return amount from current_due
-                $cust_query = mysqli_query($conn, "SELECT current_due FROM customers WHERE id = $customer_id");
-                $cust_data = mysqli_fetch_assoc($cust_query);
-                $current_due = floatval($cust_data['current_due'] ?? 0);
+            if($current_due > 0) {
+                // Customer has due - first deduct from due
+                $deduct_from_due = min($total_return_amount, $current_due);
+                $remaining_for_wallet = $total_return_amount - $deduct_from_due;
                 
-                if($current_due > 0) {
-                    // Deduct return amount from current_due (but don't go below 0)
-                    $deduct_amount = min($total_return_amount, $current_due);
-                    if(!mysqli_query($conn, "UPDATE customers SET current_due = current_due - $deduct_amount WHERE id = $customer_id")) {
+                // Deduct from current_due
+                if($deduct_from_due > 0) {
+                    if(!mysqli_query($conn, "UPDATE customers SET current_due = current_due - $deduct_from_due WHERE id = $customer_id")) {
                         throw new Exception("Error updating customer due balance: " . mysqli_error($conn));
                     }
+                }
+                
+                // Add remaining to opening_balance (wallet)
+                if($remaining_for_wallet > 0) {
+                    if(!mysqli_query($conn, "UPDATE customers SET opening_balance = opening_balance + $remaining_for_wallet WHERE id = $customer_id")) {
+                        throw new Exception("Error updating customer opening balance: " . mysqli_error($conn));
+                    }
+                }
+            } else {
+                // No due - add full return amount to opening_balance (wallet)
+                if(!mysqli_query($conn, "UPDATE customers SET opening_balance = opening_balance + $total_return_amount WHERE id = $customer_id")) {
+                    throw new Exception("Error updating customer credit balance: " . mysqli_error($conn));
                 }
             }
         }
