@@ -328,7 +328,7 @@ function processPayment($conn, $user_id) {
                 $remaining_to_allocate = $paid_for_previous_due;
                 $old_invoices_query = "SELECT si.invoice_id, si.store_id, si.grand_total,
                     IFNULL((SELECT SUM(si2.grand_total) FROM selling_info si2 WHERE si2.ref_invoice_id = si.invoice_id AND si2.inv_type = 'return'), 0) as return_amount,
-                    IFNULL((SELECT SUM(sl.amount) FROM sell_logs sl WHERE sl.ref_invoice_id = si.invoice_id AND sl.type IN ('full_payment','partial_payment','payment')), 0) as paid_amount
+                    IFNULL((SELECT SUM(sl.amount) FROM sell_logs sl WHERE sl.ref_invoice_id = si.invoice_id AND sl.type IN ('full_payment','partial_payment','payment','due_paid')), 0) as paid_amount
                 FROM selling_info si 
                 WHERE si.customer_id = $customer_id AND si.inv_type = 'sale' AND si.invoice_id != '$invoice_id'
                 ORDER BY si.created_at ASC";
