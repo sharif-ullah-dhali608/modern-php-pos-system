@@ -1,13 +1,9 @@
-/**
- * Payment Modal JavaScript Functions
- * Reusable payment modal logic extracted from pos.php
- */
 
 // Global variables for payment modal
-let appliedPayments = window.appliedPayments || [];
-let selectedPaymentMethod = window.selectedPaymentMethod || null;
-let customerId = window.customerId || 0;
-let onPaymentSubmit = null; // Callback for custom submission
+var appliedPayments = window.appliedPayments || [];
+var selectedPaymentMethod = window.selectedPaymentMethod || null;
+var customerId = window.customerId || 0;
+var onPaymentSubmit = null; // Callback for custom submission
 
 /**
  * Open Payment Modal with configuration
@@ -43,14 +39,15 @@ window.openPaymentModal = function (config) {
     if (totalPayableEl) totalPayableEl.textContent = (totalPayable + previousDue).toFixed(2);
     if (displayPayableEl) displayPayableEl.textContent = (totalPayable + previousDue).toFixed(2);
     if (previousDueEl) previousDueEl.textContent = previousDue.toFixed(2);
+    if (document.getElementById('pm-credit-balance')) document.getElementById('pm-credit-balance').textContent = previousDue.toFixed(2);
     if (customerNameEl) customerNameEl.textContent = customerName;
     if (paidEl) paidEl.textContent = '0.00';
     if (dueEl) dueEl.textContent = (totalPayable + previousDue).toFixed(2);
     if (balanceEl) balanceEl.textContent = '0.00';
 
-    // Reset amount input
+    // Reset amount input to default full total payable
     const amountInput = document.getElementById('amount-received');
-    if (amountInput) amountInput.value = totalPayable.toFixed(2);
+    if (amountInput) amountInput.value = (totalPayable + previousDue).toFixed(2);
 
     // Show modal
     const modal = document.getElementById('paymentModal');
@@ -75,21 +72,17 @@ window.closeModal = function (modalId) {
 // Complete Sale / Submit Payment - calls the onSubmit callback if provided
 window.completeSale = function () {
     if (onPaymentSubmit && typeof onPaymentSubmit === 'function') {
-        // Get amount from input
-        let amountReceived = parseFloat(document.getElementById('amount-received')?.value) || 0;
-
-        // Calculate total from applied payments
+        // The big box now shows TOTAL PAID (Manual + Applied)
+        let totalPaidInBox = parseFloat(document.getElementById('amount-received')?.value) || 0;
         const totalApplied = appliedPayments.reduce((sum, p) => sum + p.amount, 0);
 
-        // Only auto-fill the full payable amount if:
-        // 1. Amount input is 0
-        // 2. AND there are NO applied payments (user hasn't manually added any payment method)
-        // This prevents overwriting 0 when user intentionally paid via applied methods only
-        if (amountReceived === 0 && totalApplied === 0) {
-            const displayedAmount = parseFloat(document.getElementById('display-payable-amount')?.textContent) || 0;
-            const totalPayable = parseFloat(document.getElementById('payment-total-payable')?.textContent) || 0;
-            amountReceived = displayedAmount || totalPayable;
-        }
+        // Final amountReceived (Cash/Manual) to send to backend
+        let amountReceived = Math.max(0, totalPaidInBox - totalApplied);
+
+        // Only auto-fill if input is invalid/empty, but respect explicit 0 if in due mode or intended.
+        // Actually, since we initialize with full amount, 0 means explicit intent.
+        // We will only fallback if we really think it's an error, but here we should trust the input.
+        // Removing the aggressive auto-fill that prevents "Full Due".
 
         const paymentData = {
             amountReceived: amountReceived,
@@ -132,7 +125,7 @@ function selectPaymentMethod(element, id) {
         element.style.background = '#e0f2fe';
         element.style.borderColor = '#0d9488';
         selectedPaymentMethod = id;
-        updatePaymentCalculations();
+        setPaymentType('due'); // Auto-switch to due mode
         return;
     } else {
         // Standard methods (Cash, Nagad, etc.)
@@ -239,7 +232,16 @@ function selectPaymentMethod(element, id) {
             }
 
             updateAppliedPaymentsUI();
-            updatePaymentCalculations();
+
+            // Sync the big box with total applied amount
+            const amountInput = document.getElementById('amount-received');
+            if (amountInput) {
+                const totalApplied = appliedPayments.reduce((sum, p) => sum + p.amount, 0);
+                amountInput.value = totalApplied.toFixed(2);
+            }
+
+            // Auto-switch to partial mode (Custom/Split)
+            setPaymentType('partial', true);
         }
     });
 }
@@ -279,83 +281,49 @@ function removeAppliedPayment(index) {
     updatePaymentCalculations();
 }
 
-function setPaymentType(type) {
+function setPaymentType(type, keepInput = false) {
     document.querySelectorAll('.payment-type-btn').forEach(btn => {
         btn.classList.remove('active');
         btn.style.background = 'transparent';
-        btn.style.background = 'transparent'; // Reset background
         btn.style.color = '#64748b'; // Reset color
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+            if (type === 'full') btn.style.background = '#10b981';
+            else if (type === 'partial') btn.style.background = '#f59e0b';
+            else btn.style.background = '#64748b'; // Due
+            btn.style.color = 'white';
+        }
     });
 
-    const activeBtn = document.querySelector(`.payment-type-btn[data-type="${type}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.style.background = type === 'full' ? '#10b981' : '#ef4444'; // Apply active background
-        activeBtn.style.color = 'white'; // Apply active color
-    }
-
-    // Logic for Full Payment vs Due
-    const grandTotal = parseFloat(document.getElementById('payment-payable').textContent) || 0;
+    // Handle button behavior
     const amountInput = document.getElementById('amount-received');
+    const totalPayableEl = document.getElementById('payment-total-payable');
+    const totalPayable = totalPayableEl ? parseFloat(totalPayableEl.textContent) : 0;
+
+    if (!amountInput) return;
 
     if (type === 'full') {
-        if (amountInput) amountInput.value = grandTotal.toFixed(2);
-        updatePaymentCalculations(grandTotal);
-
-        // Ensure Pay Amount tab is visible
-        switchTab('pay');
+        amountInput.value = totalPayable.toFixed(2);
+        updatePaymentCalculations();
+    } else if (type === 'partial') {
+        // If clicking manually (not from apply method), clear it to 0
+        if (!keepInput) {
+            amountInput.value = '0.00';
+            setTimeout(() => { amountInput.focus(); }, 100);
+        }
+        updatePaymentCalculations();
     } else {
-        // Due payment - intention is to pay LATER, so paid amount is 0?
-        // Or pay PARTIAL? Usually "Full Due" in this context might mean "Credit Sale" (Pay 0 now)
-        if (amountInput) amountInput.value = '0.00';
-        updatePaymentCalculations(0);
-
-        // Ensure Input Amount tab is visible to let them change it if they want
-        switchTab('input');
+        // Due (Full Due / Pay Later)
+        amountInput.value = '0.00';
+        updatePaymentCalculations();
     }
 }
 
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = '#f1f5f9';
-        btn.style.color = '#64748b';
-    });
+// Removed switchTab as UI is now single-view as per user image
 
-    // Highlight active tab - find button by text content or index? 
-    // Simplified: relying on DOM order is flaky, but for now assuming event.target works if called from click
-    // When called programmatically (e.g., from setPaymentType), event is undefined.
-    // We need to find the button by its data-tab attribute or similar.
-    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-        activeBtn.style.background = '#e0f2fe';
-        activeBtn.style.color = '#0369a1';
-    }
+window.updatePaymentSummary = function () {
+    if (typeof cart === 'undefined') return;
 
-    // Toggle Views
-    const payView = document.getElementById('tab-pay-amount');
-    const inputView = document.getElementById('tab-input-amount');
-
-    if (tab === 'pay') {
-        if (payView) payView.style.display = 'block';
-        if (inputView) inputView.style.display = 'none';
-
-        // When switching to Pay Amount, we imply Full Payment usually, 
-        // but let's NOT override value unless user explicitly clicked "Full Payment".
-        // Just hide the input.
-    } else {
-        if (payView) payView.style.display = 'none';
-        if (inputView) inputView.style.display = 'block';
-        // Focus input
-        setTimeout(() => {
-            const input = document.getElementById('amount-received');
-            if (input) input.focus();
-        }, 100);
-    }
-}
-
-function updatePaymentSummary() {
     let subtotal = 0;
     cart.forEach(item => {
         subtotal += item.price * item.qty;
@@ -369,76 +337,75 @@ function updatePaymentSummary() {
     const taxAmount = (subtotal - discount) * (taxPercent / 100);
     const grandTotal = subtotal - discount + taxAmount + shipping + other;
 
-    // Update all payment fields
-    document.getElementById('payment-subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('payment-discount').textContent = discount.toFixed(2);
-    document.getElementById('payment-tax').textContent = taxAmount.toFixed(2);
-    document.getElementById('payment-shipping').textContent = shipping.toFixed(2);
-    document.getElementById('payment-other').textContent = other.toFixed(2);
-    document.getElementById('payment-interest').textContent = '0.00';
-    const totalBalance = parseFloat(document.getElementById('customer_total_balance').value) || 0;
+    // Update all payment fields element checks to avoid errors if elements missing
+    if (document.getElementById('payment-subtotal')) document.getElementById('payment-subtotal').textContent = subtotal.toFixed(2);
+    if (document.getElementById('payment-discount')) document.getElementById('payment-discount').textContent = discount.toFixed(2);
+    if (document.getElementById('payment-tax')) document.getElementById('payment-tax').textContent = taxAmount.toFixed(2);
+    if (document.getElementById('payment-shipping')) document.getElementById('payment-shipping').textContent = shipping.toFixed(2);
+    if (document.getElementById('payment-other')) document.getElementById('payment-other').textContent = other.toFixed(2);
+    if (document.getElementById('payment-interest')) document.getElementById('payment-interest').textContent = '0.00';
+
+    // Values that might not exist on all pages
+    const totalBalance = parseFloat(document.getElementById('customer_total_balance')?.value) || 0;
     const currentDue = totalBalance > 0 ? totalBalance : 0;
     const totalPayableWithDue = grandTotal + currentDue;
 
-    document.getElementById('payment-previous-due').textContent = currentDue.toFixed(2);
-    document.getElementById('payment-payable').textContent = grandTotal.toFixed(2);
-    document.getElementById('payment-total-payable').textContent = totalPayableWithDue.toFixed(2);
+    if (document.getElementById('payment-previous-due')) document.getElementById('payment-previous-due').textContent = currentDue.toFixed(2);
+    if (document.getElementById('payment-payable')) document.getElementById('payment-payable').textContent = grandTotal.toFixed(2);
+    if (document.getElementById('payment-total-payable')) document.getElementById('payment-total-payable').textContent = totalPayableWithDue.toFixed(2);
 
     if (document.getElementById('display-payable-amount')) {
         document.getElementById('display-payable-amount').textContent = totalPayableWithDue.toFixed(2);
     }
 
     // Update cart items display
-    const cartItemsHtml = cart.map((item, index) => `
-        <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
-            <div style="flex:1">
-                 <span style="color: #475569; font-size: 12px; display:block;">${index + 1}. ${item.name}</span>
-                 <span style="color: #64748b; font-size: 11px;">${item.qty} x ${parseFloat(item.price).toFixed(2)}</span>
+    const cartItemsContainer = document.getElementById('payment-cart-items');
+    if (cartItemsContainer) {
+        const cartItemsHtml = cart.map((item, index) => `
+            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e2e8f0;">
+                <div style="flex:1">
+                    <span style="color: #475569; font-size: 12px; display:block;">${index + 1}. ${item.name}</span>
+                    <span style="color: #64748b; font-size: 11px;">${item.qty} x ${parseFloat(item.price).toFixed(2)}</span>
+                </div>
+                <span style="color: #1e293b; font-weight: 500; font-size: 12px;">${(item.price * item.qty).toFixed(2)}</span>
             </div>
-            <span style="color: #1e293b; font-weight: 500; font-size: 12px;">${(item.price * item.qty).toFixed(2)}</span>
-        </div>
-    `).join('');
-    document.getElementById('payment-cart-items').innerHTML = cartItemsHtml || '<div style="text-align: center; color: #94a3b8; padding: 20px;">No items</div>';
+        `).join('');
+        cartItemsContainer.innerHTML = cartItemsHtml || '<div style="text-align: center; color: #94a3b8; padding: 20px;">No items</div>';
+    }
 
     // Update customer info in header
-    const customerName = document.getElementById('selected-customer-name').textContent || 'Walking Customer';
-    const customerPhone = document.getElementById('selected-customer-phone').textContent || '0170000000000';
-    document.getElementById('payment-customer-name').textContent = customerName;
-    document.getElementById('payment-customer-id').textContent = customerPhone;
+    const customerName = document.getElementById('selected-customer-name')?.textContent || 'Walking Customer';
+    const customerPhone = document.getElementById('selected-customer-phone')?.textContent || '0170000000000';
+    if (document.getElementById('payment-customer-name')) document.getElementById('payment-customer-name').textContent = customerName;
+    if (document.getElementById('payment-customer-id')) document.getElementById('payment-customer-id').textContent = customerPhone;
 
     // Maintain current payment state calculation
-    // If input amount has value, use it
-    const inputAmount = parseFloat(document.getElementById('amount-received').value) || 0;
-    if (inputAmount > 0) {
-        updatePaymentCalculations(inputAmount);
-    } else {
-        // Default to full payment if not manually entered? 
-        // Or just show total due.
-        updatePaymentCalculations(grandTotal);
-    }
-}
+    updatePaymentCalculations();
+};
 
-function updatePaymentCalculations(paidAmount) {
+function updatePaymentCalculations() {
     const totalPayable = parseFloat(document.getElementById('payment-total-payable').textContent) || 0;
     const totalApplied = appliedPayments.reduce((sum, p) => sum + p.amount, 0);
-    const amountToPay = totalPayable - totalApplied;
 
-    // Fallback if paidAmount not provided: get from input
-    let received = (paidAmount !== undefined) ? paidAmount : (parseFloat(document.getElementById('amount-received').value) || 0);
+    // In our new paradigm, the big box shows TOTAL PAID (Manual + Applied)
+    const amountInput = document.getElementById('amount-received');
+    if (!amountInput) return;
 
-    // Auto-fill remaining amount if just opening modal or totalApplied changed
-    if (paidAmount === undefined && (document.getElementById('amount-received').value === '' || parseFloat(document.getElementById('amount-received').value) > amountToPay)) {
-        received = amountToPay;
-        document.getElementById('amount-received').value = received.toFixed(2);
+    let totalPaidFromUser = parseFloat(amountInput.value) || 0;
+
+    // Reliability check: if box is less than applied total, it means something was added 
+    // and we should show at least the applied portion.
+    if (totalPaidFromUser < totalApplied) {
+        totalPaidFromUser = totalApplied;
+        amountInput.value = totalPaidFromUser.toFixed(2);
     }
 
-    const totalPaid = received + totalApplied;
-    const due = Math.max(0, totalPayable - totalPaid);
-    const balance = Math.max(0, totalPaid - totalPayable);
+    const due = Math.max(0, totalPayable - totalPaidFromUser);
+    const balance = Math.max(0, totalPaidFromUser - totalPayable);
 
-    document.getElementById('payment-paid').textContent = totalPaid.toFixed(2);
-    document.getElementById('payment-due').textContent = due.toFixed(2);
-    document.getElementById('payment-balance').textContent = balance.toFixed(2);
+    if (document.getElementById('payment-paid')) document.getElementById('payment-paid').textContent = totalPaidFromUser.toFixed(2);
+    if (document.getElementById('payment-due')) document.getElementById('payment-due').textContent = due.toFixed(2);
+    if (document.getElementById('payment-balance')) document.getElementById('payment-balance').textContent = balance.toFixed(2);
 
     // Update checkout button state for Walking Customer (who can't have due)
     const completeBtn = document.querySelector('.complete-btn');
@@ -456,7 +423,6 @@ function updatePaymentCalculations(paidAmount) {
 }
 
 function calculateChange() {
-    const received = parseFloat(document.getElementById('amount-received').value) || 0;
-    const grandTotal = parseFloat(document.getElementById('payment-payable').textContent) || 0;
-    updatePaymentCalculations(received);
+    // updatePaymentCalculations reads from input and updates all UI
+    updatePaymentCalculations();
 }
