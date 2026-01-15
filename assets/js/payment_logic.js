@@ -1,7 +1,3 @@
-/**
- * Payment Modal JavaScript Functions
- * Reusable payment modal logic extracted from pos.php
- */
 
 // Global variables for payment modal
 var appliedPayments = window.appliedPayments || [];
