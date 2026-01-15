@@ -11,7 +11,7 @@ $page_title = "Invoices List";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
 ?>
-<link rel="stylesheet" href="/pos/assets/css/payment_modal.css">
+<link rel="stylesheet" href="/pos/assets/css/payment_modal.css">.php 
 <?php
 
 // Filter parameters
@@ -29,7 +29,7 @@ $today = date('Y-m-d');
 // Fetch Data
 // net_amount: Total after returns
 // paid_amount: Total from sell_logs (all payment types)
-$query = "SELECT si.*, c.name as customer_name,
+$query = "SELECT si.*, COALESCE(c.name, 'Walking Customer') as customer_name,
           (SELECT SUM(qty_sold - return_item) FROM selling_item WHERE invoice_id = si.invoice_id) as item_count,
           (si.grand_total - IFNULL((SELECT SUM(grand_total) FROM selling_info WHERE ref_invoice_id = si.invoice_id AND inv_type = 'return'), 0)) as net_amount,
           IFNULL((SELECT SUM(amount) FROM sell_logs WHERE ref_invoice_id = si.invoice_id AND type IN ('payment', 'full_payment', 'partial_payment', 'due_paid')), 0) as paid_amount
@@ -204,7 +204,7 @@ include('../includes/invoice_modal.php');
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="/pos/assets/js/invoice_modal.js"></script>
-<script src="/pos/assets/js/payment_modal.js"></script>
+<script src="/pos/assets/js/payment_logic.js"></script>
 <script>
 // Global variables for submission
 let currentInvoiceId = '';
@@ -226,6 +226,9 @@ function openInvoicePaymentModal(invoiceId, dueAmount, infoId, storeId, customer
         customerName: `Invoice ${invoiceId}`, // Could fetch name from row if needed
         onSubmit: submitInvoicePayment
     });
+    
+    // Default to Full Payment view
+    if(window.setPaymentType) window.setPaymentType('full');
 }
 
 function submitInvoicePayment(paymentData) {

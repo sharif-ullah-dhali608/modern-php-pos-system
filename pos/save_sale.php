@@ -101,9 +101,19 @@ function processPayment($conn, $user_id) {
     $tax_amount = ($subtotal * $tax_percent) / 100;
     $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
     
+    // Calculate total paid including applied payments (bKash, Nagad, Giftcard, etc.)
+    $payments = json_decode($_POST['payments'] ?? '[]', true);
+    $applied_payments_total = 0;
+    if (is_array($payments)) {
+        foreach ($payments as $p) {
+            $applied_payments_total += floatval($p['amount'] ?? 0);
+        }
+    }
+    $total_paid = $amount_received + $applied_payments_total;
+    
     // Check if Walking Customer is trying to make due payment
     // Allow a small epsilon for floating point comparison issues
-    if (($customer_id === null || $customer_id == 0) && ($amount_received < ($grand_total - 0.01))) {
+    if (($customer_id === null || $customer_id == 0) && ($total_paid < ($grand_total - 0.01))) {
         echo json_encode([
             'success' => false, 
             'message' => 'Walking Customer cannot make due payments. Please pay the full amount.',

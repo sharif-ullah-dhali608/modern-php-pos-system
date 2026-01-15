@@ -50,6 +50,7 @@
                         <tr><td style="text-align: right; padding: 2px;">Shipping:</td><td style="text-align: right; padding: 2px;" id="inv-shipping">0.00</td></tr>
                         <tr style="border-top: 1px solid #000; font-weight: bold;"><td style="text-align: right; padding: 5px 2px;">Grand Total:</td><td style="text-align: right; padding: 5px 2px;" id="inv-grand-total">0.00</td></tr>
                         <tr style="border-top: 1px dashed #000;"><td style="text-align: right; padding: 5px 2px;">Paid Amount:</td><td style="text-align: right; padding: 5px 2px;" id="inv-paid">0.00</td></tr>
+                        <tr><td style="text-align: right; padding: 2px;">Change:</td><td style="text-align: right; padding: 2px;" id="inv-change">0.00</td></tr>
                         <tr><td style="text-align: right; padding: 2px;">Due:</td><td style="text-align: right; padding: 2px;" id="inv-due">0.00</td></tr>
                         <tr><td style="text-align: right; padding: 2px;">Previous Due:</td><td style="text-align: right; padding: 2px;" id="inv-prev-due">0.00</td></tr>
                         <tr style="border-top: 1px solid #000; font-weight: bold; color: #dc2626;"><td style="text-align: right; padding: 5px 2px;">Total Due:</td><td style="text-align: right; padding: 5px 2px;" id="inv-total-due">0.00</td></tr>
