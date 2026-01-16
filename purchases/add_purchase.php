@@ -464,6 +464,14 @@ $(document).ready(function() {
                     '<?= $item['item_tax']; ?>' 
                 );
             <?php endforeach; ?>
+        <?php elseif(isset($_GET['product_id'])): 
+            $pid = intval($_GET['product_id']);
+            $product_q = mysqli_query($conn, "SELECT id, selling_price, purchase_price FROM products WHERE id = $pid LIMIT 1");
+            if(mysqli_num_rows($product_q) > 0) {
+                $p = mysqli_fetch_assoc($product_q);
+                echo "addRow('{$p['id']}', 1, '{$p['purchase_price']}', '{$p['selling_price']}', 0);";
+            }
+        ?>
         <?php else: ?>
             addRow(); 
         <?php endif; ?>

@@ -11,9 +11,7 @@ $page_title = "Invoices List";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
 ?>
-<!-- <link rel="stylesheet" href="/pos/assets/css/payment_modal.css"> -->
 <link rel="stylesheet" href="/pos/assets/css/pos.css">
-
 <?php
 
 // Filter parameters

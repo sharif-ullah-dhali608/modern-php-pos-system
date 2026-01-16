@@ -148,10 +148,10 @@ include('../includes/header.php');
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main id="main-content" class="flex-1 lg:ml-64 main-content flex flex-col h-screen bg-slate-50">       
+    <main id="main-content" class="flex-1 lg:ml-64 main-content flex flex-col min-h-screen bg-slate-50">       
         <div class="navbar-fixed-top"><?php include('../includes/navbar.php'); ?></div>
         
-        <div class="content-scroll-area custom-scroll h-full overflow-y-auto p-4 md:p-6">
+        <div class="content-scroll-area custom-scroll flex-1 p-4 md:p-6">
             <form action="/pos/quotations/save_quotation.php" method="POST" id="quotationForm" novalidate>
                 
                 <?php if($is_edit): ?>
@@ -262,7 +262,7 @@ include('../includes/header.php');
                     </div>
 
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 sticky top-6">
+                        <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:sticky lg:top-6">
                             <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fas fa-file-invoice-dollar text-teal-600"></i> Summary</h3>
                             <div class="space-y-4">
                                 <div class="flex justify-between text-slate-600">
@@ -305,8 +305,10 @@ include('../includes/header.php');
                 </div>
             </form>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
