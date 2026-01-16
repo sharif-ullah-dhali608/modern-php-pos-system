@@ -35,12 +35,192 @@ function renderReusableList($config) {
     <style>
         .slide-in { animation: slideIn 0.3s ease-out forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Ultra-Premium 480px Advanced Mobile Design */
+        @media (max-width: 1023px) {
+            #sidebar { display: block !important; }
+        }
+        @media (max-width: 480px) {
+            .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr { 
+                display: block; 
+                width: 100%;
+            }
+            .data-table thead { display: none; }
+            
+            .data-table tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                padding: 10px 0;
+            }
+
+            .data-table tbody tr {
+                background: #ffffff;
+                border: 1px solid #f1f5f9;
+                border-radius: 20px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                overflow: hidden;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                padding-bottom: 0;
+            }
+            
+            /* Primary Info Block (Spans full width) */
+            .data-table td.mobile-primary {
+                grid-column: span 2;
+                background: #f8fafc;
+                border-bottom: 1px solid #f1f5f9;
+                padding: 16px !important;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-align: left;
+            }
+            .data-table td.mobile-primary::before { display: none; }
+            .data-table td.mobile-primary > span { font-weight: 800; font-size: 1rem; color: #1e293b; }
+
+            /* Grid Detail Cells */
+            .data-table td {
+                padding: 12px 16px !important;
+                border-bottom: 1px solid #f8fafc;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+                text-align: left;
+                min-height: 60px;
+            }
+
+            .data-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.6rem;
+                color: #94a3b8;
+                letter-spacing: 0.05em;
+                margin-bottom: 4px;
+            }
+
+            /* Action area styling */
+            .data-table td.mobile-actions {
+                grid-column: span 2;
+                border-bottom: none;
+                background: #fdfdfd;
+                padding: 16px !important;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                border-top: 1px solid #f1f5f9;
+            }
+            .data-table td.mobile-actions::before { display: none; }
+
+            /* Image styling in mobile primary */
+            .data-table td.mobile-primary img {
+                width: 50px;
+                height: 50px;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            }
+        }
+
+        /* DataTables Controls Premium Styling */
+        .dataTables_wrapper .dataTables_length, 
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 20px;
+        }
+
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 10px 14px 10px 40px !important;
+            outline: none !important;
+            transition: all 0.2s !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230d9488' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E") no-repeat !important;
+            background-size: 18px !important;
+            background-position: 14px center !important;
+            font-size: 14px !important;
+            color: #475569 !important;
+        }
+
+        .dataTables_wrapper .dataTables_length select:focus,
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #0d9488 !important;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1) !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter label,
+        .dataTables_wrapper .dataTables_length label {
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            font-size: 11px !important;
+            letter-spacing: 0.025em !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        @media (max-width: 480px) {
+            .dataTables_wrapper .dataTables_length, 
+            .dataTables_wrapper .dataTables_filter {
+                width: 100% !important;
+                text-align: center !important;
+                margin-bottom: 20px !important;
+            }
+            
+            /* Entries Dropdown: Single Line */
+            .dataTables_wrapper .dataTables_length label {
+                width: 100% !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 12px !important;
+            }
+            .dataTables_wrapper .dataTables_length select {
+                width: 100px !important;
+                margin: 0 !important;
+            }
+
+            /* Search Field: Stays Full Width */
+            .dataTables_wrapper .dataTables_filter label {
+                width: 100% !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 6px !important;
+            }
+            .dataTables_wrapper .dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+            }
+       }
+
+        /* Large Screen Table Scroll Fallback */
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .data-table-container {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .data-table {
+                min-width: 900px !important;
+            }
+            .w-full.slide-in button, 
+            .w-full.slide-in a {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+                font-size: 13px !important;
+            }
+            .flex-wrap.items-center.gap-2.md\:gap-3 {
+                gap: 8px !important;
+            }
+        }
     </style>
 
     <div class="w-full slide-in">
         
         <div class="w-full animate-fade-in">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-800 mb-1"><?= htmlspecialchars($title); ?></h1>
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -49,9 +229,9 @@ function renderReusableList($config) {
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <div class="relative">
-                    <button type="button" onclick="toggleExportDropdown()" class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition-all">
+            <div class="flex flex-wrap items-center gap-2 md:gap-3 w-full lg:w-auto lg:justify-end">
+                <div class="relative w-full md:w-auto">
+                    <button type="button" onclick="toggleExportDropdown()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg border border-slate-300 transition-all">
                         <i class="fas fa-upload rotate-180"></i>
                         <span>Export</span>
                         <i class="fas fa-chevron-down text-xs"></i>
@@ -76,7 +256,7 @@ function renderReusableList($config) {
                 </div>
 
                 <?php if($add_url !== '#'): ?>
-                <a href="<?= $add_url; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+                <a href="<?= $add_url; ?>" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
                     <i class="fas fa-plus"></i>
                     <span>Add New</span>
                 </a>
@@ -84,7 +264,7 @@ function renderReusableList($config) {
                 
                 <?php // Extra Buttons (Pay All, etc.)
                 foreach($extra_buttons as $btn): ?>
-                    <button type="button" onclick="<?= $btn['onclick'] ?? ''; ?>" class="<?= $btn['class'] ?? 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all'; ?>">
+                    <button type="button" onclick="<?= $btn['onclick'] ?? ''; ?>" class="<?= $btn['class'] ?? 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all'; ?> w-full md:w-auto inline-flex items-center justify-center gap-2">
                         <?php if(isset($btn['icon'])): ?><i class="<?= $btn['icon']; ?>"></i><?php endif; ?>
                         <span><?= $btn['label']; ?></span>
                     </button>
@@ -92,8 +272,8 @@ function renderReusableList($config) {
                 
                 <?php // Filter Dropdowns
                 foreach($filters as $filter): ?>
-                    <div class="relative">
-                        <button type="button" onclick="toggleFilterDropdown('<?= $filter['id']; ?>')" class="inline-flex items-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition-all">
+                    <div class="relative w-full md:w-auto">
+                        <button type="button" onclick="toggleFilterDropdown('<?= $filter['id']; ?>')" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition-all w-full md:w-auto">
                             <i class="fas fa-filter"></i>
                             <span><?= $filter['label']; ?></span>
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -121,7 +301,7 @@ function renderReusableList($config) {
         if(!empty($summary_cards)): ?>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-<?= count($summary_cards); ?> gap-6 mb-6">
             <?php foreach($summary_cards as $card): ?>
-            <div class="bg-white rounded-xl shadow-sm border-l-4 <?= $card['border_color'] ?? 'border-teal-500'; ?> p-5">
+            <div class="bg-white rounded-xl shadow-sm border-l-4 <?= $card['border_color'] ?? 'border-teal-500'; ?> p-5 text-center md:text-left">
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2"><?= $card['label']; ?></div>
                 <div class="text-2xl font-black text-slate-800"><?= $card['value']; ?></div>
             </div>
@@ -146,17 +326,26 @@ function renderReusableList($config) {
                         <tbody class="divide-y divide-slate-100">
                             <?php foreach($data as $row): ?>
                                 <tr class="hover:bg-slate-50 transition-colors group">
-                                    <?php foreach($columns as $col): ?>
-                                        <td class="p-4 text-sm text-slate-700 align-middle">
+                                    <?php foreach($columns as $col): 
+                                        $key  = $col['key'];
+                                        $type = $col['type'] ?? 'text';
+                                        
+                                        // Mobile helper classes
+                                        $mobile_class = '';
+                                        if($type === 'actions' || $key === 'actions') $mobile_class = 'mobile-actions';
+                                        elseif($type === 'image' || $key === $name_field || $key === 'id') $mobile_class = 'mobile-primary';
+
+                                        // Desktop helper: wrap product name
+                                        $desktop_class = ($key === $name_field || $key === 'product_name') ? '' : 'whitespace-nowrap';
+                                    ?>
+                                        <td class="p-4 text-sm text-slate-700 align-middle <?= $desktop_class; ?> <?= $mobile_class; ?>" data-label="<?= htmlspecialchars($col['label']); ?>">
                                             <?php
-                                            $key  = $col['key'];
-                                            $type = $col['type'] ?? 'text';
                                             $val  = $row[$key] ?? '';
                                             $id   = $row[$primary_key] ?? 0;
 
                                             // --- Action Buttons ---
                                             if ($key === 'actions' || $type === 'actions'): ?>
-                                                <div class="flex items-center gap-3">
+                                                <div class="flex flex-wrap items-center gap-2 md:gap-3">
                                                     <?php if($view_url && in_array('view', $action_buttons)): ?>
                                                         <a href="<?= $view_url; ?>/<?= $id; ?>" class="p-2 text-blue-500 hover:bg-blue-50 rounded transition" title="View">
                                                             <i class="fas fa-eye"></i>

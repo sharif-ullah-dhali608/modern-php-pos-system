@@ -102,6 +102,16 @@ include('../includes/header.php');
     margin-left: 80px !important;
 }
 
+@media (max-width: 480px) {
+    #sidebar {
+        display: none !important;
+    }
+    #main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
 </style>
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
@@ -129,7 +139,12 @@ include('../includes/header.php');
                 <a href="#" onclick="openModal('addProductModal')"><i class="fas fa-plus"></i> Product</a>
                 <a href="#" onclick="openModal('addCustomerModal')"><i class="fas fa-user-plus"></i> Customer</a>
                 <a href="#" onclick="openModal('giftcardModal')"><i class="fas fa-gift"></i> Giftcard</a>
-                <a href="/pos/admin/stock_alert.php"><i class="fas fa-exclamation-triangle"></i> Stock Alert</a>
+                <a href="/pos/products/stock_alert" class="relative group">
+                    <i class="fas fa-exclamation-triangle"></i> Stock Alert
+                    <?php if($alert_count > 0): ?>
+                        <span class="stock-alert-badge"><?= $alert_count; ?></span>
+                    <?php endif; ?>
+                </a>
                 <a href="/pos/admin/reports.php"><i class="fas fa-chart-bar"></i> Reports</a>
                 <a href="#" onclick="lockScreen()"><i class="fas fa-lock"></i> Lockscreen</a>
             </div>

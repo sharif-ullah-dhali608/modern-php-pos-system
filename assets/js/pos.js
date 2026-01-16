@@ -150,7 +150,9 @@ document.querySelectorAll('.pos-modal').forEach(modal => {
 
 // Store Selection Listener
 document.getElementById('store_select').addEventListener('change', function () {
+    const storeId = this.value;
     loadProducts(1); // Reload from page 1 when store changes
+    updateStockAlertCount(storeId);
 });
 
 // Track current filters
@@ -1626,4 +1628,47 @@ document.getElementById('customer-search-input')?.addEventListener('input', func
     } else if (noResultsEl) {
         noResultsEl.remove();
     }
+});
+
+// Update Stock Alert Count for CURRENT store
+function updateStockAlertCount(storeId = 0) {
+    $.ajax({
+        type: "GET",
+        url: "/pos/pos/get_stock_alert_count.php",
+        data: { store_id: storeId },
+        success: function (response) {
+            const res = JSON.parse(response);
+            const badge = document.querySelector('.pos-header-bar a[href="/pos/products/stock_alert"] span');
+            if (badge) {
+                if (res.count > 0) {
+                    badge.innerText = res.count;
+                    badge.style.display = 'flex';
+
+                    // Show a toast if it's a specific store and there's an alert
+                    if (storeId > 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Stock Alert!',
+                            text: `There are ${res.count} products with low stock in this store.`,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            background: '#f97316',
+                            color: '#fff',
+                            iconColor: '#fff'
+                        });
+                    }
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+    });
+}
+
+// Initial call
+$(document).ready(function () {
+    const initialStoreId = document.getElementById('store_select').value;
+    updateStockAlertCount(initialStoreId);
 });

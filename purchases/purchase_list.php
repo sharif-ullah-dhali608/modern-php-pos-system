@@ -263,13 +263,14 @@ include('../includes/header.php');
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                         <div class="relative">
-                            <button type="button" onclick="toggleExportDropdown()" class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition-all">
+                            <button type="button" onclick="toggleExportDropdown()" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition-all text-sm sm:text-base">
                                 <i class="fas fa-upload rotate-180"></i>
                                 <span>Export</span>
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
+                            <!-- Export Dropdown -->
                             <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
                                 <button onclick="triggerDtAction('print')" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                     <i class="fas fa-print w-4 text-slate-500"></i> Print
@@ -289,18 +290,18 @@ include('../includes/header.php');
                             </div>
                         </div>
 
-                        <a href="/pos/purchases/add" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                        <a href="/pos/purchases/add" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 group text-sm sm:text-base">
                             <i class="fas fa-plus transition-transform group-hover:rotate-90"></i>
                             <span>Add New</span>
                         </a>
                         
-                        <button type="button" onclick="payAllSelected()" class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition-all">
+                        <button type="button" onclick="payAllSelected()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base">
                             <i class="fas fa-dollar-sign"></i>
                             <span>Pay All</span>
                         </button>
                         
                         <div class="relative">
-                            <button type="button" onclick="toggleFilterDropdown()" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all">
+                            <button type="button" onclick="toggleFilterDropdown()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base">
                                 <i class="fas fa-filter"></i>
                                 <span>Filter</span>
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -317,22 +318,22 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl border-l-4 border-indigo-500 shadow-sm transition-transform hover:scale-[1.02]">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grand Total</p>
-                        <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_amount, 2); ?></h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border-l-4 border-indigo-500 shadow-sm transition-transform hover:scale-[1.02]">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grand Total</p>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800"><?= number_format($total_amount, 2); ?></h2>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border-l-4 border-emerald-500 shadow-sm transition-transform hover:scale-[1.02]">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Paid</p>
-                        <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_paid, 2); ?></h2>
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border-l-4 border-emerald-500 shadow-sm transition-transform hover:scale-[1.02]">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Paid</p>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800"><?= number_format($total_paid, 2); ?></h2>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border-l-4 border-rose-500 shadow-sm transition-transform hover:scale-[1.02]">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Due</p>
-                        <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_due, 2); ?></h2>
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border-l-4 border-rose-500 shadow-sm transition-transform hover:scale-[1.02]">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Due</p>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800"><?= number_format($total_due, 2); ?></h2>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm transition-transform hover:scale-[1.02]">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Stock</p>
-                        <h2 class="text-2xl font-black text-slate-800"><?= number_format($total_stock_qty, 0); ?></h2>
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border-l-4 border-orange-500 shadow-sm transition-transform hover:scale-[1.02]">
+                        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Stock</p>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800"><?= number_format($total_stock_qty, 0); ?></h2>
                     </div>
                 </div>
 

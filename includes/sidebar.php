@@ -3,6 +3,20 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $current_uri = $_SERVER['REQUEST_URI'];
 
+// Count stock alerts
+$alert_count = 0;
+if(isset($conn)) {
+    $alert_query = "SELECT COUNT(*) as alert_count 
+                    FROM products p
+                    JOIN product_store_map psm ON p.id = psm.product_id
+                    WHERE p.status = 1 AND psm.stock <= p.alert_quantity";
+    $alert_res = mysqli_query($conn, $alert_query);
+    if($alert_res) {
+        $alert_data = mysqli_fetch_assoc($alert_res);
+        $alert_count = (int)$alert_data['alert_count'];
+    }
+}
+
 // Helper to check if current uri matches
 function uri_has($needle, $uri) {
     return strpos($uri, $needle) !== false;
@@ -17,7 +31,7 @@ $menu_items = [
         'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
     ],
     [
-        'title' => 'POS',
+        'title' => 'Point of Sale',
         'icon' => 'fa-cash-register',
         'link' => '/pos/pos/',
         'active' => (uri_has('/pos/pos', $current_uri))
@@ -50,7 +64,8 @@ $menu_items = [
         'link' => '#',
         'submenu' => [
             ['title' => 'Add Product', 'link' => '/pos/products/add'],
-            ['title' => 'Product List', 'link' => '/pos/products/list']
+            ['title' => 'Product List', 'link' => '/pos/products/list'],
+            ['title' => 'Stock Alert', 'link' => '/pos/products/stock_alert', 'badge' => $alert_count]
         ],
         'active' => (uri_has('/products/', $current_uri))
     ],
@@ -348,9 +363,14 @@ $menu_items = [
                 <?php if($has_submenu): ?>
                     <div class="submenu ml-4 mt-1 space-y-1 <?= $item['active'] ? '' : 'hidden'; ?>">
                         <?php foreach($item['submenu'] as $sub): ?>
-                            <a href="<?= $sub['link']; ?>" class="flex items-center gap-3 px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
-                                <i class="fas fa-circle text-[4px] shrink-0"></i>
-                                <span class="link-text"><?= $sub['title']; ?></span>
+                            <a href="<?= $sub['link']; ?>" class="flex items-center justify-between px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-circle text-[4px] shrink-0"></i>
+                                    <span class="link-text"><?= $sub['title']; ?></span>
+                                </div>
+                                <?php if(isset($sub['badge']) && $sub['badge'] > 0): ?>
+                                    <span class="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"><?= $sub['badge']; ?></span>
+                                <?php endif; ?>
                             </a>
                         <?php endforeach; ?>
                     </div>
