@@ -2,7 +2,7 @@
 include '../config/dbcon.php';
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$items_per_page = 20;
+$items_per_page = 100;
 $offset = ($page - 1) * $items_per_page;
 $store_id = isset($_GET['store_id']) ? (int)$_GET['store_id'] : 0;
 $category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
@@ -44,14 +44,23 @@ if($store_id > 0) {
                       ORDER BY p.product_name ASC 
                       LIMIT $offset, $items_per_page";
 } else {
-    // All Stores: Use global opening_stock
+    // All Stores: Calculate total stock across all stores from product_store_map
+    // Use GREATEST to ensure stock is never negative
+    // Also get store-wise breakdown for tooltip display
     $products_query = "SELECT p.*, c.name as category_name, u.unit_name as unit_name,
-                      p.opening_stock as store_stock
+                      GREATEST(0, COALESCE(SUM(psm.stock), 0)) as store_stock,
+                      GROUP_CONCAT(
+                          CONCAT(s.store_name, ':', COALESCE(psm.stock, 0))
+                          ORDER BY s.store_name
+                          SEPARATOR '|'
+                      ) as store_breakdown
                       FROM products p 
                       LEFT JOIN categories c ON p.category_id = c.id 
                       LEFT JOIN units u ON p.unit_id = u.id 
-                      $join_clause
+                      LEFT JOIN product_store_map psm ON p.id = psm.product_id
+                      LEFT JOIN stores s ON psm.store_id = s.id AND s.status = 1
                       $where_clause
+                      GROUP BY p.id
                       ORDER BY p.product_name ASC 
                       LIMIT $offset, $items_per_page";
 }
@@ -84,23 +93,64 @@ foreach($products as $product):
     $is_out_of_stock = $stock <= 0;
     $is_low_stock = $stock > 0 && $stock <= $alert_qty;
 ?>
-    <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" data-id="<?= $product['id']; ?>" data-stock="<?= $stock; ?>">
+    <div class="product-card clickable-product <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" 
+         data-id="<?= $product['id']; ?>" 
+         data-stock="<?= $stock; ?>"
+         data-name="<?= htmlspecialchars($product['product_name']); ?>"
+         data-price="<?= $product['selling_price']; ?>">
         <?php if($is_out_of_stock): ?>
             <div class="stock-badge out-of-stock">Out of Stock</div>
         <?php elseif($is_low_stock): ?>
             <div class="stock-badge low-stock">Low Stock</div>
         <?php endif; ?>
-        <?php if(!empty($product['thumbnail']) && file_exists("../".$product['thumbnail'])): ?>
-            <img src="../<?= $product['thumbnail']; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
-        <?php elseif(!empty($product['image']) && file_exists("../uploads/".$product['image'])): ?>
-            <img src="../uploads/<?= $product['image']; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
+        <?php 
+        // Determine the image to display
+        $display_image = '';
+        $thumbnail = $product['thumbnail'] ?? '';
+        
+        // Method 1: Check products.thumbnail column
+        if (!empty($thumbnail)) {
+            // Handle paths that start with /pos/
+            if (strpos($thumbnail, '/pos/') === 0) {
+                $relative_path = '..' . $thumbnail;
+            } else {
+                $relative_path = '../' . $thumbnail;
+            }
+            if (file_exists($relative_path)) {
+                $display_image = $thumbnail;
+            }
+        }
+        
+        // Method 2: Check product_images table for first image
+        if (empty($display_image)) {
+            $img_query = "SELECT image_path FROM product_images WHERE product_id = " . intval($product['id']) . " ORDER BY sort_order ASC, id ASC LIMIT 1";
+            $img_result = mysqli_query($conn, $img_query);
+            if ($img_result && mysqli_num_rows($img_result) > 0) {
+                $img_row = mysqli_fetch_assoc($img_result);
+                if (!empty($img_row['image_path'])) {
+                    $display_image = $img_row['image_path'];
+                }
+            }
+        }
+        
+        // Method 3: Check legacy 'image' column
+        if (empty($display_image) && !empty($product['image'])) {
+            if (file_exists("../uploads/" . $product['image'])) {
+                $display_image = "/pos/uploads/" . $product['image'];
+            }
+        }
+        ?>
+        <?php if(!empty($display_image)): ?>
+            <img src="<?= $display_image; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
         <?php else: ?>
             <img src="../assets/images/no-image.png" alt="No Image">
         <?php endif; ?>
         <div class="info">
             <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
             <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
-            <div class="stock">Stock: <?= number_format($stock, 0); ?> <?= $product['unit_name'] ?? 'pcs'; ?></div>
+            <div class="stock" style="position: relative;">
+                Stock: <?= number_format($stock, 0); ?> <?= $product['unit_name'] ?? 'pcs'; ?>
+            </div>
         </div>
         <?php if($is_out_of_stock): ?>
             <button class="add-btn out-of-stock-btn" disabled>

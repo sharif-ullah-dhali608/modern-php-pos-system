@@ -138,7 +138,21 @@ window.openInvoiceModal = function (data) {
     if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('active');
+
+        // Auto-trigger print after short delay to ensure rendering
+        setTimeout(() => {
+            window.printInvoice();
+        }, 500);
     }
+};
+
+// Print Invoice Logic
+window.printInvoice = function () {
+    window.print();
+    // Automatically close the modal after printing or cancelling
+    setTimeout(() => {
+        window.closeInvoiceModal();
+    }, 100);
 };
 
 // Close Invoice Modal
@@ -149,11 +163,17 @@ window.closeInvoiceModal = function () {
         modal.classList.remove('active');
     }
 
-    // Call onClose callback if provided, otherwise reload page
+    // Also explicitly ensure payment modal is closed
+    const paymentModal = document.getElementById('paymentModal');
+    if (paymentModal) {
+        paymentModal.style.display = 'none';
+        paymentModal.classList.remove('active');
+    }
+
+    // Call onClose callback if provided
     if (window._invoiceModalOnClose && typeof window._invoiceModalOnClose === 'function') {
         window._invoiceModalOnClose();
-    } else {
-        // Default behavior: reload page
-        window.location.reload();
+        window._invoiceModalOnClose = null; // Clear it after use
     }
 };
+

@@ -366,12 +366,36 @@ function processPayment($conn, $user_id) {
         
         mysqli_commit($conn);
         $new_balance = 0;
+        $updated_opening_balance = 0;
+        $updated_giftcard_balance = 0;
+        
         if ($customer_id) {
-            $nb_res = mysqli_query($conn, "SELECT current_due FROM customers WHERE id = $customer_id");
+            // Fetch updated customer balances
+            $nb_res = mysqli_query($conn, "SELECT current_due, opening_balance FROM customers WHERE id = $customer_id");
             $nb_row = mysqli_fetch_assoc($nb_res);
             $new_balance = floatval($nb_row['current_due']);
+            $updated_opening_balance = floatval($nb_row['opening_balance']);
+            
+            // Fetch updated giftcard balance
+            $gc_res = mysqli_query($conn, "SELECT COALESCE(SUM(balance), 0) as gc_balance FROM giftcards WHERE customer_id = $customer_id AND status = 1");
+            $gc_row = mysqli_fetch_assoc($gc_res);
+            $updated_giftcard_balance = floatval($gc_row['gc_balance']);
         }
-        echo json_encode(['success' => true, 'message' => 'Sale completed', 'invoice_id' => $invoice_id, 'grand_total' => $grand_total, 'new_balance' => $new_balance]);
+        
+        // Fetch updated stock alert count
+        $alert_res = mysqli_query($conn, "SELECT COUNT(*) as alert_count FROM products WHERE status = 1 AND opening_stock <= alert_quantity");
+        $alert_count = mysqli_fetch_assoc($alert_res)['alert_count'] ?? 0;
+
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Sale completed', 
+            'invoice_id' => $invoice_id, 
+            'grand_total' => $grand_total, 
+            'new_balance' => $new_balance,
+            'opening_balance' => $updated_opening_balance,
+            'giftcard_balance' => $updated_giftcard_balance,
+            'alert_count' => $alert_count
+        ]);
         
     } catch(Exception $e) {
         mysqli_rollback($conn);
