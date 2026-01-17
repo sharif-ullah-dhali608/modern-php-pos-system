@@ -81,7 +81,7 @@
             </div>
             
             <div class="no-print" style="margin-top: 20px; display: flex; flex-direction: row; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 10px;">
-                <button onclick="window.print()" style="background: #0ea5e9; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
+                <button onclick="window.printInvoice()" style="background: #0ea5e9; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
                     <i class="fas fa-print"></i> Print
                 </button>
                 <button style="background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">

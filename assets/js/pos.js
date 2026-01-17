@@ -1,4 +1,3 @@
-
 // Force sidebar to be collapsed on POS page
 (function () {
     // Set localStorage to unlock (collapsed) state
@@ -19,6 +18,42 @@
         toggleIcon.classList.add('rotate-180');
     }
 })();
+
+// Global keydown listener for POS shortcuts
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        const paymentModal = document.getElementById('paymentModal');
+        const invoiceModal = document.getElementById('invoiceModal');
+        const customerSelectModal = document.getElementById('customerSelectModal');
+
+        // If searching product, let it handle its own logic (usually barcode scan or search trigger)
+        if (document.activeElement.id === 'product_search') return;
+
+        if (invoiceModal && invoiceModal.classList.contains('active')) {
+            e.preventDefault();
+            if (window.printInvoice) window.printInvoice();
+        } else if (paymentModal && paymentModal.classList.contains('active')) {
+            e.preventDefault();
+            if (window.completeSale) window.completeSale();
+        } else if (customerSelectModal && customerSelectModal.classList.contains('active')) {
+            // Let the modal handle it or trigger selection if something is focused
+        } else {
+            // Default: Pay Now if cart has items
+            if (cart.length > 0) {
+                e.preventDefault();
+                prepareAndOpenPaymentModal();
+            }
+        }
+    }
+
+    // Escape key to close any active modal
+    if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.pos-modal.active');
+        if (activeModal) {
+            closeModal(activeModal.id);
+        }
+    }
+});
 
 // Cart data
 let cart = [];
@@ -148,11 +183,57 @@ document.querySelectorAll('.pos-modal').forEach(modal => {
 });
 
 
-// Store Selection Listener
+// Store Selection with localStorage Persistence
+document.addEventListener('DOMContentLoaded', function () {
+    const storeSelect = document.getElementById('store_select');
+    const savedStoreId = localStorage.getItem('pos_selected_store');
+
+    // Restore saved store or select first available store (never "All Stores")
+    if (savedStoreId && savedStoreId !== 'all') {
+        // Check if saved store still exists in options
+        const savedOption = storeSelect.querySelector(`option[value="${savedStoreId}"]`);
+        if (savedOption) {
+            storeSelect.value = savedStoreId;
+        } else {
+            // Saved store no longer exists, select first available store
+            selectFirstAvailableStore(storeSelect);
+        }
+    } else {
+        // No saved store or was "All Stores", select first available store
+        selectFirstAvailableStore(storeSelect);
+    }
+
+    // Load products with selected store
+    loadProducts(1);
+});
+
+// Helper function to select first available store (not "All Stores")
+function selectFirstAvailableStore(storeSelect) {
+    const firstStoreOption = storeSelect.querySelector('option[data-default="true"]');
+    if (firstStoreOption) {
+        storeSelect.value = firstStoreOption.value;
+        localStorage.setItem('pos_selected_store', firstStoreOption.value);
+    } else {
+        // Fallback: select first non-"all" option
+        const options = storeSelect.querySelectorAll('option');
+        for (let option of options) {
+            if (option.value !== 'all') {
+                storeSelect.value = option.value;
+                localStorage.setItem('pos_selected_store', option.value);
+                break;
+            }
+        }
+    }
+}
+
+// Store Selection Listener - Save to localStorage when changed
 document.getElementById('store_select').addEventListener('change', function () {
-    const storeId = this.value;
+    const selectedStore = this.value;
+
+    // Save to localStorage (even if "All Stores" is selected manually)
+    localStorage.setItem('pos_selected_store', selectedStore);
+
     loadProducts(1); // Reload from page 1 when store changes
-    updateStockAlertCount(storeId);
 });
 
 // Track current filters
@@ -194,6 +275,23 @@ function loadProducts(page) {
 
 // Add to cart with stock validation
 function addToCart(id, name, price, stock = null) {
+    // Check if "All Stores" is selected
+    const storeSelect = document.getElementById('store_select');
+    if (!storeSelect || storeSelect.value === 'all' || storeSelect.value === '0') {
+        showToast('Please select a specific store to add products to cart', 'warning');
+
+        // Highlight store dropdown
+        if (storeSelect) {
+            storeSelect.style.border = '2px solid #f59e0b';
+            storeSelect.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.2)';
+            setTimeout(() => {
+                storeSelect.style.border = '';
+                storeSelect.style.boxShadow = '';
+            }, 2000);
+        }
+        return;
+    }
+
     // Get stock from product card if not provided
     if (stock === null) {
         const productCard = document.querySelector(`.product-card[data-id="${id}"]`);
@@ -736,22 +834,64 @@ function submitPosSale(paymentData) {
 
                 openModal('invoiceModal');
 
-                // Reset Cart
-                cart = [];
-                updateCartUI();
+                // Reload-less UI Sync
+                const resetPOS = () => {
+                    // 1. Clear Cart
+                    cart = [];
+                    renderCart();
 
-                // Reset Customer
-                document.getElementById('selected_customer_id').value = 0;
-                document.getElementById('selected-customer-name').textContent = 'Walking Customer';
-                document.getElementById('selected-customer-phone').textContent = '0170000000000';
-                document.getElementById('customer_due_balance').value = 0;
-                document.getElementById('customer_opening_balance').value = 0;
-                document.getElementById('customer_giftcard_balance').value = 0;
-                document.getElementById('customer_total_balance').value = 0;
-                if (document.getElementById('selected-customer-due-display')) {
-                    document.getElementById('selected-customer-due-display').style.display = 'none';
-                }
+                    // 2. Reset Totals
+                    document.getElementById('discount-input').value = 0;
+                    document.getElementById('tax-input').value = 0;
+                    document.getElementById('shipping-input').value = 0;
+                    document.getElementById('other-input').value = 0;
+                    if (document.getElementById('payment-note')) document.getElementById('payment-note').value = '';
+                    updateTotals();
 
+                    // 3. Refresh Stock Grid
+                    loadProducts(1);
+
+                    // 4. Update Customer Info if applicable
+                    if (data.new_balance !== undefined) {
+                        // Data from backend: new_balance, opening_balance, giftcard_balance
+                        const customerId = document.getElementById('selected_customer_id').value;
+                        if (customerId > 0) {
+                            document.getElementById('customer_total_balance').value = data.new_balance;
+                            document.getElementById('customer_due_balance').value = data.new_balance > 0 ? data.new_balance : 0;
+                            document.getElementById('customer_opening_balance').value = data.opening_balance;
+                            document.getElementById('customer_giftcard_balance').value = data.giftcard_balance;
+
+                            // Update display badges
+                            const dueDisplay = document.getElementById('selected-customer-due-display');
+                            const dueAmount = document.getElementById('selected-customer-due-amount');
+                            if (dueDisplay && dueAmount) {
+                                if (data.new_balance > 0) {
+                                    dueDisplay.style.display = 'block';
+                                    dueAmount.textContent = parseFloat(data.new_balance).toFixed(2);
+                                } else {
+                                    dueDisplay.style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+
+                    // 5. Update Stock Alert Count
+                    const badge = document.querySelector('.stock-alert-badge');
+                    if (badge) {
+                        if (data.alert_count > 0) {
+                            badge.textContent = data.alert_count;
+                            badge.style.display = 'block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                };
+
+                // Set callback for invoice close
+                window._invoiceModalOnClose = resetPOS;
+
+                // Show success toast
+                // showToast('Sale Completed Successfully', 'success');
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -1144,7 +1284,7 @@ function saveWalkingCustomer() {
     }
 }
 
-// Product search with debounce
+// Product search with barcode scanning
 let searchTimeout = null;
 document.getElementById('product_search').addEventListener('input', function () {
     currentSearch = this.value.trim();
@@ -1155,6 +1295,96 @@ document.getElementById('product_search').addEventListener('input', function () 
         loadProducts(1); // Reload products with new search
     }, 300); // Wait 300ms after user stops typing
 });
+
+// Barcode scanning - Enter key to add product to cart
+document.getElementById('product_search').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcode = this.value.trim();
+
+        if (barcode) {
+            // Search for product by barcode
+            handleBarcodeSearch(barcode);
+        }
+    }
+});
+
+// Handle barcode search and auto-add to cart
+// Handle barcode search and auto-add to cart
+function handleBarcodeSearch(barcode) {
+    const formData = new FormData();
+    formData.append('search', barcode);
+    formData.append('store_id', document.getElementById('store_select').value === 'all' ? 0 : document.getElementById('store_select').value);
+    formData.append('category_id', 0);
+    formData.append('page', 1);
+
+    fetch('/pos/pos/get_products.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.html && data.html.trim() !== '') {
+                // Parse the HTML to extract product data
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.html;
+                const productCards = tempDiv.querySelectorAll('.product-card');
+
+                if (productCards.length > 0) {
+                    let targetProduct = null;
+                    const searchLower = barcode.toLowerCase().trim();
+
+                    // 1. Try to find an Exact Name Match
+                    for (let i = 0; i < productCards.length; i++) {
+                        const name = productCards[i].dataset.name;
+                        if (name && name.toLowerCase().trim() === searchLower) {
+                            targetProduct = productCards[i];
+                            break;
+                        }
+                    }
+
+                    // 2. Fallback: If no exact match, take the first one
+                    if (!targetProduct) {
+                        targetProduct = productCards[0];
+                    }
+
+                    if (targetProduct) {
+                        const productId = targetProduct.dataset.id;
+                        const productName = targetProduct.dataset.name;
+                        const productPrice = targetProduct.dataset.price;
+                        const productStock = parseFloat(targetProduct.dataset.stock);
+
+                        // Stock Validation
+                        if (productStock <= 0) {
+                            showToast('Stock not available', 'error');
+                            // Clear search field even on error to allow new search
+                            document.getElementById('product_search').value = '';
+                            currentSearch = '';
+                            return; // Stop here, do not add to cart
+                        }
+
+                        // Add to cart
+                        addToCart(productId, productName, productPrice, productStock);
+
+                        // Clear search field
+                        document.getElementById('product_search').value = '';
+                        currentSearch = '';
+
+                        showToast('Product added to cart', 'success');
+                    }
+                } else {
+                    showToast('Product not found', 'error');
+                }
+            } else {
+                showToast('Product not found', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error searching product', 'error');
+        });
+}
+
 
 // Category filter
 document.querySelectorAll('.category-filter button').forEach(btn => {
@@ -1546,20 +1776,64 @@ document.addEventListener('DOMContentLoaded', function () {
     initStatusToggle('modal-customer-status-card', 'modal-customer-status-toggle', 'modal_customer_status', 'modal-customer-status-label');
 });
 
-// Keyboard shortcuts
+// Keyboard shortcuts and Enter key navigation
 document.addEventListener('keydown', function (e) {
     // F2 - Focus search
     if (e.key === 'F2') {
         e.preventDefault();
         document.getElementById('product_search').focus();
     }
+
     // F4 - Open payment
     if (e.key === 'F4') {
         e.preventDefault();
         if (cart.length > 0) {
-            openModal('paymentModal');
+            prepareAndOpenPaymentModal();
         }
     }
+
+    // Enter key - Navigate through workflow
+    if (e.key === 'Enter') {
+        const activeModal = getActiveModal();
+
+        // If no modal is open and we're on POS page
+        if (!activeModal) {
+            // Check if search field is focused
+            const searchField = document.getElementById('product_search');
+            if (document.activeElement === searchField) {
+                // Let the barcode search handler handle this
+                return;
+            }
+
+            // If cart has items, open payment modal
+            if (cart.length > 0) {
+                e.preventDefault();
+                prepareAndOpenPaymentModal();
+            }
+        }
+        // If payment modal is open
+        else if (activeModal === 'paymentModal') {
+            // Check if we're not in an input field
+            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                // Trigger payment processing
+                const completeBtn = document.querySelector('#paymentModal .complete-btn');
+                if (completeBtn && !completeBtn.disabled) {
+                    completeBtn.click();
+                }
+            }
+        }
+        // If invoice modal is open
+        else if (activeModal === 'invoiceModal') {
+            // Check if we're not in an input field
+            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                // Trigger print
+                triggerAutoPrint();
+            }
+        }
+    }
+
     // Escape - Close modals
     if (e.key === 'Escape') {
         document.querySelectorAll('.pos-modal.active').forEach(modal => {
@@ -1567,6 +1841,63 @@ document.addEventListener('keydown', function (e) {
         });
     }
 });
+
+// Get currently active modal
+function getActiveModal() {
+    const activeModal = document.querySelector('.pos-modal.active');
+    return activeModal ? activeModal.id : null;
+}
+
+// Trigger auto-print and handle post-print cleanup
+function triggerAutoPrint() {
+    // Trigger browser print
+    window.print();
+
+    // Listen for afterprint event
+    const handleAfterPrint = function () {
+        // Close invoice modal
+        closeModal('invoiceModal');
+
+        // Clear cart and reset POS
+        clearCartAndReset();
+
+        // Remove the listener
+        window.removeEventListener('afterprint', handleAfterPrint);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+}
+
+// Clear cart and reset POS without reload
+function clearCartAndReset() {
+    // Clear cart
+    cart = [];
+    renderCart();
+
+    // Reset all input fields to empty (parseFloat will handle as 0)
+    document.getElementById('discount-input').value = '';
+    document.getElementById('tax-input').value = '';
+    document.getElementById('shipping-input').value = '';
+    document.getElementById('other-input').value = '';
+
+    // Reset customer to walking customer
+    selectCustomer(0, 'Walking Customer', '0170000000000', 0, 0, 0);
+
+    // Update totals
+    updateTotals();
+
+    // Reload products to show updated stock
+    loadProducts(1);
+
+    // Show success message
+    showToast('Sale completed successfully!', 'success');
+
+    // Focus back to search field
+    setTimeout(() => {
+        document.getElementById('product_search').focus();
+    }, 500);
+}
+
 // Reset Cart and Form
 function resetCart() {
     cart = [];
@@ -1630,45 +1961,133 @@ document.getElementById('customer-search-input')?.addEventListener('input', func
     }
 });
 
-// Update Stock Alert Count for CURRENT store
-function updateStockAlertCount(storeId = 0) {
-    $.ajax({
-        type: "GET",
-        url: "/pos/pos/get_stock_alert_count.php",
-        data: { store_id: storeId },
-        success: function (response) {
-            const res = JSON.parse(response);
-            const badge = document.querySelector('.pos-header-bar a[href="/pos/products/stock_alert"] span');
-            if (badge) {
-                if (res.count > 0) {
-                    badge.innerText = res.count;
-                    badge.style.display = 'flex';
+// ===============================
+// KEYBOARD & SALE HANDLING LOGIC (ADDED)
+// ===============================
 
-                    // Show a toast if it's a specific store and there's an alert
-                    if (storeId > 0) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Stock Alert!',
-                            text: `There are ${res.count} products with low stock in this store.`,
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 5000,
-                            background: '#f97316',
-                            color: '#fff',
-                            iconColor: '#fff'
-                        });
-                    }
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
+// Helper to check active modal
+function getActiveModal() {
+    const modals = document.querySelectorAll('.modal');
+    for (let modal of modals) {
+        if ((modal.style.display === 'flex' || modal.classList.contains('active')) && modal.style.display !== 'none') {
+            return modal.id;
         }
-    });
+    }
+    return null;
 }
 
-// Initial call
-$(document).ready(function () {
-    const initialStoreId = document.getElementById('store_select').value;
-    updateStockAlertCount(initialStoreId);
+// Global Keyboard Handler
+document.addEventListener('keydown', function (e) {
+    const activeModal = getActiveModal();
+
+    // 1. Payment Modal Logic
+    if (activeModal === 'paymentModal') {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            completeSale();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeModal('paymentModal');
+        }
+    }
+    // 2. Invoice Modal Logic
+    else if (activeModal === 'invoiceModal') {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            triggerAutoPrint();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeInvoiceModal(false); // No reload
+        }
+    }
+    // 3. POS Page Logic
+    else if (!activeModal) {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('product_search').focus();
+        } else if (e.key === 'F4') {
+            e.preventDefault();
+            if (cart.length > 0) {
+                openPaymentModal({
+                    totalPayable: parseFloat(document.getElementById('total-payable').textContent),
+                    previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
+                    customerId: document.getElementById('selected_customer_id').value || 0,
+                    customerName: document.getElementById('selected-customer-name').textContent,
+                    onSubmit: function (paymentData) {
+                        processPayment(paymentData);
+                    }
+                });
+            } else {
+                showToast('Cart is empty', 'error');
+            }
+        } else if (e.key === 'Enter') {
+            if (document.activeElement.id === 'product_search') return;
+            if (cart.length > 0) {
+                e.preventDefault();
+                openPaymentModal({
+                    totalPayable: parseFloat(document.getElementById('total-payable').textContent),
+                    previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
+                    customerId: document.getElementById('selected_customer_id').value || 0,
+                    customerName: document.getElementById('selected-customer-name').textContent,
+                    onSubmit: function (paymentData) {
+                        processPayment(paymentData);
+                    }
+                });
+            }
+        }
+    }
 });
+
+function triggerAutoPrint() {
+    const printBtn = document.querySelector('#invoiceModal .btn-primary');
+    if (printBtn) {
+        printBtn.click();
+    } else {
+        window.print();
+    }
+}
+
+function handleSaleSuccess(response) {
+    if (!response || !response.success) return;
+
+    closeModal('paymentModal');
+
+    // Reset Data silently
+    cart = [];
+    updateCartUI();
+
+    document.getElementById('discount-input').value = 0;
+    document.getElementById('tax-input').value = 0;
+    document.getElementById('shipping-input').value = 0;
+    document.getElementById('other-input').value = 0;
+
+    if (typeof appliedPayments !== 'undefined') appliedPayments = [];
+    if (typeof selectedPaymentMethod !== 'undefined') selectedPaymentMethod = null;
+
+    const currentCustomerId = document.getElementById('selected_customer_id').value;
+    if (currentCustomerId && currentCustomerId == response.customer_id) {
+        document.getElementById('customer_due_balance').value = response.new_balance;
+        document.getElementById('customer_opening_balance').value = response.new_wallet_balance;
+
+        let giftBalance = document.getElementById('customer_giftcard_balance');
+        if (giftBalance && response.new_giftcard_balance !== undefined) {
+            giftBalance.value = response.new_giftcard_balance;
+        }
+
+        const dueDisplay = document.getElementById('selected-customer-due-display');
+        const dueAmount = document.getElementById('selected-customer-due-amount');
+        if (response.new_balance > 0) {
+            dueDisplay.style.display = 'block';
+            dueAmount.textContent = parseFloat(response.new_balance).toFixed(2);
+        } else {
+            dueDisplay.style.display = 'none';
+        }
+    }
+
+    if (typeof loadProducts === 'function') {
+        loadProducts(currentPage);
+    }
+
+    document.getElementById('product_search').value = '';
+    showToast('Sale completed successfully', 'success');
+}

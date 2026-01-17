@@ -82,15 +82,8 @@ include('../includes/header.php');
 ?>
 <link rel="stylesheet" href="/pos/assets/css/pos.css">
 <style>
-    /* Force sidebar to stay collapsed on POS page */
+    /* Completely hide sidebar on POS page */
 #sidebar {
-    width: 80px !important;
-}
-
-#sidebar .link-text,
-#sidebar .logo-text-container,
-#sidebar .fa-chevron-right,
-#sidebar .submenu {
     display: none !important;
 }
 
@@ -99,17 +92,12 @@ include('../includes/header.php');
 }
 
 #main-content {
-    margin-left: 80px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
 }
 
-@media (max-width: 480px) {
-    #sidebar {
-        display: none !important;
-    }
-    #main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
+.app-wrapper {
+    display: block !important;
 }
 
 </style>
@@ -123,12 +111,18 @@ include('../includes/header.php');
         <!-- POS Header Bar (Full Width Navbar) -->
         <div class="pos-header-bar">
             <select id="store_select" class="store-select">
-                <option value="all" selected>All Stores</option>
-                <?php foreach($stores as $store): ?>
-                    <option value="<?= $store['id']; ?>">
+                <option value="all">All Stores</option>
+                <?php 
+                $first = true;
+                foreach($stores as $store): 
+                ?>
+                    <option value="<?= $store['id']; ?>" <?= $first ? 'data-default="true"' : ''; ?>>
                         <?= htmlspecialchars($store['store_name']); ?>
                     </option>
-                <?php endforeach; ?>
+                <?php 
+                    $first = false;
+                endforeach; 
+                ?>
             </select>
             
             <div class="nav-links">
@@ -161,7 +155,7 @@ include('../includes/header.php');
             <div class="pos-left">
                 <!-- Search Bar -->
                 <div class="search-bar">
-                    <input type="text" id="product_search" placeholder="Search/Barcode Scan..." autofocus>
+                    <input type="text" id="product_search" placeholder="Search/Barcode Scan..." autocomplete="off" autofocus>
                 </div>
                 
                 <!-- Category Filter -->
