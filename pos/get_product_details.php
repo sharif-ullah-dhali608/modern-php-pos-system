@@ -23,12 +23,14 @@ $query = "SELECT p.*,
                  b.name as brand_name,
                  u.unit_name,
                  t.name as tax_name,
-                 t.taxrate as tax_rate
+                 t.taxrate as tax_rate,
+                 bx.box_name as location
           FROM products p
           LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN brands b ON p.brand_id = b.id
           LEFT JOIN units u ON p.unit_id = u.id
           LEFT JOIN taxrates t ON p.tax_rate_id = t.id
+          LEFT JOIN boxes bx ON p.box_id = bx.id
           WHERE p.id = ?";
 
 $stmt = mysqli_prepare($conn, $query);
@@ -92,7 +94,7 @@ if (empty($images)) {
 // Get stock info per store using product_store_map table
 $stock_info = [];
 $stock_query = "SELECT s.id as store_id, s.store_name, 
-                       COALESCE(psm.stock, ?) as stock
+                       COALESCE(psm.stock, 0) as stock
                 FROM stores s
                 LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
                 WHERE s.status = 1
@@ -100,7 +102,7 @@ $stock_query = "SELECT s.id as store_id, s.store_name,
 
 $stock_stmt = mysqli_prepare($conn, $stock_query);
 $opening_stock = $product['opening_stock'] ?? 0;
-mysqli_stmt_bind_param($stock_stmt, 'di', $opening_stock, $product_id);
+mysqli_stmt_bind_param($stock_stmt, 'i', $product_id);
 mysqli_stmt_execute($stock_stmt);
 $stock_result = mysqli_stmt_get_result($stock_stmt);
 
@@ -145,9 +147,28 @@ $response = [
         'status' => $product['status'],
         'created_at' => $product['created_at'] ?? null,
         'images' => array_values($images),
+        'location' => $product['location'] ?? '',
         'stock_by_store' => $stock_info
-    ]
+    ],
+    'related_products' => []
 ];
+
+// Fetch Related Products (Same category)
+if (!empty($product['category_id'])) {
+    $related_query = "SELECT id, product_name, selling_price, thumbnail FROM products WHERE category_id = ? AND id != ? AND status = 1 LIMIT 5";
+    $related_stmt = mysqli_prepare($conn, $related_query);
+    mysqli_stmt_bind_param($related_stmt, 'ii', $product['category_id'], $product_id);
+    mysqli_stmt_execute($related_stmt);
+    $related_result = mysqli_stmt_get_result($related_stmt);
+    
+    while ($related_row = mysqli_fetch_assoc($related_result)) {
+        if (empty($related_row['thumbnail'])) {
+            $related_row['thumbnail'] = '/pos/assets/images/no-image.png';
+        }
+        $response['related_products'][] = $related_row;
+    }
+}
+
 
 echo json_encode($response);
 ?>

@@ -2135,6 +2135,13 @@
         border: 1px solid rgba(255, 255, 255, 0.8);
         box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
     }
+
+    .welcome-step-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 13px;
+    }
 }
 
 /* Very Small Screens */
@@ -2367,4 +2374,23 @@ input[type=number] {
     border-color: #0ea5e9;
     outline: none;
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+
+.welcome-step-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: center;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+}
+
+.welcome-step-text {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    /* Critical for truncation */
 }

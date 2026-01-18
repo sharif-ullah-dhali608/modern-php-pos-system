@@ -1,12 +1,12 @@
 <?php
 include '../config/dbcon.php';
 
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_REQUEST['page']) ? (int)$_REQUEST['page'] : 1;
 $items_per_page = 100;
 $offset = ($page - 1) * $items_per_page;
-$store_id = isset($_GET['store_id']) ? (int)$_GET['store_id'] : 0;
-$category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
-$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
+$store_id = isset($_REQUEST['store_id']) ? (int)$_REQUEST['store_id'] : 0;
+$category_id = isset($_REQUEST['category_id']) ? (int)$_REQUEST['category_id'] : 0;
+$search = isset($_REQUEST['search']) ? mysqli_real_escape_string($conn, trim($_REQUEST['search'])) : '';
 
 $where_conditions = ["p.status = 1"];
 $join_clause = "";
@@ -149,7 +149,7 @@ foreach($products as $product):
             <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
             <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
             <div class="stock" style="position: relative;">
-                Stock: <?= number_format($stock, 0); ?> <?= $product['unit_name'] ?? 'pcs'; ?>
+                Stock: <?= number_format($stock, 0); ?>
             </div>
         </div>
         <?php if($is_out_of_stock): ?>
