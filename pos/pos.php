@@ -37,11 +37,14 @@ $total_products = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_products / $items_per_page);
 
 // Fetch products for display
-$products_query = "SELECT p.*, c.name as category_name, u.unit_name 
+$products_query = "SELECT p.*, c.name as category_name, u.unit_name,
+                   GREATEST(0, COALESCE(SUM(psm.stock), 0)) as store_stock
                    FROM products p 
                    LEFT JOIN categories c ON p.category_id = c.id 
                    LEFT JOIN units u ON p.unit_id = u.id 
+                   LEFT JOIN product_store_map psm ON p.id = psm.product_id
                    WHERE p.status = 1 
+                   GROUP BY p.id
                    ORDER BY p.product_name ASC 
                    LIMIT $items_per_page OFFSET $offset";
 $products_result = mysqli_query($conn, $products_query);
@@ -100,6 +103,14 @@ include('../includes/header.php');
     display: block !important;
 }
 
+    /* Invisible Scrollbar but scrollable */
+    .invisible-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .invisible-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
 </style>
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
@@ -124,8 +135,8 @@ include('../includes/header.php');
                 endforeach; 
                 ?>
             </select>
-            
             <div class="nav-links">
+                <a href="/pos"><i class="fas fa-home "></i> DASHBOARD</a>
                 <a href="/pos/pos/" class="active"><i class="fas fa-cash-register"></i> POS</a>
                 <a href="#"><i class="fas fa-book"></i> CASHBOOK</a>
                 <a href="/pos/invoice/list"><i class="fas fa-file-invoice"></i> INVOICE</a>
@@ -171,12 +182,12 @@ include('../includes/header.php');
                 <!-- Product Grid -->
                 <div class="product-grid" id="product-grid">
                     <?php while($product = mysqli_fetch_assoc($products_result)): 
-                        $stock = floatval($product['opening_stock']);
+                        $stock = floatval($product['store_stock']);
                         $alert_qty = floatval($product['alert_quantity'] ?? 5);
                         $is_out_of_stock = $stock <= 0;
                         $is_low_stock = $stock > 0 && $stock <= $alert_qty;
                     ?>
-                        <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" data-id="<?= $product['id']; ?>" data-name="<?= htmlspecialchars($product['product_name']); ?>" data-price="<?= $product['selling_price']; ?>" data-category="<?= $product['category_id']; ?>" data-stock="<?= $stock; ?>">
+                        <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" data-id="<?= $product['id']; ?>" data-name="<?= htmlspecialchars($product['product_name']); ?>" data-price="<?= $product['selling_price']; ?>" data-category="<?= $product['category_id']; ?>" data-stock="<?= $stock; ?>" onclick="openProductDetails(<?= $product['id']; ?>)" style="cursor: pointer;">
                             <?php if($is_out_of_stock): ?>
                                 <div class="stock-badge out-of-stock">Out of Stock</div>
                             <?php elseif($is_low_stock): ?>
@@ -190,15 +201,15 @@ include('../includes/header.php');
                             <div class="info">
                                 <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
                                 <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
-                                <div class="stock">Stock: <?= $product['opening_stock']; ?> <?= $product['unit_name'] ?? 'pcs'; ?></div>
+                                <div class="stock">Stock: <?= number_format($stock, 0); ?></div>
                             </div>
                             <?php if($is_out_of_stock): ?>
                                 <button class="add-btn out-of-stock-btn" disabled>
                                     <i class="fas fa-ban"></i> Out of Stock
                                 </button>
                             <?php else: ?>
-                                <button class="add-btn" onclick="addToCart(<?= $product['id']; ?>, '<?= htmlspecialchars($product['product_name'], ENT_QUOTES); ?>', <?= $product['selling_price']; ?>)">
-                                    <i class="fas fa-cart-plus"></i> Add To Cart
+                                <button class="add-btn" onclick="openProductDetails(<?= $product['id']; ?>)">
+                                    <i class="fas fa-eye"></i> View Details
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -326,6 +337,245 @@ include('../includes/header.php');
     </main>
 </div>
 
+
+
+<!-- Product Details Modal (Unique Design) -->
+<style>
+    .pd-grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+    @media (max-width: 768px) {
+        .pd-grid-layout {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        #productDetailsModal .pos-modal-content {
+            height: 95vh;
+            max-height: 95vh;
+        }
+
+            /* Mobile Layout Override: Strict Grid (No Scroll) */
+            @media (max-width: 480px) {
+                .pd-gallery-wrapper {
+                    position: static !important;
+                    top: auto !important;
+                }
+
+                .pd-mobile-scroll-container {
+                    display: block !important;
+                    overflow: visible !important;
+                    padding: 0;
+                    margin: 0;
+                }
+                
+                #pd-main-image-container {
+                    width: 100% !important;
+                    flex: none !important;
+                    height: auto !important;
+                    aspect-ratio: 1/1;
+                    margin-bottom: 15px !important;
+                }
+                
+                /* Gallery Grid 4 Cols */
+                #pd-gallery {
+                    display: grid !important;
+                    grid-template-columns: repeat(4, 1fr) !important;
+                    gap: 10px !important;
+                    overflow: visible !important;
+                    white-space: normal !important;
+                    padding-bottom: 0 !important;
+                    justify-content: start !important;
+                }
+                
+                #pd-gallery img {
+                    width: 100% !important;
+                    height: auto !important;
+                    aspect-ratio: 1/1;
+                    flex: none !important;
+                    margin: 0 !important;
+                }
+                
+                #pd-gallery button { display: none !important; }
+
+            /* --- NEW MOBILE LAYOUT OVERRIDES --- */
+            /* Force rows on mobile (overrides pos.css global stacking) */
+            .pd-mobile-row {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 10px !important;
+                flex-wrap: nowrap !important;
+            }
+
+            /* Header specific: ensure justification works */
+            .pd-header-mobile.pd-mobile-row {
+                justify-content: space-between !important;
+            }
+
+            /* Extra Info: strict 2 Cols (Match Image) */
+            .pd-extra-info-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+                font-size: 10px !important;
+            }
+            
+            /* Cart Actions: Stacked 100% width */
+            .pd-cart-actions.pd-mobile-row {
+                flex-direction: column !important;
+                width: 100%;
+                gap: 10px !important;
+                margin-bottom: 25px !important;
+            }
+            .pd-cart-actions > div, 
+            .pd-cart-actions > button {
+                width: 100% !important;
+                justify-content: center;
+            }
+            .pd-cart-actions > div {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important; 
+                padding: 10px !important;
+            }
+
+            /* Stock Info: Flex Row (Name Left, Qty/Loc Right) */
+            .pd-stock-row {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                border-bottom: 1px dashed #f1f5f9;
+                padding: 10px 0;
+                width: 100%;
+                gap: 10px;
+            }
+            /* Reset Grid Children Styles */
+            .pd-stock-row > * {
+                display: block !important; 
+                width: auto !important;
+            }
+        }
+    }
+</style>
+<div class="pos-modal" id="productDetailsModal" style="display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.7); padding: 10px;">
+    <div class="pos-modal-content" style="width: 95%; max-width: 900px; max-height: 90vh; border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5); display: flex; flex-direction: column; background: #fff; margin: auto;">
+        
+        <!-- Header -->
+        <div class="pd-header-mobile pd-mobile-row" style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+             <div>
+                <span id="pd-category" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #0d9488; background: #ecfdf5; padding: 4px 10px; border-radius: 4px;">Category</span>
+             </div>
+             <button onclick="closeModal('productDetailsModal')" style="width: 32px; height: 32px; background: #f1f5f9; border: none; border-radius: 50%; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                <i class="fas fa-times" style="font-size: 14px;"></i>
+            </button>
+        </div>
+
+         <div class="pos-modal-body no-scrollbar" style="padding: 30px; overflow-y: auto; flex: 1; background: #fff;">
+            
+            <div class="pd-grid-layout">
+                
+                <!-- Left Column: Gallery -->
+                <div class="pd-gallery-wrapper" style="background: #f8fafc; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; position: sticky; top: 0;">
+                     
+                     <div class="pd-mobile-scroll-container">
+                         <div id="pd-main-image-container" style="width: 100%; aspect-ratio: 1/1; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px;">
+                             <img id="pd-image" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                             <div id="pd-stock-badge" style="position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; background: #ef4444; display: none;">Out of Stock</div>
+                             
+                             <!-- Gallery Controls -->
+                             <button id="pd-prev-btn" onclick="changeGalleryImage(-1)" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #0d9488; border: 1px solid #0d9488; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; color: #ffffff;">
+                                <i class="fas fa-chevron-left"></i>
+                             </button>
+                             <button id="pd-next-btn" onclick="changeGalleryImage(1)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #0d9488; border: 1px solid #0d9488; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; color: #ffffff;">
+                                <i class="fas fa-chevron-right"></i>
+                             </button>
+                        </div>
+                        <!-- Thumbnails Strip -->
+                        <div id="pd-gallery" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <!-- Thumbnails injected here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Details & Extra Info -->
+                <div>
+                     <h2 id="pd-name" style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 10px 0; line-height: 1.2;">Product Name</h2>
+                     
+                     <div class="pd-mobile-row" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span id="pd-price" style="font-size: 28px; font-weight: 800; color: #0d9488;">৳0.00</span>
+                        <span id="pd-unit" style="font-size: 13px; font-weight: 600; color: #94a3b8; background: #f1f5f9; padding: 4px 10px; border-radius: 20px;">Unit</span>
+                    </div>
+
+                    <p id="pd-description" style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px dashed #e2e8f0;">
+                        Product description...
+                    </p>
+                    
+                    <!-- Extra Info Grid -->
+                    <div class="pd-extra-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #e2e8f0;">
+                       <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Brand</span>
+                           <span id="pd-brand" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                       <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Product Code</span>
+                           <span id="pd-code" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                       <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Barcode Type</span>
+                           <span id="pd-barcode" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                        <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Tax</span>
+                           <span id="pd-tax" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                       <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Tax Method</span>
+                           <span id="pd-tax-method" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                        <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Alert Quantity</span>
+                           <span id="pd-alert-qty" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                    </div>
+
+                    <!-- Stock Info -->
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 25px;">
+                        <h4 class="pd-mobile-row" style="margin: 0 0 10px 0; font-size: 13px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-warehouse text-teal-600"></i> Stock Availability
+                        </h4>
+                        <div id="pd-stock-list" class="invisible-scrollbar" style="max-height: 150px; overflow-y: auto;"></div>
+                    </div>
+
+                    <!-- Cart Actions -->
+                    <div class="pd-cart-actions pd-mobile-row" style="display: flex; gap: 12px; margin-bottom: 30px;">
+                         <div style="display: flex; align-items: center; background: #f1f5f9; border-radius: 10px; padding: 4px;">
+                            <button onclick="adjustModalQty(-1)" style="width: 36px; height: 36px; border: none; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; color: #334155;">-</button>
+                            <input type="number" id="pd-qty-input" value="1" min="1" onclick="this.select()" style="width: 50px; text-align: center; border: none; background: transparent; font-size: 16px; font-weight: 700; outline: none;">
+                            <button onclick="adjustModalQty(1)" style="width: 36px; height: 36px; border: none; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; color: #334155;">+</button>
+                        </div>
+                        <button id="pd-add-btn" onclick="addToCartFromModal()" style="flex: 1; border: none; background: #0d9488; color: white; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-cart-shopping"></i> Add to Cart
+                        </button>
+                    </div>
+
+                    <!-- Related Items (Moved here) -->
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                        <h4 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 15px;">Related Items</h4>
+                        <div id="pd-related-list" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Related Products Injected Here -->
+                             <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">Loading...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+         </div>
+    </div>
+</div>
+
 <!-- Payment Modal -->
 <?php include('../includes/payment_modal.php'); ?>
 
@@ -333,6 +583,37 @@ include('../includes/header.php');
 <?php include('../includes/order_hold_modal.php'); ?>
 
 
+
+
+<!-- Fullscreen Lightbox Modal -->
+<div class="pos-modal" id="lightboxModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center;">
+    
+    <!-- Close Button -->
+    <button onclick="closeModal('lightboxModal')" style="position: absolute; top: 30px; right: 30px; background: #0d9488; border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 10002; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <i class="fas fa-times"></i>
+    </button>
+    
+    <!-- Nav Left -->
+    <button onclick="changeLightboxImage(-1)" style="position: absolute; left: 5%; background: #0d9488; border: none; color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10002; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <i class="fas fa-chevron-left" style="font-size: 20px;"></i>
+    </button>
+    
+    <!-- Image Container (70% Screen) -->
+    <div style="width: 70vw; height: 70vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+        <img id="lightbox-image" src="" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.1s ease-out; cursor: grab;">
+        
+        <!-- Caption Bar -->
+        <div id="lightbox-caption" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; backdrop-filter: blur(4px);">
+            <span id="lightbox-title" style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Product Name</span>
+            <span id="lightbox-counter" style="font-weight: 400; font-size: 12px; opacity: 0.9;">1 of 1</span>
+        </div>
+    </div>
+
+    <!-- Nav Right -->
+    <button onclick="changeLightboxImage(1)" style="position: absolute; right: 5%; background: #0d9488; border: none; color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10002; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <i class="fas fa-chevron-right" style="font-size: 20px;"></i>
+    </button>
+</div>
 
 <!-- Customer Select Modal -->
 <div class="pos-modal" id="customerSelectModal">
@@ -919,6 +1200,48 @@ include('../includes/header.php');
     </div>
 </div>
 
+
+<!-- Welcome Modal (Informational) -->
+<div class="pos-modal" id="welcomeModal" onclick="closeWelcomeModal(); event.preventDefault(); event.stopPropagation();" style="display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); background: rgba(0,0,0,0.8); z-index: 9999; padding: 20px; position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh;">
+    <div class="pos-modal-content" onclick="closeWelcomeModal(); event.preventDefault(); event.stopPropagation();" style="width: 95%; max-width: 480px; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); background: #ffffff; animation: modal-pop 0.3s ease-out; margin: auto; cursor: pointer;">
+        <div style="padding: 40px; text-align: center;">
+            <div style="width: 80px; height: 80px; background: #ccfbf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto;">
+                <i class="fas fa-store" style="font-size: 32px; color: #0d9488;"></i>
+            </div>
+            
+            <h2 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px;">Welcome to Point of Sale</h2>
+            
+            <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                To begin processing sales, please select your 
+                <strong style="color: #0d9488;">Store</strong> and 
+                <strong style="color: #0d9488;">Customer</strong> 
+                from the dashboard.
+            </p>
+            <div style="background: #f8fafc; border-radius: 16px; padding: 20px; text-align: left; margin-bottom: 30px; border: 1px dashed #cbd5e1;">
+                <div class="welcome-step-item">
+                    <div style="width: 24px; height: 24px; background: #0d9488; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">
+                        <i class="fas fa-store" style="font-size: 10px;"></i>
+                    </div>
+                    <span class="welcome-step-text">Select active store from top menu</span>
+                </div>
+                <div class="welcome-step-item" style="margin-bottom: 0;">
+                     <div style="width: 24px; height: 24px; background: #0d9488; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">
+                        <i class="fas fa-user" style="font-size: 10px;"></i>
+                     </div>
+                    <span class="welcome-step-text">Choose "Walking Customer" or find one</span>
+                </div>
+            </div>
+
+            <button onclick="closeWelcomeModal(); event.stopPropagation();" style="width: 100%; padding: 16px; background: #0d9488; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s, background 0.2s; margin-top: 10px;" onmouseover="this.style.background='#0f766e'" onmouseout="this.style.background='#0d9488'">
+                 Dismiss & Start Selling
+            </button>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
+                Press <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ESC</span> or <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ENTER</span> to close
+            </p>
+        </div>
+    </div>
+</div>
 
 <!-- Invoice Modal -->
 <?php include('../includes/invoice_modal.php'); ?>

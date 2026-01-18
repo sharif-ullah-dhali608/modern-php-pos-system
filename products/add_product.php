@@ -304,7 +304,7 @@ include('../includes/header.php');
                                     <i class="fas fa-warehouse text-teal-600"></i> Inventory Setup
                                 </h3>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Opening Stock</label>
                                         <input type="number" name="opening_stock" id="opening_stock" value="<?= $d['opening_stock']; ?>" class="w-full bg-blue-50/30 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
@@ -318,13 +318,7 @@ include('../includes/header.php');
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Expire Date</label>
                                         <input type="date" name="expire_date" value="<?= $d['expire_date']; ?>" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">
                                     </div>
-                                </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5">
-                                    <div class="form-group">
-                                        <label class="block text-sm font-semibold text-slate-700 mb-2">Alert Qty</label>
-                                            <input type="number" name="alert_quantity" value="<?= $d['alert_quantity']; ?>" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 outline-none">
-                                    </div>
                                     <div class="form-group">
                                         <label class="block text-sm font-semibold text-slate-700 mb-2">Sort Order</label>
                                         <input type="number" name="sort_order" id="sort_order" value="<?= $d['sort_order'] ?? '0'; ?>" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none">

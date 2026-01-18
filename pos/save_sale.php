@@ -121,6 +121,33 @@ function processPayment($conn, $user_id) {
         ]);
         return;
     }
+
+    // 0. STOCK VALIDATION (Server-Side)
+    foreach($cart as $item) {
+        $item_id = intval($item['id']);
+        $req_qty = floatval($item['quantity'] ?? $item['qty'] ?? 1);
+        $item_name = $item['name'];
+
+        // Check stock in product_store_map
+        $stock_query = mysqli_query($conn, "SELECT stock FROM product_store_map WHERE product_id = $item_id AND store_id = $store_id");
+        if ($stock_query && mysqli_num_rows($stock_query) > 0) {
+            $row = mysqli_fetch_assoc($stock_query);
+            $current_stock = floatval($row['stock']);
+            if ($req_qty > $current_stock) {
+                echo json_encode(['success' => false, 'message' => "Insufficient stock for '$item_name'. Available: $current_stock"]);
+                return;
+            }
+        } else {
+            // Check global stock if not in map (fallback)
+            $stock_query = mysqli_query($conn, "SELECT opening_stock FROM products WHERE id = $item_id");
+            $row = mysqli_fetch_assoc($stock_query);
+            $current_stock = floatval($row['opening_stock']);
+            if ($req_qty > $current_stock) {
+                 echo json_encode(['success' => false, 'message' => "Insufficient stock for '$item_name'. Available: $current_stock"]);
+                 return;
+            }
+        }
+    }
     
     mysqli_begin_transaction($conn);
     
@@ -494,7 +521,27 @@ function holdOrder($conn, $user_id) {
         echo json_encode([
             'success' => true, 
             'message' => 'Order held successfully',
-            'ref_no' => $ref_no
+            'order' => [
+                'invoice_id' => $ref_no,
+                'invoice_note' => $note,
+                'customer_name' => $customer_name,
+                'created_at' => date('Y-m-d H:i:s'),
+                'total_items' => count($cart),
+                'grand_total' => $grand_total,
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'item_tax' => $tax_amount,
+                'shipping_amount' => $shipping,
+                'others_charge' => $other_charge,
+                'items' => array_map(function($item) {
+                     return [
+                         'item_name' => $item['name'],
+                         'item_price' => $item['price'],
+                         'item_quantity' => $item['qty'],
+                         'item_total' => $item['price'] * $item['qty']
+                     ];
+                }, $cart)
+            ]
         ]);
         
     } catch(Exception $e) {

@@ -11,7 +11,7 @@
             <div style="display: grid; grid-template-columns: 250px 1fr; min-height: 500px;">
                 <!-- Left Sidebar - Payment Methods -->
                 <div style="background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 20px;">
-                    <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Payment Method:</h4>
+                    <h4 style="display: flex; align-items: center; justify-content: center; margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Payment Method</h4>
                     <div class="payment-methods-grid">
                         <!-- Special Payment Methods (Hidden by default) -->
                         <div id="pm-opening-balance" class="sidebar-payment-method" data-id="opening_balance" onclick="selectPaymentMethod(this, 'opening_balance')" style="display: none;">
@@ -61,7 +61,7 @@
                 <div style="padding: 20px;">
                     <!-- Payment Method Buttons -->
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b;">Payment Method:</h4>
+                        <!-- <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b;">Payment Method:</h4> -->
                         <div style="display: inline-flex; gap: 10px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
                             <button class="payment-type-btn active" data-type="full" onclick="setPaymentType('full')" style="padding: 10px 30px; border: none; background: #10b981; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
                                 <i class="fas fa-check-circle"></i> FULL PAYMENT
