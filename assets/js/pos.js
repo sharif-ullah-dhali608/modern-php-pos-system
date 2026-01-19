@@ -2509,7 +2509,7 @@ window.openProductDetails = function (productId) {
                     if (resp.related_products && resp.related_products.length > 0) {
                         resp.related_products.forEach(rp => {
                             const item = document.createElement('div');
-                            item.className = 'val-related-item'; // For hover effect if added in CSS
+                            item.className = 'val-related-item';
                             item.style.display = 'flex';
                             item.style.alignItems = 'center';
                             item.style.gap = '10px';
@@ -2524,11 +2524,12 @@ window.openProductDetails = function (productId) {
                             item.onmouseover = () => { item.style.borderColor = '#0d9488'; item.style.transform = 'translateY(-2px)'; };
                             item.onmouseout = () => { item.style.borderColor = '#e2e8f0'; item.style.transform = 'translateY(0)'; };
 
+                            // Updated innerHTML with gap and flex: 1
                             item.innerHTML = `
                                 <img src="${rp.thumbnail}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
-                                <div>
+                                <div style="flex: 1; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 8px;">
                                     <div style="font-size: 12px; font-weight: 600; color: #1e293b; line-height: 1.2; margin-bottom: 2px;">${rp.product_name}</div>
-                                    <div style="font-size: 11px; font-weight: 700; color: #0d9488;">৳${parseFloat(rp.selling_price).toFixed(2)}</div>
+                                    <div style="font-size: 11px; font-weight: 700; color: #0d9488; white-space: nowrap;">৳${parseFloat(rp.selling_price).toFixed(2)}</div>
                                 </div>
                             `;
                             relatedList.appendChild(item);
@@ -2676,6 +2677,11 @@ function handleSaleSuccess(response) {
     if (!response || !response.success) return;
 
     closeModal('paymentModal');
+
+    // Reset payment modal to defaults (Full Payment + Cash)
+    if (typeof resetPaymentModal === 'function') {
+        resetPaymentModal();
+    }
 
     // Reset Data silently
     cart = [];
