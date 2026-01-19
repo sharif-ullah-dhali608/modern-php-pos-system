@@ -58,6 +58,11 @@ window.openPaymentModal = function (config) {
 
     // Update applied payments UI
     updateAppliedPaymentsUI();
+
+    // Set default: Full Payment + Cash selected
+    setTimeout(() => {
+        setPaymentType('full', false, false); // Auto-select Cash
+    }, 100);
 };
 
 // Close modal helper
@@ -102,6 +107,7 @@ function selectPaymentMethod(element, id) {
     let label = '';
     let icon = '';
     let isSpecial = false;
+    let isCashMethod = false;
 
     if (id === 'opening_balance') {
         balance = parseFloat(document.getElementById('customer_opening_balance').value) || 0;
@@ -114,18 +120,27 @@ function selectPaymentMethod(element, id) {
         icon = 'fa-gift';
         isSpecial = true;
     } else if (id === 'credit') {
-        // Pay Later case: Keep legacy behavior for now or unify? 
-        // User said "Pay Later" is credit. Let's keep it as is for now unless specifically asked to apply amount.
-        // Actually, user said "Apply Wallet modal er motw jotw payment method ache sob method eii Apply Wallet modal er motw modal dekhabe"
-        // So EVERY method including cash/nagad/etc needs a modal.
-        document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
-            pm.style.background = 'white';
-            pm.style.borderColor = '#e2e8f0';
-        });
-        element.style.background = '#e0f2fe';
-        element.style.borderColor = '#0d9488';
-        selectedPaymentMethod = id;
-        setPaymentType('due'); // Auto-switch to due mode
+        // Pay Later: Check if there are applied payments
+        const hasAppliedPayments = appliedPayments.length > 0;
+
+        if (!hasAppliedPayments) {
+            // No payments applied - Full Due mode
+            document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
+                pm.style.background = 'white';
+                pm.style.borderColor = '#e2e8f0';
+            });
+            element.style.background = '#e0f2fe';
+            element.style.borderColor = '#0d9488';
+            selectedPaymentMethod = id;
+            setPaymentType('due', false, true); // Auto-switch to due mode
+        } else {
+            // Has applied payments - Keep them, stay in Partial mode
+            // Just highlight Pay Later without clearing payments
+            element.style.background = '#e0f2fe';
+            element.style.borderColor = '#0d9488';
+            selectedPaymentMethod = id;
+            // Don't change payment type - stay in Partial
+        }
         return;
     } else {
         // Standard methods (Cash, Nagad, etc.)
@@ -133,6 +148,13 @@ function selectPaymentMethod(element, id) {
         label = pmEl ? pmEl.textContent : 'Payment';
         const iconEl = element.querySelector('i');
         icon = iconEl ? Array.from(iconEl.classList).find(c => c.startsWith('fa-')) : 'fa-money-bill';
+
+        // Check if this is the Cash method (code='cash')
+        const methodElement = element.closest('.sidebar-payment-method');
+        if (methodElement && methodElement.dataset.id) {
+            // Get the payment method code from the element or check label
+            isCashMethod = label.toLowerCase().includes('cash');
+        }
     }
 
     if (isSpecial && balance <= 0) {
@@ -199,14 +221,12 @@ function selectPaymentMethod(element, id) {
                 Swal.showValidationMessage('Please enter a valid amount');
                 return false;
             }
-            if (value > balance) {
+            // Only check balance limit for special methods (Wallet, Gift Card)
+            if (isSpecial && value > balance) {
                 Swal.showValidationMessage('Amount exceeds available balance');
                 return false;
             }
-            if (value > (totalPayable - alreadyAppliedTotal + 0.01)) {
-                Swal.showValidationMessage('Amount exceeds total payable');
-                return false;
-            }
+            // For regular methods (Cash, Rocket, etc.), allow overpayment for change
             return value;
         }
     }).then((result) => {
@@ -218,18 +238,24 @@ function selectPaymentMethod(element, id) {
                 appliedPayments.push({ type: id, amount: amount, label: label });
             }
 
-            // For universal mode, we select the method as the "primary" if it's the only one, 
-            // or just keep selectedPaymentMethod if it was already set.
-            if (!selectedPaymentMethod || selectedPaymentMethod === 'credit') {
-                selectedPaymentMethod = id;
-                // Highlight the element
-                document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
-                    pm.style.background = 'white';
-                    pm.style.borderColor = '#e2e8f0';
-                });
-                element.style.background = '#e0f2fe';
-                element.style.borderColor = '#0d9488';
-            }
+            // Clear all payment method highlights first
+            document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
+                pm.style.background = 'white';
+                pm.style.borderColor = '#e2e8f0';
+            });
+
+            // Re-highlight ALL applied payment methods
+            appliedPayments.forEach(payment => {
+                const methodEl = document.querySelector(`.sidebar-payment-method[data-id="${payment.type}"]`) ||
+                    document.getElementById(`pm-${payment.type}`);
+                if (methodEl) {
+                    methodEl.style.background = '#e0f2fe';
+                    methodEl.style.borderColor = '#0d9488';
+                }
+            });
+
+            // Set as selected payment method
+            selectedPaymentMethod = id;
 
             updateAppliedPaymentsUI();
 
@@ -240,8 +266,18 @@ function selectPaymentMethod(element, id) {
                 amountInput.value = totalApplied.toFixed(2);
             }
 
-            // Auto-switch to partial mode (Custom/Split)
-            setPaymentType('partial', true);
+            // Update payment calculations to reflect new total
+            updatePaymentCalculations();
+
+            // Auto-switch to partial mode if multiple methods, or keep current for single method
+            if (appliedPayments.length > 1) {
+                setPaymentType('partial', true, true);
+            } else if (appliedPayments.length === 1 && isCashMethod) {
+                // Single Cash payment - switch to full but keep the input value
+                setPaymentType('full', true, true);
+            } else {
+                setPaymentType('partial', true, true);
+            }
         }
     });
 }
@@ -276,12 +312,32 @@ function updateAppliedPaymentsUI() {
 }
 
 function removeAppliedPayment(index) {
+    const removedPayment = appliedPayments[index];
+
+    // Un-highlight the removed payment method
+    if (removedPayment && removedPayment.type) {
+        const methodElement = document.querySelector(`.sidebar-payment-method[data-id="${removedPayment.type}"]`) ||
+            document.getElementById(`pm-${removedPayment.type}`);
+        if (methodElement) {
+            methodElement.style.background = 'white';
+            methodElement.style.borderColor = '#e2e8f0';
+        }
+    }
+
     appliedPayments.splice(index, 1);
+
+    // Update the amount input with new total
+    const amountInput = document.getElementById('amount-received');
+    if (amountInput) {
+        const totalApplied = appliedPayments.reduce((sum, p) => sum + p.amount, 0);
+        amountInput.value = totalApplied.toFixed(2);
+    }
+
     updateAppliedPaymentsUI();
     updatePaymentCalculations();
 }
 
-function setPaymentType(type, keepInput = false) {
+function setPaymentType(type, keepInput = false, skipAutoSelect = false) {
     document.querySelectorAll('.payment-type-btn').forEach(btn => {
         btn.classList.remove('active');
         btn.style.background = 'transparent';
@@ -295,6 +351,17 @@ function setPaymentType(type, keepInput = false) {
         }
     });
 
+    // Auto-select payment method based on type (unless skipAutoSelect)
+    if (!skipAutoSelect) {
+        if (type === 'full') {
+            // Auto-select Cash method
+            autoSelectCashMethod();
+        } else if (type === 'due') {
+            // Auto-select Pay Later method for Full Due
+            autoSelectPayLaterMethod();
+        }
+    }
+
     // Handle button behavior
     const amountInput = document.getElementById('amount-received');
     const totalPayableEl = document.getElementById('payment-total-payable');
@@ -303,7 +370,10 @@ function setPaymentType(type, keepInput = false) {
     if (!amountInput) return;
 
     if (type === 'full') {
-        amountInput.value = totalPayable.toFixed(2);
+        // Only reset to full amount if keepInput is false
+        if (!keepInput) {
+            amountInput.value = totalPayable.toFixed(2);
+        }
         updatePaymentCalculations();
     } else if (type === 'partial') {
         // If clicking manually (not from apply method), clear it to 0
@@ -313,10 +383,65 @@ function setPaymentType(type, keepInput = false) {
         }
         updatePaymentCalculations();
     } else {
-        // Due (Full Due / Pay Later)
+        // Due (Full Due / Pay Later) - Clear any applied payments
+        appliedPayments = [];
+        updateAppliedPaymentsUI();
         amountInput.value = '0.00';
         updatePaymentCalculations();
     }
+}
+
+// Helper: Auto-select Cash payment method
+function autoSelectCashMethod() {
+    // Find Cash method (look for method with 'cash' in name or code)
+    const cashMethod = Array.from(document.querySelectorAll('.sidebar-payment-method')).find(el => {
+        const nameEl = el.querySelector('.pm-name');
+        return nameEl && nameEl.textContent.toLowerCase().includes('cash');
+    });
+
+    if (cashMethod && cashMethod.dataset.id) {
+        // Clear all selections
+        document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
+            pm.style.background = 'white';
+            pm.style.borderColor = '#e2e8f0';
+        });
+        // Select Cash
+        cashMethod.style.background = '#e0f2fe';
+        cashMethod.style.borderColor = '#0d9488';
+        selectedPaymentMethod = cashMethod.dataset.id;
+    }
+}
+
+// Helper: Auto-select Pay Later method
+function autoSelectPayLaterMethod() {
+    const payLaterMethod = document.getElementById('pm-credit');
+    if (payLaterMethod) {
+        // Clear all selections
+        document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
+            pm.style.background = 'white';
+            pm.style.borderColor = '#e2e8f0';
+        });
+        // Select Pay Later
+        payLaterMethod.style.background = '#e0f2fe';
+        payLaterMethod.style.borderColor = '#0d9488';
+        selectedPaymentMethod = 'credit';
+    }
+}
+
+// Reset payment modal to defaults (called after checkout)
+window.resetPaymentModal = function () {
+    // Clear all payment method highlights
+    document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
+        pm.style.background = 'white';
+        pm.style.borderColor = '#e2e8f0';
+    });
+
+    // Clear applied payments
+    appliedPayments = [];
+    updateAppliedPaymentsUI();
+
+    // Reset to Full Payment + Cash selected
+    setPaymentType('full', false, false);
 }
 
 // Removed switchTab as UI is now single-view as per user image
@@ -406,6 +531,7 @@ function updatePaymentCalculations() {
     if (document.getElementById('payment-paid')) document.getElementById('payment-paid').textContent = totalPaidFromUser.toFixed(2);
     if (document.getElementById('payment-due')) document.getElementById('payment-due').textContent = due.toFixed(2);
     if (document.getElementById('payment-balance')) document.getElementById('payment-balance').textContent = balance.toFixed(2);
+    if (document.getElementById('change-amount')) document.getElementById('change-amount').textContent = balance.toFixed(2);
 
     // Update checkout button state for Walking Customer (who can't have due)
     const completeBtn = document.querySelector('.complete-btn');

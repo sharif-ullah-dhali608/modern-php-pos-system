@@ -98,7 +98,7 @@ function processPayment($conn, $user_id) {
     foreach($cart as $item) {
         $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
     }
-    $tax_amount = ($subtotal * $tax_percent) / 100;
+    $tax_amount = (($subtotal - $discount) * $tax_percent) / 100;
     $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
     
     // Calculate total paid including applied payments (bKash, Nagad, Giftcard, etc.)
@@ -157,7 +157,7 @@ function processPayment($conn, $user_id) {
         foreach($cart as $item) {
             $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
         }
-        $tax_amount = ($subtotal * $tax_percent) / 100;
+        $tax_amount = (($subtotal - $discount) * $tax_percent) / 100;
         $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
         
         // 2. Generate invoice ID and get mobile

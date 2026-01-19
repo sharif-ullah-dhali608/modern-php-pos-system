@@ -1,0 +1,560 @@
+/* Payment Modal Styles */
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.payment-method {
+    padding: 16px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-method:hover {
+    border-color: #0d9488;
+    background: #f0fdfa;
+}
+
+.payment-method.selected {
+    border-color: #0d9488;
+    background: #ccfbf1;
+}
+
+.payment-method i {
+    font-size: 24px;
+    color: #0d9488;
+    margin-bottom: 6px;
+}
+
+.payment-method span {
+    display: block;
+    font-weight: 600;
+    font-size: 12px;
+    color: #1e293b;
+}
+
+.payment-summary {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.payment-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+}
+
+.payment-row.grand-total {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d9488;
+    border-top: 2px solid #e2e8f0;
+    margin-top: 10px;
+    padding-top: 14px;
+}
+
+.payment-input-group {
+    margin-bottom: 14px;
+}
+
+.payment-input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #475569;
+    font-size: 13px;
+}
+
+.payment-input-group input,
+.payment-input-group select,
+.payment-input-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.payment-input-group input:focus,
+.payment-input-group select:focus {
+    outline: none;
+    border-color: #0d9488;
+}
+
+.change-display {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.change-display .label {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.change-display .amount {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+/* Payment Modal Sticky Footer */
+#paymentModal {
+    overflow: hidden !important;
+    /* Prevent modal itself from scrolling */
+}
+
+#paymentModal .pos-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 1000px;
+    max-width: 1000px;
+    overflow: hidden;
+    /* Prevent content wrapper from scrolling */
+}
+
+#paymentModal .pos-modal-header {
+    flex-shrink: 0;
+}
+
+#paymentModal .pos-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    /* Only body scrolls */
+    overflow-x: hidden;
+    padding: 0;
+}
+
+#paymentModal .pos-modal-footer {
+    flex-shrink: 0;
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    background: white;
+    border-top: 2px solid #e2e8f0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+/* Mobile Responsive Styles for Payment Modal */
+@media (max-width: 768px) {
+
+    /* Payment Modal - full width on mobile */
+    #paymentModal .pos-modal-content {
+        max-width: 100% !important;
+    }
+
+    #paymentModal .pos-modal-body>div[style*="grid"] {
+        display: block !important;
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Payment methods sidebar - 4 per row */
+    .payment-methods-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+    }
+
+    .sidebar-payment-method {
+        padding: 8px 4px !important;
+        flex-direction: column !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        font-size: 8px !important;
+        gap: 3px !important;
+        min-width: auto !important;
+        height: auto !important;
+    }
+
+    /* Selected Payment Method Style - Mobile */
+    .sidebar-payment-method.selected {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2) !important;
+    }
+
+    .sidebar-payment-method.selected i,
+    .sidebar-payment-method.selected span,
+    .sidebar-payment-method.selected div {
+        color: white !important;
+    }
+
+    .sidebar-payment-method i {
+        font-size: 16px !important;
+        width: auto !important;
+    }
+
+    .sidebar-payment-method span,
+    .sidebar-payment-method div {
+        font-size: 7px !important;
+        line-height: 1.1 !important;
+        word-break: break-word !important;
+    }
+
+    .sidebar-payment-method>div[style*="flex: 1"] {
+        flex: none !important;
+    }
+
+    /* Payment Modal Header - Fix for mobile */
+    #paymentModal .pos-modal-header {
+        padding: 10px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px;
+    }
+
+    #paymentModal .pos-modal-header h3 {
+        font-size: 11px !important;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+        flex: 1;
+    }
+
+    #paymentModal .pos-modal-header h3 i {
+        font-size: 14px;
+    }
+
+    #paymentModal .pos-modal-header span {
+        font-size: 10px;
+    }
+
+    #paymentModal .pos-modal-header .close-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+
+@media (max-width: 480px) {
+    #paymentModal .pos-modal-header .close-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Payment Modal - Vertical scroll */
+    #paymentModal {
+        overflow-y: auto !important;
+        padding: 10px !important;
+    }
+
+    #paymentModal .pos-modal-content {
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        margin: auto;
+    }
+
+    #paymentModal .pos-modal-body {
+        max-height: calc(90vh - 60px) !important;
+        overflow-y: auto !important;
+    }
+
+    /* Payment summary - 2 columns grid */
+    /* Target the summary container (div with background: #f8fafc) */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        padding: 8px !important;
+        gap: 0 !important;
+    }
+
+    /* Each summary row - 2 per row */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div[style*="display: flex"][style*="margin-bottom: 8px"] {
+        width: 48% !important;
+        margin: 1% !important;
+        padding: 6px 8px !important;
+        background: white !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        font-size: 10px !important;
+        box-sizing: border-box;
+    }
+
+    /* Payable row - full width */
+    /* Previous Due row (7th child) - full width */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div[style*="margin-bottom: 12px"][style*="border-bottom"] {
+        width: 100% !important;
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Payable Amount row - full width with green highlight */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div:has(span[style*="font-weight: 600"]):not(:has(span[style*="color: #10b981"])):not(:has(span[style*="color: #ef4444"])) {
+        width: 100% !important;
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5) !important;
+        border: 1px solid #34d399 !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        margin: 4px 0 !important;
+    }
+
+    /* Paid Amount row - full width */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div:has(span[style*="color: #10b981"]) {
+        width: 48% !important;
+        background: #f0fdf4 !important;
+        border: 1px solid #86efac !important;
+    }
+
+    /* Due Amount row - full width */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div:has(span[style*="color: #ef4444"]) {
+        width: 48% !important;
+        background: #fef2f2 !important;
+        border: 1px solid #fca5a5 !important;
+    }
+
+    /* Balance row - full width */
+    #paymentModal div[style*="background: #f8fafc"][style*="padding: 15px"]>div[style*="border-top: 2px"] {
+        width: 100% !important;
+        margin-top: 8px !important;
+        padding-top: 10px !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        padding: 8px !important;
+    }
+
+
+    /* Labels */
+    #paymentModal .pos-modal-body>div>div:last-child span:first-child {
+        font-size: 9px !important;
+        color: #64748b;
+    }
+
+    /* Values */
+    #paymentModal .pos-modal-body>div>div:last-child span:last-child {
+        font-size: 11px !important;
+        font-weight: 600;
+    }
+
+    /* Payment type buttons - SAME ROW */
+    #paymentModal div[style*="display: flex"][style*="gap: 10px"],
+    #paymentModal div[style*="display: flex"][style*="gap: 12px"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    #paymentModal div[style*="display: flex"][style*="gap: 10px"]>button,
+    #paymentModal div[style*="display: flex"][style*="gap: 12px"]>button,
+    #paymentModal div[style*="display: flex"][style*="gap: 10px"]>label,
+    #paymentModal div[style*="display: flex"][style*="gap: 12px"]>label {
+        flex: 1 !important;
+        min-width: 0 !important;
+        padding: 10px 6px !important;
+        font-size: 9px !important;
+        white-space: nowrap;
+        border-radius: 8px !important;
+    }
+
+    /* Input section */
+    #paymentModal div[style*="display: grid"][style*="gap: 15px"] {
+        display: block !important;
+    }
+
+    #paymentModal div[style*="display: grid"][style*="gap: 15px"]>div {
+        margin-bottom: 10px;
+    }
+
+    /* ============================================
+       UNIQUE PAYMENT MODAL DESIGN - MOBILE
+       ============================================ */
+
+    /* Modal container - glassmorphism style */
+    #paymentModal .pos-modal-content {
+        background: linear-gradient(145deg, #ffffff 0%, #f0f9ff 100%) !important;
+        border-radius: 20px !important;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    /* Header - gradient with pattern */
+    #paymentModal .pos-modal-header {
+        background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #0d9488 100%) !important;
+        padding: 12px 15px !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #paymentModal .pos-modal-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: shimmer 3s infinite;
+        pointer-events: none;
+    }
+
+    @keyframes shimmer {
+
+        0%,
+        100% {
+            transform: translateX(-20%) rotate(0deg);
+        }
+
+        50% {
+            transform: translateX(20%) rotate(5deg);
+        }
+    }
+
+    #paymentModal .pos-modal-header h3 {
+        font-size: 12px !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* Payment methods - pill style grid */
+    .sidebar-payment-method {
+        background: linear-gradient(145deg, #ffffff, #f1f5f9) !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 10px 6px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .sidebar-payment-method:hover,
+    .sidebar-payment-method.selected {
+        background: linear-gradient(145deg, #0d9488, #14b8a6) !important;
+        border-color: #0d9488 !important;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3) !important;
+    }
+
+    .sidebar-payment-method:hover i,
+    .sidebar-payment-method.selected i,
+    .sidebar-payment-method:hover span,
+    .sidebar-payment-method.selected span {
+        color: white !important;
+    }
+
+    .sidebar-payment-method i {
+        font-size: 18px !important;
+        color: #0d9488;
+        transition: all 0.3s !important;
+    }
+
+    /* Cart items section - card style */
+    #paymentModal [style*="border: 1px solid #e2e8f0"][style*="border-radius: 6px"] {
+        background: linear-gradient(145deg, #f8fafc, #f1f5f9) !important;
+        border-radius: 12px !important;
+        padding: 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Summary section - modern cards */
+    #paymentModal .pos-modal-body>div>div:last-child {
+        padding: 12px !important;
+    }
+
+    #paymentModal [style*="border-bottom: 1px solid #e2e8f0"] {
+        border-color: rgba(226, 232, 240, 0.5) !important;
+        padding: 6px 0 !important;
+    }
+
+    /* Totals styling */
+    #paymentModal [style*="font-weight: bold"],
+    #paymentModal [style*="font-weight: 600"] {
+        color: #0d9488 !important;
+    }
+
+    /* Payable amount - highlight card */
+    #paymentModal [style*="background: #f0fdf4"] {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+        border-radius: 12px !important;
+        padding: 10px !important;
+        margin: 8px 0 !important;
+        border: 1px solid #34d399 !important;
+    }
+
+    /* Paid/Due amounts - colored badges */
+    #paymentModal [style*="color: #10b981"] {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        font-weight: 700 !important;
+    }
+
+    #paymentModal [style*="color: #ef4444"] {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        font-weight: 700 !important;
+    }
+
+    /* Payment type buttons */
+    #paymentModal button[style*="border-radius: 8px"] {
+        border-radius: 12px !important;
+        padding: 10px 15px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #paymentModal button[style*="background: #10b981"],
+    #paymentModal button[style*="background: linear-gradient"] {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+
+    #paymentModal button:active {
+        transform: scale(0.98) !important;
+    }
+
+    /* Input fields - modern style */
+    #paymentModal input[type="number"],
+    #paymentModal input[type="text"] {
+        border-radius: 10px !important;
+        border: 2px solid #e2e8f0 !important;
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        transition: all 0.3s !important;
+    }
+
+    #paymentModal input:focus {
+        border-color: #14b8a6 !important;
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1) !important;
+    }
+
+    /* Scrollbar styling */
+    #paymentModal ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    #paymentModal ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    #paymentModal ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #14b8a6, #0d9488);
+        border-radius: 4px;
+    }
+}

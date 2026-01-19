@@ -1,6 +1,7 @@
+<link rel="stylesheet" href="/pos/assets/css/payment_method.css">
 <!-- Payment Modal -->
 <div class="pos-modal" id="paymentModal">
-    <div class="pos-modal-content" style="max-width: 900px;">
+    <div class="pos-modal-content">
         <div class="pos-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
             <h3><i class="fas fa-credit-card"></i> Payment - <span id="payment-customer-name">Walking Customer</span> (<span id="payment-customer-id">0170000000000</span>)</h3>
             <button class="close-btn" onclick="closeModal('paymentModal')" style="display: flex; align-items: center; justify-content: center;">
@@ -108,20 +109,22 @@
                                 </div>
                             </div>
                             
-                            <div class="payment-input-group" style="margin-bottom: 15px;">
-                                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #475569; font-weight: 600; font-size: 14px;">
-                                    <i class="fas fa-pencil-alt"></i> Note Here
-                                </label>
-                                <textarea id="payment-note" rows="3" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: none; font-size: 14px; transition: border-color 0.2s;" placeholder="Add payment note..."></textarea>
+                            <div style="margin-bottom: 15px;">
+                                <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; font-weight: 600;">Order Details</h4>
+                                <div id="payment-cart-items" style="max-height: 350px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc;">
+                                    <!-- Cart items will be inserted here -->
+                                </div>
                             </div>
                         </div>
                         </div>
                         
                         <!-- Right: Order Summary -->
                         <div>
-                            <h4 style="margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-align: right;">Order Details</h4>
-                            <div id="payment-cart-items" style="margin-bottom: 15px; max-height: 100px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; background: #f8fafc;">
-                                <!-- Cart items will be inserted here -->
+                            <div class="payment-input-group" style="margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #475569; font-weight: 600; font-size: 14px;">
+                                    <i class="fas fa-pencil-alt"></i> Note Here
+                                </label>
+                                <textarea id="payment-note" rows="3" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: none; font-size: 14px; transition: border-color 0.2s;" placeholder="Add payment note..."></textarea>
                             </div>
                             
                             <div id="applied-payments-section" style="margin-bottom: 12px; display: none; background: #f0fdf4; border: 1px dashed #10b981; border-radius: 8px; padding: 12px;">
@@ -187,18 +190,18 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Bottom Buttons -->
-                    <div style="display: flex; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <button onclick="closeModal('paymentModal')" style="flex: 1; padding: 12px; border: none; background: #ef4444; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
-                            <i class="fas fa-times"></i> Close
-                        </button>
-                        <button class="complete-btn" onclick="completeSale()" style="flex: 1; padding: 12px; border: none; background: #10b981; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
-                            <i class="fas fa-check-circle"></i> Checkout
-                        </button>
-                    </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Modal Footer - Sticky Action Buttons -->
+        <div class="pos-modal-footer">
+            <button onclick="closeModal('paymentModal')" style="flex: 1; padding: 12px; border: none; background: #ef4444; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                <i class="fas fa-times"></i> Close
+            </button>
+            <button class="complete-btn" onclick="completeSale()" style="flex: 1; padding: 12px; border: none; background: #10b981; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                <i class="fas fa-check-circle"></i> Checkout
+            </button>
         </div>
     </div>
 </div>
