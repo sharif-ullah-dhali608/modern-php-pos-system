@@ -275,13 +275,13 @@ $payments_result = mysqli_query($conn, $payments_query);
         <!-- Payments -->
         <?php if(mysqli_num_rows($payments_result) > 0): ?>
         <div class="mb-3">
-            <h4 class="font-bold border-bottom-dashed mb-1">Payments</h4>
+            <h4 class="font-bold border-bottom-dashed mb-1 pb-1">Payments</h4>
             <table>
                 <thead>
                    <tr>
-                       <th>SL</th>
-                       <th>Method</th>
-                       <th class="text-right">Amount</th>
+                       <th style="width: 10%">SL</th>
+                       <th style="width: 50%">Method</th>
+                       <th class="text-right" style="width: 40%">Amount</th>
                    </tr> 
                 </thead>
                 <tbody>
@@ -292,8 +292,11 @@ $payments_result = mysqli_query($conn, $payments_query);
                     ?>
                     <tr>
                         <td><?= $p_sl++; ?></td>
-                        <td><?= htmlspecialchars($pay['pmethod_name'] ?? 'Cash'); ?> <span class="text-[9px] text-gray-400"><?= date('d M Y', strtotime($pay['created_at'])); ?></span></td>
-                        <td class="text-right"><?= number_format($pay['amount'], 2); ?></td>
+                        <td>
+                            <div style="font-weight: 600;"><?= htmlspecialchars($pay['pmethod_name'] ?? 'Cash on Hand'); ?></div>
+                            <div class="text-[9px] text-gray-500"><?= date('d M Y, h:i A', strtotime($pay['created_at'])); ?></div>
+                        </td>
+                        <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($pay['amount'], 2); ?></td>
                     </tr>
                     <?php endwhile; ?>
                 </tbody>
@@ -308,9 +311,9 @@ $payments_result = mysqli_query($conn, $payments_query);
             </div>
             <div class="text-[9px] text-gray-500 mt-1">
                 Thank you for choosing us!<br>
-                For Support: support@pos.com
+                For Support: <?= htmlspecialchars($invoice['store_phone'] ?? ''); ?>
             </div>
-            <div class="text-[8px] text-gray-400 mt-1">@codecanoyn.net</div>
+            <div class="text-[8px] text-gray-400 mt-1">Developed by STS</div>
         </div>
 
         <!-- Action Buttons (Screen Only) -->

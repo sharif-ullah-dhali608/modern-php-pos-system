@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/date_filter_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: ../signin.php");
@@ -17,6 +18,9 @@ include('../includes/reusable_list.php');
 // Filter parameters
 $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 $filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
 
 // Fetch Customers for filter dropdown
 $customers_list = [];
@@ -45,13 +49,18 @@ if($filter_status == 'today') {
     $query .= " AND DATE(si.created_at) = '$today' ";
 }
 
+// Apply date filter
+applyDateFilter($query, 'si.created_at', $date_filter, $start_date, $end_date);
+
 $query .= "HAVING item_count > 0 ";
 
 // Filter by payment status after HAVING
 if($filter_status == 'due') {
-    $query .= " AND (net_amount - paid_amount) > 0.01 ";
+    $query .= " AND (net_amount - paid_amount) > 0.01 AND si.is_installment = 0 ";
 } elseif($filter_status == 'paid') {
     $query .= " AND (net_amount - paid_amount) <= 0.01 ";
+} elseif($filter_status == 'installment') {
+    $query .= " AND si.is_installment = 1 ";
 }
 
 $query .= "ORDER BY si.created_at DESC";
@@ -70,13 +79,36 @@ while ($row = mysqli_fetch_assoc($result)) {
     $row['paid_amount'] = round($row['paid_amount'], 2);
     $row['current_due'] = max(0, round($row['net_amount'] - $row['paid_amount'], 2));
     
-    // Status Logic: If net_amount equals paid_amount, it's paid.
-    // If net_amount > paid_amount, it's due.
-    $display_status = ($row['paid_amount'] >= $row['net_amount'] - 0.01) ? 'paid' : 'due';
+    // Status Logic: If it's an installment sale, check if fully paid or still has due.
+    // Otherwise, check if it's paid or due based on amount.
+    if ($row['is_installment'] == 1) {
+        // Check if all installment payments are complete
+        $installment_due_query = "SELECT SUM(due) as total_due FROM installment_payments WHERE invoice_id = '".$row['invoice_id']."'";
+        $installment_due_result = mysqli_query($conn, $installment_due_query);
+        $installment_due_data = mysqli_fetch_assoc($installment_due_result);
+        $total_installment_due = $installment_due_data['total_due'] ?? 0;
+        
+        if ($total_installment_due <= 0.01) {
+            // All installments are paid
+            $display_status = 'installment_paid';
+            $row['status_badge'] = '<span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">INSTALLMENT PAID</span>';
+        } else {
+            // Still has pending installments
+            $display_status = 'installment';
+            $row['status_badge'] = '<span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 uppercase">INSTALLMENT DUE</span>';
+        }
+    } else {
+        $display_status = ($row['paid_amount'] >= $row['net_amount'] - 0.01) ? 'paid' : 'due';
+        if ($display_status == 'paid') {
+            $row['status_badge'] = '<span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">PAID</span>';
+        } else {
+            $row['status_badge'] = '<span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">DUE</span>';
+        }
+    }
     $row['payment_status'] = $display_status;
     
-    // Pay Button
-    if($display_status != 'paid') {
+    // Pay Button: Hidden for installments and fully paid invoices
+    if($display_status == 'due') {
          // JavaScript Triggered Pay Icon
          $row['pay_btn'] = '<button onclick="openInvoicePaymentModal(\''.$row['invoice_id'].'\', '.$row['current_due'].', '.$row['info_id'].', '.$row['store_id'].', '.($row['customer_id'] ?: '0').')" class="inline-block p-2 text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition" title="Pay"><i class="fas fa-money-bill"></i></button>';
     } else {
@@ -111,6 +143,7 @@ $status_filter_options = [
     ['label' => 'All Invoice', 'url' => '?status=all' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'all'],
     ['label' => 'Due Invoice', 'url' => '?status=due' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'due'],
     ['label' => 'Paid Invoice', 'url' => '?status=paid' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'paid'],
+    ['label' => 'Installment', 'url' => '?status=installment' . ($filter_customer ? '&customer_id='.$filter_customer : ''), 'active' => $filter_status == 'installment'],
 ];
 
 $customer_filter_options = [['label' => 'All Customers', 'url' => '?status='.$filter_status, 'active' => $filter_customer == 0]];
@@ -135,15 +168,18 @@ $config = [
     'data' => $data,
     
     // New: Extra Buttons
-    'extra_buttons' => [
-        ['label' => 'Pay All', 'icon' => 'fas fa-dollar-sign', 'onclick' => 'payAllDue()', 'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all']
-    ],
+    // 'extra_buttons' => [
+    //     ['label' => 'Pay All', 'icon' => 'fas fa-dollar-sign', 'onclick' => 'payAllDue()', 'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition-all']
+    // ],
     
     // New: Filters
     'filters' => [
         ['id' => 'filter_status', 'label' => 'Filter', 'options' => $status_filter_options],
         ['id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options]
     ],
+    
+    // Date filter configuration
+    'date_column' => 'si.created_at',
     
     // New: Summary Cards
     'summary_cards' => [
@@ -159,7 +195,7 @@ $config = [
         ['label' => 'Customer Name', 'key' => 'customer_name'],
         ['label' => 'Items', 'key' => 'item_count_formatted'],
         ['label' => 'Amount', 'key' => 'amount_formatted'],
-        ['label' => 'Status', 'key' => 'payment_status', 'type' => 'badge', 'badge_class' => 'bg-green-100 text-green-800'],
+        ['label' => 'Status', 'key' => 'status_badge', 'type' => 'html'],
         ['label' => 'Current Due', 'key' => 'current_due', 'type' => 'number'],
         ['label' => 'Pay', 'key' => 'pay_btn', 'type' => 'html'], 
         ['label' => 'Return', 'key' => 'return_btn', 'type' => 'html'],
@@ -218,17 +254,38 @@ function openInvoicePaymentModal(invoiceId, dueAmount, infoId, storeId, customer
     currentStoreId = storeId;
     currentCustomerId = customerId;
 
-    // Call shared initialization
-    window.openPaymentModal({
-        totalPayable: parseFloat(dueAmount),
-        previousDue: 0, // In invoice list, we are paying a specific invoice's current due
-        customerId: customerId,
-        customerName: `Invoice ${invoiceId}`, // Could fetch name from row if needed
-        onSubmit: submitInvoicePayment
-    });
-    
-    // Default to Full Payment view
-    if(window.setPaymentType) window.setPaymentType('full');
+    // Fetch invoice items for order details
+    fetch(`/pos/invoice/get_invoice_items.php?invoice_id=${invoiceId}`)
+        .then(res => res.json())
+        .then(data => {
+            // Call shared initialization with items
+            window.openPaymentModal({
+                totalPayable: parseFloat(dueAmount),
+                previousDue: 0, // In invoice list, we are paying a specific invoice's current due
+                customerId: customerId,
+                customerName: `Invoice ${invoiceId}`, // Could fetch name from row if needed
+                isInvoicePayment: true, // Hide installment and full due buttons
+                items: data.items || [], // Pass items for order details
+                onSubmit: submitInvoicePayment
+            });
+            
+            // Default to Full Payment view
+            if(window.setPaymentType) window.setPaymentType('full');
+        })
+        .catch(error => {
+            console.error('Error fetching invoice items:', error);
+            // Fallback: open modal without items
+            window.openPaymentModal({
+                totalPayable: parseFloat(dueAmount),
+                previousDue: 0,
+                customerId: customerId,
+                customerName: `Invoice ${invoiceId}`,
+                isInvoicePayment: true,
+                items: [],
+                onSubmit: submitInvoicePayment
+            });
+            if(window.setPaymentType) window.setPaymentType('full');
+        });
 }
 
 function submitInvoicePayment(paymentData) {

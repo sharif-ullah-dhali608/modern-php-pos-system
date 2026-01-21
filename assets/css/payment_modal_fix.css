@@ -1,0 +1,53 @@
+/* Payment Modal - Sidebar Payment Methods Grid */
+.payment-methods-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+}
+
+.sidebar-payment-method {
+    padding: 12px 8px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    background: white !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+}
+
+.sidebar-payment-method:hover {
+    border-color: #0d9488 !important;
+    background: #f0fdfa !important;
+}
+
+.sidebar-payment-method.selected {
+    border-color: #0d9488 !important;
+    background: #ccfbf1 !important;
+}
+
+.sidebar-payment-method i {
+    font-size: 24px !important;
+    color: #0d9488 !important;
+    margin-bottom: 4px !important;
+}
+
+.sidebar-payment-method .pm-name,
+.sidebar-payment-method span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+}
+
+.sidebar-payment-method .pm-balance {
+    font-size: 10px !important;
+    color: #64748b !important;
+}
+
+/* Right Panel Background Fix */
+#paymentModal .pos-modal-body>div>div:last-child {
+    background: white !important;
+}

@@ -139,10 +139,21 @@ window.openInvoiceModal = function (data) {
         modal.style.display = 'flex';
         modal.classList.add('active');
 
-        // Auto-trigger print after short delay to ensure rendering
-        setTimeout(() => {
-            window.printInvoice();
-        }, 500);
+        // Auto-print disabled per user request
+        // setTimeout(() => {
+        //     window.printInvoice();
+        // }, 500);
+
+        // Add Enter key listener for printing
+        const handleEnterPrint = function (e) {
+            if (e.key === 'Enter' && modal.classList.contains('active')) {
+                e.preventDefault();
+                window.printInvoice();
+            }
+        };
+        document.removeEventListener('keydown', window._invoiceEnterHandler); // Remove old if exists
+        window._invoiceEnterHandler = handleEnterPrint;
+        document.addEventListener('keydown', window._invoiceEnterHandler);
     }
 };
 

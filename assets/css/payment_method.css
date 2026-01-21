@@ -119,7 +119,7 @@
 #paymentModal .pos-modal-content {
     display: flex;
     flex-direction: column;
-    height: 1000px;
+    max-height: 90vh;
     max-width: 1000px;
     overflow: hidden;
     /* Prevent content wrapper from scrolling */

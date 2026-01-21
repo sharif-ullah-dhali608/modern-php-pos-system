@@ -2,7 +2,7 @@
     <div class="px-6 py-4">
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="text-slate-500 text-sm">
-                &copy; <?php echo date("Y"); ?>, made with <span class="text-red-500"> ❤️ </span> by POS
+                &copy; <?php echo date("Y"); ?>, Developed <span class="text-red-500"> ❤️ </span> by STS
             </div>
             <div class="flex items-center gap-6 text-sm">
                 <a href="#" class="text-slate-600 hover:text-slate-800 transition-colors">License</a>
@@ -214,7 +214,8 @@ endif; ?>
                     }).remove();
                     
                     searchInput.unwrap().addClass('unique-search-field');
-                    searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
+                    // Removed duplicate icon - using CSS background-image instead
+                    // searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
 
                     // Apply horizontal scroll container class
                     $('.data-table').wrap('<div class="data-table-container"></div>');

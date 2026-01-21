@@ -68,6 +68,31 @@ document.addEventListener('keydown', function (e) {
         // Default: Pay Now if cart has items and NO modal is open
         if (cart.length > 0) {
             e.preventDefault();
+
+            // FIRST: Validate actual stock in cart (most important check)
+            let hasStockIssue = false;
+            for (const item of cart) {
+                if (item.qty > item.stock) {
+                    showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
+                    window.lastStockErrorTime = Date.now();
+                    hasStockIssue = true;
+                    break;
+                }
+            }
+
+            // If stock issue found, stop immediately - do NOT open modal
+            if (hasStockIssue) {
+                return;
+            }
+
+            // SECOND: Check if a stock error just occurred (within last 1.5 seconds)
+            const timeSinceLastError = Date.now() - (window.lastStockErrorTime || 0);
+            if (timeSinceLastError < 1500) {
+                showToast('Please adjust quantity before proceeding to payment', 'warning');
+                return;
+            }
+
+            // All validations passed - safe to open modal
             prepareAndOpenPaymentModal();
         }
     }
@@ -82,10 +107,13 @@ document.addEventListener('keydown', function (e) {
 });
 
 // Cart data
-let cart = [];
+var cart = [];
 
 var customerId = 0; // Current customer ID
 
+// Track last stock error to prevent modal opening immediately after stock alert
+// Make it globally accessible on window object to ensure shared state
+window.lastStockErrorTime = 0;
 
 // Modal functions
 function openModal(id) {
@@ -394,9 +422,9 @@ function updateQty(id, change) {
     if (item) {
         const newQty = item.qty + change;
 
-        // Check stock limit when increasing
         if (change > 0 && newQty > item.stock) {
             showToast(`Cannot exceed stock! Only ${item.stock} available.`, 'error');
+            window.lastStockErrorTime = Date.now(); // Mark that a stock error just occurred
             return;
         }
 
@@ -418,6 +446,7 @@ function setQty(id, newQty) {
 
         if (newQty > item.stock) {
             showToast(`Cannot exceed stock! Only ${item.stock} available.`, 'error');
+            window.lastStockErrorTime = Date.now(); // Mark that a stock error just occurred
             item.qty = item.stock;
             renderCart();
             return;
@@ -519,6 +548,22 @@ function prepareAndOpenPaymentModal() {
     if (cart.length === 0) {
         showToast('Cart is empty', 'error');
         return;
+    }
+
+    // Prevent opening modal if a stock error just occurred (within last 1.5 seconds)
+    const timeSinceLastError = Date.now() - window.lastStockErrorTime;
+    if (timeSinceLastError < 1500) {
+        showToast('Please adjust quantity before proceeding to payment', 'warning');
+        return;
+    }
+
+    // Check for stock availability before opening payment modal
+    for (const item of cart) {
+        if (item.qty > item.stock) {
+            showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
+            window.lastStockErrorTime = Date.now(); // Mark error time
+            return; // Stop here, do not open modal
+        }
     }
 
     // Toggle Opening Balance Wallet visibility based on updated UI
@@ -765,6 +810,16 @@ function submitPosSale(paymentData) {
 
     const previousDue = parseFloat(document.getElementById('payment-previous-due')?.textContent) || 0;
     formData.append('previous_due', previousDue);
+
+    // Installment Data
+    if (window.installmentMode) {
+        formData.append('is_installment', 1);
+        formData.append('inst_duration', document.getElementById('inst-duration').value);
+        formData.append('inst_interval', document.getElementById('inst-interval').value);
+        formData.append('inst_count', document.getElementById('inst-count').value);
+        formData.append('inst_interest_percent', document.getElementById('inst-interest-percent').value);
+        formData.append('inst_interest_amount', document.getElementById('inst-interest-amount').value);
+    }
 
     const btn = document.querySelector('.complete-btn'); // Shared modal button class
     if (btn) {
@@ -1105,6 +1160,16 @@ function resumeHeldOrder(invoiceId) {
                 const order = data.order;
                 const items = data.items;
 
+                // Check for stock warnings and show toast notifications
+                if (data.stock_warnings && data.stock_warnings.length > 0) {
+                    data.stock_warnings.forEach(warning => {
+                        showToast(
+                            `Stock Low - ${warning.product_name}: Only ${warning.available_stock} units available (held: ${warning.held_qty})`,
+                            'warning'
+                        );
+                    });
+                }
+
                 // Load cart
                 cart = items;
                 renderCart();
@@ -1185,6 +1250,22 @@ function prepareHoldModal() {
     if (cart.length === 0) {
         showToast('Cart is empty!', 'error');
         return;
+    }
+
+    // Prevent opening hold modal if a stock error just occurred (within last 1.5 seconds)
+    const timeSinceLastError = Date.now() - window.lastStockErrorTime;
+    if (timeSinceLastError < 1500) {
+        showToast('Please adjust quantity before holding order', 'warning');
+        return;
+    }
+
+    // Check for stock availability before opening hold modal
+    for (const item of cart) {
+        if (item.qty > item.stock) {
+            showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
+            window.lastStockErrorTime = Date.now(); // Mark error time
+            return; // Stop here, do not open modal
+        }
     }
 
     const itemsBody = document.getElementById('hold-order-items');
@@ -1319,7 +1400,7 @@ function holdOrder() {
 
 // Customer selection
 // Customer selection
-function selectCustomer(id, name, phone, balance = 0, giftcardBalance = 0, openingBalance = 0) {
+function selectCustomer(id, name, phone, balance = 0, giftcardBalance = 0, openingBalance = 0, hasInstallment = 0) {
     customerId = id;
     document.getElementById('selected_customer_id').value = id;
     document.getElementById('selected-customer-name').textContent = name;
@@ -1335,6 +1416,15 @@ function selectCustomer(id, name, phone, balance = 0, giftcardBalance = 0, openi
     document.getElementById('customer_credit').value = 0; // Legacy field
     document.getElementById('customer_giftcard_balance').value = giftcardBal;
     document.getElementById('customer_opening_balance').value = openingBal;
+
+    // Store has_installment flag
+    if (!document.getElementById('customer_has_installment')) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.id = 'customer_has_installment';
+        document.body.appendChild(input);
+    }
+    document.getElementById('customer_has_installment').value = hasInstallment;
 
     // Update due display in POS UI
     const dueDisplay = document.getElementById('selected-customer-due-display');
@@ -1881,6 +1971,9 @@ document.addEventListener('keydown', function (e) {
     }
 
     // Enter key - Navigate through workflow
+    // DISABLED: This duplicate handler was bypassing stock validation
+    // The main Enter key handler at the top of the file (line 24) handles this properly with stock validation
+    /* 
     if (e.key === 'Enter') {
         const activeModal = getActiveModal();
 
@@ -1921,6 +2014,7 @@ document.addEventListener('keydown', function (e) {
             }
         }
     }
+    */
 
     // Escape - Close modals
     if (e.key === 'Escape') {
@@ -2635,12 +2729,12 @@ document.addEventListener('keydown', function (e) {
             e.preventDefault();
             if (cart.length > 0) {
                 openPaymentModal({
-                    totalPayable: parseFloat(document.getElementById('total-payable').textContent),
+                    totalPayable: parseFloat(document.getElementById('grand-total').textContent.replace('৳', '')) || 0,
                     previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
                     customerId: document.getElementById('selected_customer_id').value || 0,
                     customerName: document.getElementById('selected-customer-name').textContent,
                     onSubmit: function (paymentData) {
-                        processPayment(paymentData);
+                        submitPosSale(paymentData);
                     }
                 });
             } else {
@@ -2651,12 +2745,12 @@ document.addEventListener('keydown', function (e) {
             if (cart.length > 0) {
                 e.preventDefault();
                 openPaymentModal({
-                    totalPayable: parseFloat(document.getElementById('total-payable').textContent),
+                    totalPayable: parseFloat(document.getElementById('grand-total').textContent.replace('৳', '')) || 0,
                     previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
                     customerId: document.getElementById('selected_customer_id').value || 0,
                     customerName: document.getElementById('selected-customer-name').textContent,
                     onSubmit: function (paymentData) {
-                        processPayment(paymentData);
+                        submitPosSale(paymentData);
                     }
                 });
             }

@@ -2,10 +2,23 @@
 session_start();
 include('../config/dbcon.php');
 
+include('../includes/date_filter_helper.php');
+
 if(!isset($_SESSION['auth'])){
     header("Location: ../signin.php");
     exit(0);
 }
+
+// Filter parameters
+$filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+
+// Fetch Customers for filter dropdown
+$customers_list = [];
+$cust_result = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+while($c = mysqli_fetch_assoc($cust_result)) $customers_list[] = $c;
 
 $page_title = "Sell Return List";
 include('../includes/header.php');
@@ -17,13 +30,32 @@ $query = "SELECT si.*, c.name as customer_name, u.name as return_by
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN users u ON si.created_by = u.id 
-          WHERE si.inv_type = 'return' 
-          ORDER BY si.created_at DESC";
+          WHERE si.inv_type = 'return' ";
+
+// Apply Customer Filter
+if($filter_customer > 0) {
+    $query .= " AND si.customer_id = $filter_customer ";
+}
+
+// Apply date filter
+applyDateFilter($query, 'si.created_at', $date_filter, $start_date, $end_date);
+
+$query .= " ORDER BY si.created_at DESC";
 
 $result = mysqli_query($conn, $query);
 $data = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $data[] = $row;
+}
+
+// Build customer filter options
+$customer_filter_options = [['label' => 'All Customers', 'url' => '?customer_id=0', 'active' => $filter_customer == 0]];
+foreach($customers_list as $cust) {
+    $customer_filter_options[] = [
+        'label' => $cust['name'],
+        'url' => '?customer_id='.$cust['id'],
+        'active' => $filter_customer == $cust['id']
+    ];
 }
 
 // Prepare Config
@@ -38,6 +70,10 @@ $config = [
     'name_field' => 'invoice_id',
     'data' => $data,
     'action_buttons' => ['view', 'delete'], // Only view and delete
+    'date_column' => 'si.created_at',
+    'filters' => [
+        ['id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options]
+    ],
     'columns' => [
         ['label' => 'Date Time', 'key' => 'created_at'],
         ['label' => 'Customer Name', 'key' => 'customer_name'],

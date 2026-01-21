@@ -1,5 +1,8 @@
 <link rel="stylesheet" href="/pos/assets/css/payment_method.css">
-<!-- Payment Modal -->
+<!-- Installment Assets -->
+<link rel="stylesheet" href="/pos/assets/css/installment.css">
+<script src="/pos/assets/js/installment.js"></script>
+
 <div class="pos-modal" id="paymentModal">
     <div class="pos-modal-content">
         <div class="pos-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
@@ -74,26 +77,47 @@
                                 <i class="fas fa-minus-circle"></i> FULL DUE
                             </button>
                         </div>
-                        <div style="margin-top: 10px;">
-                            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; cursor: pointer;">
-                                <input type="checkbox" id="sell-with-installment" style="width: 16px; height: 16px;">
-                                <i class="fas fa-sync-alt"></i> Sell With Installment
-                            </label>
+                        <div style="margin-top: 15px;">
+                            <button id="installment-toggle-btn" class="installment-toggle-btn" onclick="toggleInstallment()">
+                                <i class="fas fa-calendar-alt"></i> Sell With Installment
+                            </button>
                         </div>
                     </div>
                     
                     <!-- Order Details Section -->
                     <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px;">
                         <!-- Left: Payment Input -->
-                        <div>
-                        <div>
-                            <!-- Design refinement: single view as per user image -->
-                            <div style="margin-bottom: 20px;">
-                                <div id="pay-amount-btn" style="padding: 12px; border: 2px solid #0369a1; background: white; color: #0369a1; border-radius: 8px; text-align: center; font-weight: 600; font-size: 16px;">
-                                    Pay Amount
+                    <div>
+                        <!-- Installment Details Form (Hidden by default) -->
+                        <div id="installment-details-section" style="display: none;">
+                            <h4 style="margin: 0 0 15px 0; font-size: 15px; color: #0d9488; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-info-circle"></i> Installment Details
+                            </h4>
+                            <div class="installment-form-grid">
+                                <div class="installment-field">
+                                    <label>Duration <span class="unit-label">(Days)</span></label>
+                                    <input type="number" id="inst-duration" value="90">
+                                </div>
+                                <div class="installment-field">
+                                    <label>Interval <span class="unit-label">(Days)</span></label>
+                                    <input type="number" id="inst-interval" value="30">
+                                </div>
+                                <div class="installment-field">
+                                    <label>Total Installment</label>
+                                    <input type="number" id="inst-count" value="3">
+                                </div>
+                                <div class="installment-field">
+                                    <label>Interest Percentage <span class="unit-label">(%)</span></label>
+                                    <input type="number" id="inst-interest-percent" value="10">
+                                </div>
+                                <div class="installment-field" style="grid-column: span 2;">
+                                    <label>Interest Amount</label>
+                                    <input type="number" id="inst-interest-amount" value="0.00" readonly>
                                 </div>
                             </div>
-                            
+                        </div>
+
+                        <div>
                             <div id="payment-input-container" style="background: #e0f2fe; padding: 25px 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
                                 <div style="font-size: 14px; color: #0369a1; margin-bottom: 10px; font-weight: 500;">Total Payable</div>
                                 <div style="position: relative; display: inline-block; width: 100%;">
@@ -101,11 +125,15 @@
                                         style="width: 100%; border: none; background: transparent; text-align: center; font-size: 42px; font-weight: 800; color: #0369a1; outline: none;" 
                                         value="0.00">
                                 </div>
+                                <!-- DOWN PAYMENT 30% Label (hidden by default, shown when installment mode is active) -->
+                                <div id="down-payment-label" style="display: none; font-size: 16px; color: #d97706; margin-top: 10px; font-weight: 700;">
+                                    DOWN PAYMENT 30%
+                                </div>
                             </div>
 
                             <div style="margin-bottom: 15px; padding: 0 5px; display: flex; justify-content: space-between; align-items: center;">
                                 <div style="font-size: 14px; color: #64748b;">
-                                    <i class="fas fa-coins"></i> Change Return: <span id="change-amount" style="font-weight: 700; color: #0d9488;">0.00</span>
+                                    <i class="fas fa-coins"></i> Change Return: <span id="change-amount" style="font-weight: 700; color: #0d9488; align-items: center;">0.00</span>
                                 </div>
                             </div>
                             
@@ -116,7 +144,7 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
                         
                         <!-- Right: Order Summary -->
                         <div>

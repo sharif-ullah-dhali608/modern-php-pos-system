@@ -168,6 +168,12 @@ if (empty($phone_display)) {
                     <td>Payment Method:</td>
                     <td class="font-bold"><?= htmlspecialchars($payment_method_display); ?></td>
                 </tr>
+                <?php if(!empty($log['transaction_id'])): ?>
+                <tr>
+                    <td>Transaction ID:</td>
+                    <td class="font-bold"><?= htmlspecialchars($log['transaction_id']); ?></td>
+                </tr>
+                <?php endif; ?>
                 <tr>
                     <td>Related Invoice:</td>
                     <td class="font-bold"><?= htmlspecialchars($log['ref_invoice_id'] ?? 'N/A'); ?></td>
