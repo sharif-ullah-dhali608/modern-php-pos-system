@@ -53,13 +53,16 @@ $products_result = mysqli_query($conn, $products_query);
 $categories_query = "SELECT id, name FROM categories WHERE status=1 ORDER BY name ASC";
 $categories_result = mysqli_query($conn, $categories_query);
 
-// Fetch customers with credit and giftcard info
-$customers_query = "SELECT c.id, c.name, c.mobile, c.current_due as credit, c.opening_balance,
-                    COALESCE(SUM(g.balance), 0) as giftcard_balance
+// Fetch customers with credit, giftcard info, and installment details
+$customers_query = "SELECT c.id, c.name, c.mobile, c.current_due as credit, c.opening_balance, c.has_installment,
+                    COALESCE(SUM(g.balance), 0) as giftcard_balance,
+                    (SELECT SUM(ip.due) FROM installment_payments ip 
+                     JOIN selling_info si ON ip.invoice_id = si.invoice_id 
+                     WHERE si.customer_id = c.id AND ip.payment_status = 'due') as installment_due
                     FROM customers c
                     LEFT JOIN giftcards g ON c.id = g.customer_id AND g.status = 1
                     WHERE c.status=1 
-                    GROUP BY c.id, c.name, c.mobile, c.current_due, c.opening_balance
+                    GROUP BY c.id, c.name, c.mobile, c.current_due, c.opening_balance, c.has_installment
                     ORDER BY c.name ASC";
 $customers_result = mysqli_query($conn, $customers_query);
 
@@ -650,8 +653,10 @@ include('../includes/header.php');
                     $credit = floatval($customer['credit']);
                     $gc_balance = floatval($customer['giftcard_balance']);
                     $opening_bal = floatval($customer['opening_balance']);
+                    $has_installment = intval($customer['has_installment'] ?? 0);
+                    $installment_due = floatval($customer['installment_due'] ?? 0);
                 ?>
-                    <div class="customer-option" onclick="selectCustomer(<?= $customer['id']; ?>, '<?= htmlspecialchars($customer['name'], ENT_QUOTES); ?>', '<?= $customer['mobile']; ?>', <?= $credit; ?>, <?= $gc_balance; ?>, <?= $opening_bal; ?>)" 
+                    <div class="customer-option" onclick="selectCustomer(<?= $customer['id']; ?>, '<?= htmlspecialchars($customer['name'], ENT_QUOTES); ?>', '<?= $customer['mobile']; ?>', <?= $credit; ?>, <?= $gc_balance; ?>, <?= $opening_bal; ?>, <?= $has_installment; ?>)" 
                          style="padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;"
                          onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';">
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -667,11 +672,14 @@ include('../includes/header.php');
                             <?php if($opening_bal > 0): ?>
                                 <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #bae6fd;">Wallet: <?= number_format($opening_bal, 2); ?></span>
                             <?php endif; ?>
+                            <?php if($has_installment == 1 && $installment_due > 0): ?>
+                                <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fde68a;">Installment: <?= number_format($installment_due, 2); ?></span>
+                            <?php endif; ?>
                             <?php if($credit > 0): ?>
                                 <span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fecaca;">Due: <?= number_format($credit, 2); ?></span>
                             <?php endif; ?>
                             <?php if($gc_balance > 0): ?>
-                                <span style="background: #f0fdf4; color: #10b981; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #d1fae5;">GC: <?= number_format($gc_balance, 2); ?></span>
+                                <span style="background: #f0fdf4; color: #10b981; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #d1fae5;">GiftCard: <?= number_format($gc_balance, 2); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

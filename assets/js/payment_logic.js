@@ -12,18 +12,68 @@ var onPaymentSubmit = null; // Callback for custom submission
  * @param {number} config.previousDue - Previous due amount (optional)
  * @param {number} config.customerId - Customer ID
  * @param {string} config.customerName - Customer name for display
+ * @param {boolean} config.isInvoicePayment - Whether this is payment from invoice list (optional)
  * @param {Function} config.onSubmit - Callback function when payment is submitted
  */
 window.openPaymentModal = function (config) {
+    // CRITICAL VALIDATION - Last line of defense
+
+    // 1. Check if a stock error just occurred (within last 1.5 seconds)
+    // We use window.lastStockErrorTime to share state with pos.js
+    if (typeof window.lastStockErrorTime !== 'undefined') {
+        const timeSinceLastError = Date.now() - window.lastStockErrorTime;
+        if (timeSinceLastError < 1500) {
+            console.error('BLOCKED: Recent stock error in openPaymentModal');
+            // Force close payment modal if it's already open
+            const paymentModal = document.getElementById('paymentModal');
+            if (paymentModal) {
+                paymentModal.style.display = 'none';
+                paymentModal.classList.remove('active');
+            }
+            if (typeof showToast === 'function') {
+                showToast('Please adjust quantity before proceeding to payment', 'warning');
+            }
+            return;
+        }
+    }
+
+    // 2. Check stock availability in cart
+    if (typeof cart !== 'undefined' && cart && cart.length > 0) {
+        // Validate stock before opening modal
+        for (const item of cart) {
+            if (item.qty > item.stock) {
+                console.error('BLOCKED: Stock validation failed in openPaymentModal:', item.name, 'qty:', item.qty, 'stock:', item.stock);
+
+                // Force close payment modal if it's already open
+                const paymentModal = document.getElementById('paymentModal');
+                if (paymentModal) {
+                    paymentModal.style.display = 'none';
+                    paymentModal.classList.remove('active');
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
+                }
+                // Set error timestamp if available
+                window.lastStockErrorTime = Date.now();
+                return; // BLOCK modal from opening
+            }
+        }
+    }
+
     // Reset state
     appliedPayments = [];
     selectedPaymentMethod = null;
     customerId = config.customerId || 0;
     onPaymentSubmit = config.onSubmit || null;
 
+    // Reset installment state if function exists
+    if (typeof resetInstallment === 'function') resetInstallment();
+
     const totalPayable = config.totalPayable || 0;
     const previousDue = config.previousDue || 0;
     const customerName = config.customerName || 'Customer';
+    const isInvoicePayment = config.isInvoicePayment || false;
 
     // Update modal fields
     const payableEl = document.getElementById('payment-payable');
@@ -45,13 +95,56 @@ window.openPaymentModal = function (config) {
     if (dueEl) dueEl.textContent = (totalPayable + previousDue).toFixed(2);
     if (balanceEl) balanceEl.textContent = '0.00';
 
+    // Hide/Show installment and full due buttons based on context
+    const installmentBtn = document.getElementById('installment-toggle-btn');
+    const fullDueBtn = document.querySelector('.payment-type-btn[data-type="due"]');
+
+    console.log('isInvoicePayment flag:', isInvoicePayment); // Debug log
+
+    if (isInvoicePayment) {
+        // Hide installment and full due buttons when paying from invoice list
+        if (installmentBtn) {
+            installmentBtn.style.display = 'none';
+            console.log('Hiding installment button');
+        }
+        if (fullDueBtn) {
+            fullDueBtn.style.display = 'none';
+            console.log('Hiding full due button');
+        }
+    } else {
+        // Show buttons for normal POS sales
+        if (installmentBtn) installmentBtn.style.display = 'inline-block';
+        if (fullDueBtn) fullDueBtn.style.display = 'inline-block';
+    }
+
     // Reset amount input to default full total payable
     const amountInput = document.getElementById('amount-received');
     if (amountInput) amountInput.value = (totalPayable + previousDue).toFixed(2);
 
+    // Display order items if provided
+    const items = config.items || [];
+    const cartItemsContainer = document.getElementById('payment-cart-items');
+    if (cartItemsContainer && items.length > 0) {
+        let itemsHTML = '';
+        items.forEach(item => {
+            itemsHTML += `
+                <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #1e293b; font-size: 13px;">${item.name}</div>
+                        <div style="color: #64748b; font-size: 11px;">${item.qty} × ৳${parseFloat(item.price).toFixed(2)}</div>
+                    </div>
+                    <div style="font-weight: 700; color: #0d9488; font-size: 13px;">৳${parseFloat(item.total).toFixed(2)}</div>
+                </div>
+            `;
+        });
+        cartItemsContainer.innerHTML = itemsHTML;
+    }
+
     // Show modal
     const modal = document.getElementById('paymentModal');
     if (modal) {
+        // Remove inline style to allow display
+        modal.removeAttribute('style');
         modal.style.display = 'flex';
         modal.classList.add('active');
     }
@@ -71,6 +164,19 @@ window.closeModal = function (modalId) {
     if (modal) {
         modal.style.display = 'none';
         modal.classList.remove('active');
+
+        // Reset installment if this is the payment modal
+        if (modalId === 'paymentModal' && typeof resetInstallment === 'function') {
+            resetInstallment();
+        }
+
+        // Show invoice container back if it was hidden
+        if (modalId === 'paymentModal') {
+            const invoiceContainer = document.querySelector('.invoice-container');
+            if (invoiceContainer && invoiceContainer.style.display === 'none') {
+                invoiceContainer.style.display = 'block';
+            }
+        }
     }
 };
 
@@ -201,6 +307,14 @@ function selectPaymentMethod(element, id) {
                     value="${initialValue.toFixed(2)}" 
                     step="0.01" min="0.01" max="${balance}"
                     style="width: 100%; margin: 0; text-align: center; font-size: 24px; font-weight: 700; color: #1e293b; border: 2px solid #e2e8f0; border-radius: 10px; transition: border-color 0.2s;">
+                    
+                ${!isCashMethod ? `
+                <label style="display: block; text-align: left; font-size: 12px; color: #64748b; margin: 15px 0 6px 0; font-weight: 600;">TRANSACTION ID *</label>
+                <input type="text" id="swal-input-transaction-id" class="swal2-input" 
+                    placeholder="Enter Transaction ID" 
+                    style="width: 100%; margin: 0; text-align: center; font-size: 16px; font-weight: 600; color: #1e293b; border: 2px solid #e2e8f0; border-radius: 10px;">
+                <div style="font-size: 11px; color: #dc2626; margin-top: 5px; text-align: left;">* Required for non-cash payments</div>
+                ` : ''}
             </div>`,
         showCancelButton: true,
         confirmButtonText: 'Apply Amount',
@@ -210,13 +324,52 @@ function selectPaymentMethod(element, id) {
         target: document.getElementById('paymentModal'),
         didOpen: () => {
             const input = document.getElementById('swal-input-amount');
-            input.focus();
-            input.select();
-            input.onfocus = () => input.style.borderColor = '#14b8a6';
-            input.onblur = () => input.style.borderColor = '#e2e8f0';
+            const transactionInput = document.getElementById('swal-input-transaction-id');
+
+            if (input) {
+                input.focus();
+                input.select();
+                input.onfocus = () => input.style.borderColor = '#14b8a6';
+                input.onblur = () => input.style.borderColor = '#e2e8f0';
+
+                // Enter key support for amount input
+                input.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // If transaction ID required, focus on it
+                        if (transactionInput) {
+                            transactionInput.focus();
+                        } else {
+                            // Otherwise trigger Apply Amount button
+                            Swal.clickConfirm();
+                        }
+                    }
+                });
+            }
+
+            // Enter key support for transaction ID input
+            if (transactionInput) {
+                transactionInput.onfocus = () => transactionInput.style.borderColor = '#14b8a6';
+                transactionInput.onblur = () => transactionInput.style.borderColor = '#e2e8f0';
+
+                transactionInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        Swal.clickConfirm();
+                    }
+                });
+            }
         },
         preConfirm: () => {
             const value = parseFloat(document.getElementById('swal-input-amount').value);
+            const transactionId = document.getElementById('swal-input-transaction-id')?.value || '';
+
+            // Validation for non-cash methods
+            if (!isCashMethod && !transactionId.trim()) {
+                Swal.showValidationMessage('Transaction ID is required for non-cash payments');
+                return false;
+            }
+
             if (isNaN(value) || value <= 0) {
                 Swal.showValidationMessage('Please enter a valid amount');
                 return false;
@@ -227,15 +380,18 @@ function selectPaymentMethod(element, id) {
                 return false;
             }
             // For regular methods (Cash, Rocket, etc.), allow overpayment for change
-            return value;
+            return { amount: value, transactionId: transactionId };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            const amount = result.value;
+            const amount = typeof result.value === 'object' ? result.value.amount : result.value;
+            const transactionId = typeof result.value === 'object' ? result.value.transactionId : '';
+
             if (currentApplied) {
                 currentApplied.amount = amount;
+                currentApplied.transactionId = transactionId;
             } else {
-                appliedPayments.push({ type: id, amount: amount, label: label });
+                appliedPayments.push({ type: id, amount: amount, label: label, transactionId: transactionId });
             }
 
             // Clear all payment method highlights first

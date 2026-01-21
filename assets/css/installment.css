@@ -1,0 +1,91 @@
+/* Installment Button Styling */
+.installment-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #0d9488;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(13, 148, 136, 0.2);
+}
+
+.installment-toggle-btn:hover {
+    background: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.3);
+}
+
+.installment-toggle-btn.active {
+    background: #f59e0b;
+    color: #fff;
+}
+
+/* Installment Details Form */
+#installment-details-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.installment-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.installment-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.installment-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.installment-field input {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.installment-field input:focus {
+    border-color: #0d9488;
+}
+
+.installment-field input[readonly] {
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.unit-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-left: 5px;
+}

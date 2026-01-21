@@ -130,6 +130,15 @@ RewriteRule ^customers/list$ customers/customer_list.php [L]
 RewriteRule ^customers/add$ customers/add_customer.php [L]
 RewriteRule ^customers/save$ customers/save_customer.php [L]
 RewriteRule ^customers/edit/([0-9]+)$ customers/add_customer.php?id=$1 [L]
+ 
+# --- Installment Routes (ADDED) ---
+RewriteRule ^installment/list$ installment/installment_list.php [L]
+RewriteRule ^installment/view/([0-9]+)$ installment/view_installment.php?id=$1 [L]
+RewriteRule ^installment/payments$ installment/payment_list.php [L]
+RewriteRule ^installment/due_today$ installment/payment_list.php?filter=today [L]
+RewriteRule ^installment/due_all$ installment/payment_list.php?filter=all [L]
+RewriteRule ^installment/due_expired$ installment/payment_list.php?filter=expired [L]
+RewriteRule ^installment/overview$ installment/overview.php [L]
 
 
 # Default route

@@ -668,6 +668,12 @@ mysqli_query($conn, $userStoreMapSql);
         @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN current_due DECIMAL(15,2) DEFAULT 0.00 AFTER opening_balance");
     }
 
+    // Ensure has_installment column exists in customers table (to track active installments)
+    $checkHasInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM customers LIKE 'has_installment'");
+    if($checkHasInstallment && mysqli_num_rows($checkHasInstallment) == 0) {
+        @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN has_installment TINYINT(1) DEFAULT 0 AFTER current_due");
+    }
+
     // Ensure stock column exists in product_store_map table (for store-wise stock tracking)
     $checkPsmStock = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'stock'");
     if($checkPsmStock && mysqli_num_rows($checkPsmStock) == 0) {
@@ -799,9 +805,58 @@ mysqli_query($conn, $userStoreMapSql);
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Installment Orders Table ---
+    $installmentOrdersSql = "CREATE TABLE IF NOT EXISTS installment_orders (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        invoice_id VARCHAR(50) NOT NULL,
+        purchase_invoice_id VARCHAR(50) DEFAULT NULL,
+        duration INT(11) DEFAULT 90,
+        interval_count INT(11) DEFAULT 30,
+        installment_count INT(11) DEFAULT 3,
+        interest_percentage DECIMAL(10,2) DEFAULT 0.00,
+        interest_amount DECIMAL(15,2) DEFAULT 0.00,
+        initial_amount DECIMAL(15,2) DEFAULT 0.00,
+        payment_status VARCHAR(20) DEFAULT 'due',
+        last_installment_date DATETIME DEFAULT NULL,
+        installment_end_date DATETIME DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY invoice_id (invoice_id),
+        KEY store_id (store_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Installment Payments Table ---
+    $installmentPaymentsSql = "CREATE TABLE IF NOT EXISTS installment_payments (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        invoice_id VARCHAR(50) NOT NULL,
+        payment_date DATETIME DEFAULT NULL,
+        pmethod_id INT(11) DEFAULT NULL,
+        created_by INT(11) DEFAULT NULL,
+        note TEXT DEFAULT NULL,
+        capital DECIMAL(15,4) DEFAULT 0.0000,
+        interest DECIMAL(15,4) DEFAULT 0.0000,
+        payable DECIMAL(15,4) DEFAULT 0.0000,
+        paid DECIMAL(15,4) DEFAULT 0.0000,
+        due DECIMAL(15,4) DEFAULT 0.0000,
+        payment_status VARCHAR(20) DEFAULT 'due',
+        PRIMARY KEY (id),
+        KEY invoice_id (invoice_id),
+        KEY store_id (store_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
     mysqli_query($conn, $sellingInfoSql);
     mysqli_query($conn, $sellingItemSql);
     mysqli_query($conn, $sellLogsSql);
+    mysqli_query($conn, $installmentOrdersSql);
+    mysqli_query($conn, $installmentPaymentsSql);
+
+    // Ensure installment_quantity column exists in selling_item table
+    $checkSellItemInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM selling_item LIKE 'installment_quantity'");
+    if($checkSellItemInstallment && mysqli_num_rows($checkSellItemInstallment) == 0) {
+        @mysqli_query($conn, "ALTER TABLE selling_item ADD COLUMN installment_quantity INT(11) DEFAULT 0");
+    }
 
     $holdingInfoSql = "CREATE TABLE IF NOT EXISTS holding_info (
         info_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -864,6 +919,18 @@ mysqli_query($conn, $userStoreMapSql);
     mysqli_query($conn, $holdingInfoSql);
     mysqli_query($conn, $holdingItemSql);
     mysqli_query($conn, $holdingPriceSql);
+
+    // Ensure is_installment column exists in sell_logs table
+    $checkSellLogInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'is_installment'");
+    if($checkSellLogInstallment && mysqli_num_rows($checkSellLogInstallment) == 0) {
+        @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN is_installment TINYINT(1) DEFAULT 0 AFTER type");
+    }
+    
+    // Ensure transaction_id column exists in sell_logs table
+    $checkTransactionId = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'transaction_id'");
+    if($checkTransactionId && mysqli_num_rows($checkTransactionId) == 0) {
+        @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN transaction_id VARCHAR(255) DEFAULT NULL AFTER pmethod_id");
+    }
 
     // Seeding
     $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";

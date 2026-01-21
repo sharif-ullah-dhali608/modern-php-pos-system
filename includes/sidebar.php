@@ -59,6 +59,20 @@ $menu_items = [
         'active' => (uri_has('/giftcard/', $current_uri))
     ],
     [
+        'title' => 'Installment',
+        'icon' => 'fa-calendar-alt text-teal-400',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Installment List', 'link' => '/pos/installment/list'],
+            ['title' => 'Payment List', 'link' => '/pos/installment/payments'],
+            ['title' => 'Payment Due Today', 'link' => '/pos/installment/due_today'],
+            ['title' => 'Payment Due All', 'link' => '/pos/installment/due_all'],
+            ['title' => 'Payment Due Exp.', 'link' => '/pos/installment/due_expired'],
+            ['title' => 'Overview Report', 'link' => '/pos/installment/overview'],
+        ],
+        'active' => (uri_has('/installment/', $current_uri))
+    ],
+    [
         'title' => 'Products',
         'icon' => 'fa-box',
         'link' => '#',

@@ -175,10 +175,12 @@ function processPayment($conn, $user_id) {
         $total_paid_from_applied = 0;
         $customer_id_sql = $customer_id ? $customer_id : 'NULL';
         $payment_methods_used = []; // Track all payment methods for description
+        $transaction_ids = []; // Track transaction IDs
 
         foreach ($payments as $p) {
             $p_type = $p['type'];
             $p_amount = floatval($p['amount']);
+            $p_transaction_id = isset($p['transactionId']) ? mysqli_real_escape_string($conn, $p['transactionId']) : '';
             if ($p_amount <= 0) continue;
             
             $total_paid_from_applied += $p_amount;
@@ -209,6 +211,11 @@ function processPayment($conn, $user_id) {
                 $pm_name_query = mysqli_query($conn, "SELECT name FROM payment_methods WHERE id = " . intval($p_type));
                 $pm_name = mysqli_fetch_assoc($pm_name_query)['name'] ?? ucfirst($p_type);
                 $payment_methods_used[] = $pm_name . ": " . number_format($p_amount, 2);
+                
+                // Store transaction ID if provided
+                if (!empty($p_transaction_id)) {
+                    $transaction_ids[] = $pm_name . ": " . $p_transaction_id;
+                }
             }
         }
 
@@ -274,11 +281,16 @@ function processPayment($conn, $user_id) {
             $log_amount = min($total_amount_paid, $grand_total); // Amount for this sale only
         }
         
+        
         // Create sell_log entry for the sale payment
+        $is_installment = (isset($_POST['is_installment']) && $_POST['is_installment'] == 1) ? 1 : 0;
         $primary_ref_no = 'SAL' . date('YmdHis') . rand(10, 99);
+        $transaction_id_str = !empty($transaction_ids) ? implode(', ', $transaction_ids) : NULL;
+        $transaction_id_sql = $transaction_id_str ? "'$transaction_id_str'" : 'NULL';
+        
         mysqli_query($conn, "INSERT INTO sell_logs 
-            (customer_id, reference_no, ref_invoice_id, type, pmethod_id, amount, store_id, created_by, description) 
-            VALUES ($customer_id_sql, '$primary_ref_no', '$invoice_id', '$log_type', $payment_method_id, $log_amount, $store_id, $user_id, '$log_description')");
+            (customer_id, reference_no, ref_invoice_id, type, is_installment, pmethod_id, transaction_id, amount, store_id, created_by, description) 
+            VALUES ($customer_id_sql, '$primary_ref_no', '$invoice_id', '$log_type', $is_installment, $payment_method_id, $transaction_id_sql, $log_amount, $store_id, $user_id, '$log_description')");
 
         // If partial payment, also create a PARTIAL DUE entry for the remaining amount
         if ($log_type === 'partial_payment') {
@@ -291,15 +303,83 @@ function processPayment($conn, $user_id) {
 
         $payment_status = ($total_amount_paid >= $grand_total - 0.01) ? 'paid' : 'due';
 
+        // Handle Installment Data
+        $is_installment = (isset($_POST['is_installment']) && $_POST['is_installment'] == 1) ? 1 : 0;
+        if ($is_installment) {
+            // Validate: Check if customer already has pending installment payments
+            if ($customer_id) {
+                // Check if customer has any installment with pending payments
+                $check_query = "SELECT io.invoice_id, 
+                               (SELECT SUM(due) FROM installment_payments WHERE invoice_id = io.invoice_id) as total_due
+                               FROM installment_orders io
+                               LEFT JOIN selling_info si ON io.invoice_id = si.invoice_id
+                               WHERE si.customer_id = '$customer_id'
+                               HAVING total_due > 0
+                               LIMIT 1";
+                $check_result = mysqli_query($conn, $check_query);
+                if (mysqli_num_rows($check_result) > 0) {
+                    $existing = mysqli_fetch_assoc($check_result);
+                    throw new Exception('This customer already has an active installment with pending payments (Invoice: ' . $existing['invoice_id'] . '). Please complete the existing installment before creating a new one.');
+                }
+            }
+            
+            $inst_duration = intval($_POST['inst_duration'] ?? 90);
+            $inst_interval = intval($_POST['inst_interval'] ?? 30);
+            $inst_count = intval($_POST['inst_count'] ?? 3);
+            $inst_interest_percent = floatval($_POST['inst_interest_percent'] ?? 0);
+            $inst_interest_amount = floatval($_POST['inst_interest_amount'] ?? 0);
+            $initial_amount = $total_amount_paid; // Down Payment received at sale time
+
+            $inst_sale_time = strtotime($sale_date);
+            $installment_end_date = date('Y-m-d H:i:s', strtotime("+$inst_duration days", $inst_sale_time));
+            
+            $inst_order_sql = "INSERT INTO installment_orders 
+                (store_id, invoice_id, duration, interval_count, installment_count, 
+                 interest_percentage, interest_amount, initial_amount, payment_status, 
+                 installment_end_date, created_at) 
+                VALUES 
+                ($store_id, '$invoice_id', $inst_duration, $inst_interval, $inst_count, 
+                 $inst_interest_percent, $inst_interest_amount, $initial_amount, 'due', 
+                 '$installment_end_date', '$sale_date')";
+            
+            if(!mysqli_query($conn, $inst_order_sql)) throw new Exception('Failed to record installment info: ' . mysqli_error($conn));
+
+            // Generate Payment Schedule
+            $remaining_capital = $grand_total - $initial_amount;
+            if ($remaining_capital < 0) $remaining_capital = 0;
+            
+            $capital_per_inst = $remaining_capital / $inst_count;
+            $interest_per_inst = $inst_interest_amount / $inst_count;
+            $payable_per_inst = $capital_per_inst + $interest_per_inst;
+
+            for ($i = 1; $i <= $inst_count; $i++) {
+                $days_to_add = $i * $inst_interval;
+                $payment_date = date('Y-m-d 00:00:00', strtotime("+$days_to_add days", $inst_sale_time));
+                
+                $inst_pay_sql = "INSERT INTO installment_payments 
+                    (store_id, invoice_id, payment_date, capital, interest, payable, paid, due, payment_status) 
+                    VALUES 
+                    ($store_id, '$invoice_id', '$payment_date', $capital_per_inst, $interest_per_inst, $payable_per_inst, 0, $payable_per_inst, 'due')";
+                
+                if(!mysqli_query($conn, $inst_pay_sql)) throw new Exception('Failed to generate installment schedule');
+            }
+            
+            // Update customer has_installment flag
+            if ($customer_id) {
+                $update_customer_sql = "UPDATE customers SET has_installment = 1 WHERE id = $customer_id";
+                mysqli_query($conn, $update_customer_sql);
+            }
+        }
+
         // 4. Record selling_info
         $info_sql = "INSERT INTO selling_info 
             (invoice_id, inv_type, store_id, customer_id, customer_mobile, total_items, 
              discount_amount, tax_amount, shipping_charge, other_charge, grand_total,
-             status, payment_status, created_by, created_at) 
+             is_installment, status, payment_status, created_by, created_at) 
             VALUES 
             ('$invoice_id', 'sale', $store_id, $customer_id_sql, '$customer_mobile', $subtotal,
              $discount, $tax_amount, $shipping, $other_charge, $grand_total,
-             'completed', '$payment_status', $user_id, '$sale_date')";
+             $is_installment, 'completed', '$payment_status', $user_id, '$sale_date')";
         
         if(!mysqli_query($conn, $info_sql)) throw new Exception('Failed to create sale: ' . mysqli_error($conn));
         
@@ -310,8 +390,9 @@ function processPayment($conn, $user_id) {
             $qty = floatval($item['qty']);
             $price = floatval($item['price']);
             $item_subtotal = $qty * $price;
-            $item_sql = "INSERT INTO selling_item (invoice_id, invoice_type, store_id, item_id, item_name, qty_sold, price_sold, subtotal, created_by) 
-                        VALUES ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty, $price, $item_subtotal, $user_id)";
+            $inst_qty = $is_installment ? $qty : 0;
+            $item_sql = "INSERT INTO selling_item (invoice_id, invoice_type, store_id, item_id, item_name, qty_sold, price_sold, subtotal, created_by, installment_quantity) 
+                        VALUES ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty, $price, $item_subtotal, $user_id, $inst_qty)";
             if(!mysqli_query($conn, $item_sql)) throw new Exception('Failed to add item: ' . mysqli_error($conn));
             
             // Update global stock
@@ -339,10 +420,11 @@ function processPayment($conn, $user_id) {
             $paid_for_previous_due = min($excess_payment, $previous_due);
             
             // Current sale's unpaid portion (adds to customer due)
-            $current_sale_due = max(0, $grand_total - $paid_for_current_sale);
+            // NOTE: For installment sales, unpaid amount is tracked in installment_payments table, NOT in current_due
+            $current_sale_due = ($is_installment == 1) ? 0 : max(0, $grand_total - $paid_for_current_sale);
             
             // Net change in customer's current_due:
-            // + current_sale_due (new due from this sale)
+            // + current_sale_due (new due from this sale - 0 for installment)
             // - paid_for_previous_due (payment towards old due)
             $due_change = $current_sale_due - $paid_for_previous_due;
             
@@ -783,12 +865,40 @@ function resumeHeldOrder($conn) {
     // Get items
     $items_result = mysqli_query($conn, "SELECT * FROM holding_item WHERE ref_no = '$invoice_id'");
     $items = [];
+    $stock_warnings = [];
+    $store_id = intval($row['store_id']);
+    
     while($item = mysqli_fetch_assoc($items_result)) {
+        $product_id = intval($item['item_id']);
+        $held_qty = floatval($item['item_quantity']);
+        
+        // Get current stock for this product (Store Specific)
+        $stock_query = "SELECT stock FROM product_store_map WHERE product_id = $product_id AND store_id = $store_id";
+        $stock_result = mysqli_query($conn, $stock_query);
+        $stock_row = mysqli_fetch_assoc($stock_result);
+        
+        // Ensure non-negative stock
+        $available_stock = max(0, floatval($stock_row['stock'] ?? 0));
+        
+        // Check if held quantity exceeds available stock
+        $adjusted_qty = $held_qty;
+        if($held_qty > $available_stock) {
+            $stock_warnings[] = [
+                'product_name' => $item['item_name'],
+                'held_qty' => $held_qty,
+                'available_stock' => $available_stock
+            ];
+            
+            // Auto-adjust to available stock
+            $adjusted_qty = $available_stock;
+        }
+        
         $items[] = [
-            'id' => $item['item_id'],
+            'id' => $product_id,
             'name' => $item['item_name'],
             'price' => floatval($item['item_price']),
-            'qty' => floatval($item['item_quantity'])
+            'qty' => $adjusted_qty,
+            'stock' => $available_stock
         ];
     }
     
@@ -808,7 +918,8 @@ function resumeHeldOrder($conn) {
     echo json_encode([
         'success' => true, 
         'order' => $row,
-        'items' => $items
+        'items' => $items,
+        'stock_warnings' => $stock_warnings
     ]);
 }
 
