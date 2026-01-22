@@ -42,6 +42,7 @@ if(!empty($current_store['currency_id'])) {
         $currency_name = $curr['currency_name'];
     }
 }
+
 // ---------------------------------
 
 // Pagination settings

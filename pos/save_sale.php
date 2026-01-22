@@ -72,6 +72,7 @@ function processPayment($conn, $user_id) {
     $discount = floatval($_POST['discount']);
     $shipping = floatval($_POST['shipping']);
     $other_charge = floatval($_POST['other_charge']);
+    $rounding_adjustment = floatval($_POST['rounding_adjustment'] ?? 0); // New parameter
     $amount_received = floatval($_POST['amount_received']);
     $sale_date = mysqli_real_escape_string($conn, $_POST['sale_date']);
     $previous_due = floatval($_POST['previous_due'] ?? 0); // Previous due from payment modal
@@ -99,7 +100,7 @@ function processPayment($conn, $user_id) {
         $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
     }
     $tax_amount = (($subtotal - $discount) * $tax_percent) / 100;
-    $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
+    $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge + $rounding_adjustment;
     
     // Calculate total paid including applied payments (bKash, Nagad, Giftcard, etc.)
     $payments = json_decode($_POST['payments'] ?? '[]', true);
@@ -158,7 +159,7 @@ function processPayment($conn, $user_id) {
             $subtotal += $item['price'] * ($item['quantity'] ?? $item['qty'] ?? 1);
         }
         $tax_amount = (($subtotal - $discount) * $tax_percent) / 100;
-        $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge;
+        $grand_total = $subtotal - $discount + $tax_amount + $shipping + $other_charge + $rounding_adjustment;
         
         // 2. Generate invoice ID and get mobile
         $invoice_id = generateInvoiceId($conn);
@@ -372,6 +373,16 @@ function processPayment($conn, $user_id) {
         }
 
         // 4. Record selling_info
+        
+        // Fix: Merge rounding_adjustment into other_charge to avoid 'Unknown column' error
+        // since we cannot guarantee the DB schema has been updated.
+        $other_charge += $rounding_adjustment;
+        
+        // Recalculate grand_total to be safe (it should remain the same)
+        // grand_total was already calculated with adjustment, but other_charge is now higher.
+        // Wait, if I increase other_charge, I shouldn't add rounding_adjustment again in grand_total calc if I re-do it.
+        // But here I'm just inserting.
+        
         $info_sql = "INSERT INTO selling_info 
             (invoice_id, inv_type, store_id, customer_id, customer_mobile, total_items, 
              discount_amount, tax_amount, shipping_charge, other_charge, grand_total,

@@ -617,7 +617,12 @@ window.updatePaymentSummary = function () {
     const other = parseFloat(document.getElementById('other-input').value) || 0;
 
     const taxAmount = (subtotal - discount) * (taxPercent / 100);
-    const grandTotal = subtotal - discount + taxAmount + shipping + other;
+    let rawGrandTotal = subtotal - discount + taxAmount + shipping + other;
+
+    // --- Rounding Logic ---
+    let roundedGrandTotal = Math.round(rawGrandTotal);
+
+    const grandTotal = roundedGrandTotal;
 
     // Update all payment fields element checks to avoid errors if elements missing
     if (document.getElementById('payment-subtotal')) document.getElementById('payment-subtotal').textContent = subtotal.toFixed(2);
