@@ -131,9 +131,9 @@ window.openPaymentModal = function (config) {
                 <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #e2e8f0;">
                     <div style="flex: 1;">
                         <div style="font-weight: 600; color: #1e293b; font-size: 13px;">${item.name}</div>
-                        <div style="color: #64748b; font-size: 11px;">${item.qty} × ৳${parseFloat(item.price).toFixed(2)}</div>
+                        <div style="color: #64748b; font-size: 11px;">${item.qty} × ${window.currencySymbol}${parseFloat(item.price).toFixed(2)}</div>
                     </div>
-                    <div style="font-weight: 700; color: #0d9488; font-size: 13px;">৳${parseFloat(item.total).toFixed(2)}</div>
+                    <div style="font-weight: 700; color: #0d9488; font-size: 13px;">${window.currencySymbol}${parseFloat(item.total).toFixed(2)}</div>
                 </div>
             `;
         });
@@ -300,7 +300,7 @@ function selectPaymentMethod(element, id) {
                 ${isSpecial ? `
                 <div style="background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 10px; margin-bottom: 20px;">
                     <span style="display: block; font-size: 13px; color: #14b8a6; font-weight: 600;">Available Balance</span>
-                    <span style="font-size: 20px; font-weight: 700; color: #0f766e;">৳${balance.toFixed(2)}</span>
+                    <span style="font-size: 20px; font-weight: 700; color: #0f766e;">${window.currencySymbol}${balance.toFixed(2)}</span>
                 </div>` : ''}
                 <label style="display: block; text-align: left; font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 600;">ENTER AMOUNT</label>
                 <input type="number" id="swal-input-amount" class="swal2-input" 
@@ -457,7 +457,7 @@ function updateAppliedPaymentsUI() {
         total += p.amount;
         list.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                <span style="color: #065f46; font-size: 12px; font-weight: 600;">${p.label}: ৳${p.amount.toFixed(2)}</span>
+                <span style="color: #065f46; font-size: 12px; font-weight: 600;">${p.label}: ${window.currencySymbol}${p.amount.toFixed(2)}</span>
                 <button onclick="removeAppliedPayment(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0 4px; font-size: 14px;">
                     <i class="fas fa-times-circle"></i>
                 </button>
@@ -465,7 +465,7 @@ function updateAppliedPaymentsUI() {
         `;
     });
 
-    totalLabel.textContent = '৳' + total.toFixed(2);
+    totalLabel.textContent = window.currencySymbol + total.toFixed(2);
 }
 
 function removeAppliedPayment(index) {

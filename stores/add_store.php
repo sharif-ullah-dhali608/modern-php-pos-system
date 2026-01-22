@@ -195,6 +195,65 @@ include('../includes/header.php');
                                         </select>
                                         <i class="fas fa-chevron-down absolute right-4 top-5 text-slate-400 pointer-events-none text-xs"></i>
                                     </div>
+                                    <div class="relative w-full mb-1 group">
+                                        <select name="currency_id" id="currency_id" class="w-full">
+                                            <option value="" disabled selected>Select Currency</option>
+                                            <?php 
+                                            if(!empty($d['currency_id'])) {
+                                                $curr_q = mysqli_query($conn, "SELECT * FROM currencies WHERE id = '{$d['currency_id']}'");
+                                                if($curr = mysqli_fetch_assoc($curr_q)) {
+                                                    $symbol = $curr['symbol_left'] ? $curr['symbol_left'] : $curr['symbol_right'];
+                                                    echo "<option value='{$curr['id']}' selected>{$curr['currency_name']} ({$curr['code']}) $symbol</option>";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                        <i class="absolute right-4 top-4 text-slate-400 text-lg fas fa-coins pointer-events-none z-[11] select2-custom-icon"></i>
+                                        
+                                        <style>
+                                            /* --- Robust Select2 Design Matching --- */
+                                            .select2-container--default .select2-selection--single {
+                                                height: 54px !important;
+                                                background-color: #ffffff !important;
+                                                border: 1px solid #cbd5e1 !important; /* slate-300 */
+                                                border-radius: 0.75rem !important; /* rounded-xl */
+                                                transition: all 0.2s ease !important;
+                                                display: flex !important;
+                                                align-items: center !important;
+                                            }
+                                            .select2-container--default.select2-container--focus .select2-selection--single {
+                                                border-color: #0d9488 !important; /* teal-600 approx */
+                                                box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2) !important;
+                                            }
+                                            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                                                color: #1e293b !important; /* slate-800 */
+                                                font-size: 0.875rem !important; /* text-sm */
+                                                padding-left: 1rem !important;
+                                                padding-right: 3rem !important; /* Space for icon */
+                                                width: 100% !important;
+                                            }
+                                            .select2-container--default .select2-selection--single .select2-selection__placeholder {
+                                                color: #94a3b8 !important; /* slate-400 */
+                                            }
+                                            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                                                display: none !important; /* We use our custom FA icon */
+                                            }
+                                            .select2-dropdown {
+                                                border-radius: 0.75rem !important;
+                                                border: 1px solid #e2e8f0 !important;
+                                                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+                                                overflow: hidden !important;
+                                                z-index: 9999 !important;
+                                            }
+                                            .select2-results__option {
+                                                padding: 10px 16px !important;
+                                                font-size: 0.875rem !important;
+                                            }
+                                            .select2-results__option--highlighted[aria-selected] {
+                                                background-color: #0d9488 !important;
+                                            }
+                                        </style>
+                                    </div>
                                 </div>
                             </div>
 
@@ -342,14 +401,55 @@ include('../includes/header.php');
         </main>
     </div>
 
+    <script src="/pos/assets/js/add-store.js"></script>
+    <!-- Include jQuery and Select2 if not already in header, but typically jQuery is. If not, we add it. 
+         Assuming header has jQuery. If not, Select2 won't work. Let's assume header.php has it as it is standard.
+         If not, the user will report an error. -->
+    <script>
+    $(document).ready(function() {
+        $('#currency_id').select2({
+            placeholder: "Select Currency",
+            width: '100%',
+            allowClear: true,
+            ajax: {
+                url: '/pos/stores/search_currency.php',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term, // search term
+                        limit: 5 // initial load limit as requested (though Select2 might paginate differently, this param handles backend limit)
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            }
+        });
+        
+        // Populate initial 5 data if not editing or existing value
+        <?php if(empty($d['currency_id'])): ?>
+        $.ajax({
+            url: '/pos/stores/search_currency.php?limit=5',
+            dataType: 'json',
+            success: function(data) {
+                if(data.results) {
+                    data.results.forEach(item => {
+                        var option = new Option(item.text, item.id, false, false);
+                        $('#currency_id').append(option).trigger('change');
+                    });
+                    $('#currency_id').val(null).trigger('change'); // Clear selection but populate list
+                }
+            }
+        });
+        <?php endif; ?>
+    });
 
-
-<script src="/pos/assets/js/add-store.js"></script>
-
-<script>
     window.onload = () => {
-      
         initPicker('open_picker', 'open', "<?= $d['open_time']; ?>");
         initPicker('close_picker', 'close', "<?= $d['close_time']; ?>");
     };
-</script>
+    </script>

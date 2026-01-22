@@ -16,10 +16,12 @@ if(empty($invoice_id)){
 
 // Fetch Selling Info with store VAT number
 $query = "SELECT si.*, c.name as customer_name, c.mobile as customer_phone, c.address as customer_address, 
-          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email, s.vat_number
+          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email, s.vat_number,
+          curr.symbol_left, curr.symbol_right, curr.currency_name as currency_full_name
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN stores s ON si.store_id = s.id
+          LEFT JOIN currencies curr ON s.currency_id = curr.id
           WHERE si.info_id = '$invoice_id' OR si.invoice_id = '$invoice_id'";
 
 $result = mysqli_query($conn, $query);

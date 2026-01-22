@@ -5,41 +5,36 @@
 
 // Number to words helper
 function numberToWords(num) {
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+        'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-    if (num === 0) return 'Zero';
-    if (num < 0) return 'Minus ' + numberToWords(-num);
+    if (num === 0) return 'Zero ' + (window.currencyName || 'Taka') + ' Only';
 
-    let words = '';
-
-    if (Math.floor(num / 10000000) > 0) {
-        words += numberToWords(Math.floor(num / 10000000)) + ' Crore ';
-        num %= 10000000;
-    }
-    if (Math.floor(num / 100000) > 0) {
-        words += numberToWords(Math.floor(num / 100000)) + ' Lakh ';
-        num %= 100000;
-    }
-    if (Math.floor(num / 1000) > 0) {
-        words += numberToWords(Math.floor(num / 1000)) + ' Thousand ';
-        num %= 1000;
-    }
-    if (Math.floor(num / 100) > 0) {
-        words += ones[Math.floor(num / 100)] + ' Hundred ';
-        num %= 100;
-    }
-    if (num > 0) {
-        if (num < 10) words += ones[num];
-        else if (num < 20) words += teens[num - 10];
-        else {
-            words += tens[Math.floor(num / 10)];
-            if (num % 10 > 0) words += ' ' + ones[num % 10];
-        }
+    function convertGroup(n) {
+        if (n < 20) return ones[n];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertGroup(n % 100) : '');
     }
 
-    return words.trim() + ' Taka Only';
+    let result = '';
+    const crore = Math.floor(num / 10000000);
+    const lakh = Math.floor((num % 10000000) / 100000);
+    const thousand = Math.floor((num % 100000) / 1000);
+    const remainder = Math.floor(num % 1000);
+    const paisa = Math.round((num - Math.floor(num)) * 100);
+
+    if (crore) result += convertGroup(crore) + ' Crore ';
+    if (lakh) result += convertGroup(lakh) + ' Lakh ';
+    if (thousand) result += convertGroup(thousand) + ' Thousand ';
+    if (remainder) result += convertGroup(remainder);
+
+    result = result.trim() + ' ' + (window.currencyName || 'Taka');
+    if (paisa) result += ' and ' + convertGroup(paisa) + ' ' + (window.currencyPaisaName || 'Cents');
+    result += ' Only';
+
+    return result;
 }
 
 /**
@@ -106,7 +101,7 @@ window.openInvoiceModal = function (data) {
 
         // Amount in words
         if (document.getElementById('inv-in-words')) {
-            document.getElementById('inv-in-words').textContent = numberToWords(Math.floor(data.totals.grandTotal || 0));
+            document.getElementById('inv-in-words').textContent = numberToWords(parseFloat(data.totals.grandTotal || 0));
         }
     }
 

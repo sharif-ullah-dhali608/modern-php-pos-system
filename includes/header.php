@@ -8,7 +8,18 @@ if(!isset($_SESSION['auth'])){
 }
 
 $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
+
+// Global Currency Initialization for JavaScript
+$header_curr_q = mysqli_query($conn, "SELECT c.* FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.status = 1 LIMIT 1");
+$header_curr = mysqli_fetch_assoc($header_curr_q) ?: ['symbol_left' => '৳', 'currency_name' => 'Taka'];
+$global_symbol = $header_curr['symbol_left'] ?: ($header_curr['symbol_right'] ?: '৳');
+$global_name = $header_curr['currency_name'] ?: 'Taka';
 ?>
+<script>
+    window.currencySymbol = "<?= $global_symbol; ?>";
+    window.currencyName = "<?= $global_name; ?>";
+</script>
+<?php ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +38,7 @@ $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <style>
 

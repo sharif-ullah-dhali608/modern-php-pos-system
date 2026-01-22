@@ -257,7 +257,13 @@ document.addEventListener('DOMContentLoaded', function () {
         selectFirstAvailableStore(storeSelect);
     }
 
-    // Load products with selected store
+    // Load products with selected store and update currency
+    const currentId = storeSelect.value;
+    const selectedStoreObj = stores.find(s => s.id == currentId);
+    if (selectedStoreObj) {
+        window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
+        window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
+    }
     loadProducts(1);
 });
 
@@ -310,6 +316,15 @@ document.getElementById('store_select').addEventListener('change', function () {
 
                 // Proceed with store change
                 localStorage.setItem('pos_selected_store', selectedStore);
+
+                // --- NEW: Update Currency Symbol on Confirmed Change ---
+                const selectedStoreObj = stores.find(s => s.id == selectedStore);
+                if (selectedStoreObj) {
+                    window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
+                    window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
+                }
+                // -------------------------------------------------------
+
                 loadProducts(1);
                 showToast('Cart cleared and store switched', 'info');
             } else {
@@ -320,6 +335,15 @@ document.getElementById('store_select').addEventListener('change', function () {
     } else {
         // Cart is empty, proceed normally
         localStorage.setItem('pos_selected_store', selectedStore);
+
+        // --- NEW: Update Currency Symbol on Change ---
+        const selectedStoreObj = stores.find(s => s.id == selectedStore);
+        if (selectedStoreObj) {
+            window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
+            window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
+        }
+        // ----------------------------------------------
+
         loadProducts(1); // Reload from page 1 when store changes
     }
 });
@@ -492,9 +516,9 @@ function renderCart() {
                     <button onclick="updateQty(${item.id}, 1)">+</button>
                 </div>
                 <div class="product-name">${item.name}</div>
-                <div class="price">৳${item.price.toFixed(2)}</div>
+                <div class="price">${window.currencySymbol}${item.price.toFixed(2)}</div>
                 <div class="subtotal">
-                    ৳${subtotal.toFixed(2)}
+                    ${window.currencySymbol}${subtotal.toFixed(2)}
                     <span class="remove-btn" onclick="removeFromCart(${item.id})"><i class="fas fa-trash"></i></span>
                 </div>
             </div>
@@ -533,8 +557,8 @@ function updateTotals() {
 
     document.getElementById('total-items').textContent = `${cart.length} (${totalQty})`;
     document.getElementById('cart-total').textContent = subtotal.toFixed(2);
-    document.getElementById('grand-total').textContent = '৳' + grandTotal.toFixed(2);
-    document.getElementById('footer-total').textContent = '৳' + grandTotal.toFixed(2);
+    document.getElementById('grand-total').textContent = window.currencySymbol + grandTotal.toFixed(2);
+    document.getElementById('footer-total').textContent = window.currencySymbol + grandTotal.toFixed(2);
 }
 
 // Recalculate on input change
@@ -593,7 +617,7 @@ function prepareAndOpenPaymentModal() {
     // Calculate current totals using the shared function to populate global elements first
     if (window.updatePaymentSummary) window.updatePaymentSummary();
 
-    const grandTotal = parseFloat(document.getElementById('grand-total').textContent.replace('৳', '')) || 0;
+    const grandTotal = parseFloat(document.getElementById('grand-total').textContent.replace(window.currencySymbol, '')) || 0;
     const currentCustomerId = parseInt(document.getElementById('selected_customer_id').value) || 0;
     const customerName = document.getElementById('selected-customer-name').textContent || 'Walking Customer';
 
@@ -729,7 +753,7 @@ function numberToWords(num) {
         'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-    if (num === 0) return 'Zero Taka Only';
+    if (num === 0) return 'Zero ' + (window.currencyName || 'Taka') + ' Only';
 
     function convertGroup(n) {
         if (n < 20) return ones[n];
@@ -749,8 +773,8 @@ function numberToWords(num) {
     if (thousand) result += convertGroup(thousand) + ' Thousand ';
     if (remainder) result += convertGroup(remainder);
 
-    result = result.trim() + ' Taka';
-    if (paisa) result += ' and ' + convertGroup(paisa) + ' Paisa';
+    result = result.trim() + ' ' + (window.currencyName || 'Taka');
+    if (paisa) result += ' and ' + convertGroup(paisa) + ' ' + (window.currencyPaisaName || 'Paisa');
     result += ' Only';
 
     return result;
@@ -2505,9 +2529,12 @@ window.openProductDetails = function (productId) {
 
                 safeSet('pd-name', p.name);
                 safeSet('pd-category', p.category);
-                safeSet('pd-price', '৳' + parseFloat(p.selling_price).toFixed(2));
+                safeSet('pd-price', (window.currencySymbol || '৳') + parseFloat(p.selling_price).toFixed(2));
                 safeSet('pd-unit', p.unit);
-                safeSet('pd-description', p.description || 'No description available.');
+                let desc = p.description || 'No description available.';
+                if (window.currencyName) desc = desc.replace(/Taka/g, window.currencyName);
+                if (window.currencySymbol) desc = desc.replace(/৳/g, window.currencySymbol);
+                safeSet('pd-description', desc);
 
                 // Populate Extra Info Grid
                 safeSet('pd-brand', p.brand);
@@ -2656,13 +2683,21 @@ function adjustModalQty(delta) {
     input.value = val;
 }
 
+// Robust price parsing helper
+function parseFloatPrice(str) {
+    if (!str) return 0;
+    // Remove everything except numbers and dots
+    const cleanStr = str.replace(/[^\d.]/g, '');
+    return parseFloat(cleanStr) || 0;
+}
+
 function addToCartFromModal() {
     if (!currentProductDetailsId) return;
 
     const qty = parseInt(document.getElementById('pd-qty-input').value) || 1;
     const name = document.getElementById('pd-name').textContent;
     const priceStr = document.getElementById('pd-price').textContent;
-    const price = parseFloat(priceStr.replace('৳', '')) || 0;
+    const price = parseFloatPrice(priceStr);
 
     // Get stock from the main product grid card to ensure consistency with store selection
     const productCard = document.querySelector(`.product-card[data-id="${currentProductDetailsId}"]`);
@@ -2729,7 +2764,7 @@ document.addEventListener('keydown', function (e) {
             e.preventDefault();
             if (cart.length > 0) {
                 openPaymentModal({
-                    totalPayable: parseFloat(document.getElementById('grand-total').textContent.replace('৳', '')) || 0,
+                    totalPayable: parseFloatPrice(document.getElementById('grand-total').textContent),
                     previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
                     customerId: document.getElementById('selected_customer_id').value || 0,
                     customerName: document.getElementById('selected-customer-name').textContent,
@@ -2748,7 +2783,7 @@ document.addEventListener('keydown', function (e) {
             if (cart.length > 0) {
                 e.preventDefault();
                 openPaymentModal({
-                    totalPayable: parseFloat(document.getElementById('grand-total').textContent.replace('৳', '')) || 0,
+                    totalPayable: parseFloatPrice(document.getElementById('grand-total').textContent),
                     previousDue: parseFloat(document.getElementById('customer_due_balance').value) || 0,
                     customerId: document.getElementById('selected_customer_id').value || 0,
                     customerName: document.getElementById('selected-customer-name').textContent,

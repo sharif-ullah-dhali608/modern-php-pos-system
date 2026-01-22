@@ -162,7 +162,7 @@
                                 </div>
                                 <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(16, 185, 129, 0.2); display: flex; justify-content: space-between; font-weight: 700; color: #065f46; font-size: 12px;">
                                     <span>Total Applied:</span>
-                                    <span id="total-applied-amount">৳0.00</span>
+                                    <span id="total-applied-amount"><?= $currency_symbol; ?>0.00</span>
                                 </div>
                             </div>
                             

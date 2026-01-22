@@ -139,6 +139,15 @@ foreach($products as $product):
                 $display_image = "/pos/uploads/" . $product['image'];
             }
         }
+        // --- NEW: Fetch Store Currency ---
+        $currency_symbol = "৳"; // Default
+        if($store_id > 0) {
+            $curr_q = mysqli_query($conn, "SELECT c.symbol_left, c.symbol_right FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.id = $store_id");
+            if($curr = mysqli_fetch_assoc($curr_q)) {
+                $currency_symbol = $curr['symbol_left'] ? $curr['symbol_left'] : $curr['symbol_right'];
+            }
+        }
+        // ---------------------------------
         ?>
         <?php if(!empty($display_image)): ?>
             <img src="<?= $display_image; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
@@ -147,7 +156,7 @@ foreach($products as $product):
         <?php endif; ?>
         <div class="info">
             <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
-            <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
+            <div class="price"><?= $currency_symbol; ?><?= number_format($product['selling_price'], 2); ?></div>
             <div class="stock" style="position: relative;">
                 Stock: <?= number_format($stock, 0); ?>
             </div>
