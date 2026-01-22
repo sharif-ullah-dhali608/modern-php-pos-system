@@ -553,12 +553,34 @@ function updateTotals() {
     const other = parseFloat(document.getElementById('other-input').value) || 0;
 
     const taxAmount = (subtotal - discount) * (taxPercent / 100);
-    const grandTotal = subtotal - discount + taxAmount + shipping + other;
+    let rawGrandTotal = subtotal - discount + taxAmount + shipping + other;
+
+    // --- Rounding Logic ---
+    let roundedGrandTotal = Math.round(rawGrandTotal);
+    let roundingAdjustment = roundedGrandTotal - rawGrandTotal;
+
+    // Prevent -0.00 display issues
+    if (Math.abs(roundingAdjustment) < 0.001) roundingAdjustment = 0;
 
     document.getElementById('total-items').textContent = `${cart.length} (${totalQty})`;
     document.getElementById('cart-total').textContent = subtotal.toFixed(2);
-    document.getElementById('grand-total').textContent = window.currencySymbol + grandTotal.toFixed(2);
-    document.getElementById('footer-total').textContent = window.currencySymbol + grandTotal.toFixed(2);
+
+    // Display Rounded Total
+    document.getElementById('grand-total').innerHTML = window.currencySymbol + roundedGrandTotal.toFixed(2) +
+        `<small style="font-size: 11px; color: #64748b; display: block;">(Adj: ${roundingAdjustment > 0 ? '+' : ''}${roundingAdjustment.toFixed(2)})</small>`;
+
+    document.getElementById('footer-total').textContent = window.currencySymbol + roundedGrandTotal.toFixed(2);
+
+    // Store adjustment in hidden field if needed, or just calculate on submission
+    // We'll create a hidden input if it doesn't exist to store this for easy access
+    let adjInput = document.getElementById('rounding-adjustment-input');
+    if (!adjInput) {
+        adjInput = document.createElement('input');
+        adjInput.type = 'hidden';
+        adjInput.id = 'rounding-adjustment-input';
+        document.body.appendChild(adjInput);
+    }
+    adjInput.value = roundingAdjustment.toFixed(2);
 }
 
 // Recalculate on input change
@@ -617,7 +639,10 @@ function prepareAndOpenPaymentModal() {
     // Calculate current totals using the shared function to populate global elements first
     if (window.updatePaymentSummary) window.updatePaymentSummary();
 
-    const grandTotal = parseFloat(document.getElementById('grand-total').textContent.replace(window.currencySymbol, '')) || 0;
+    // Gets the rounded total from the footer or re-calculates
+    // We used rounded total in updateTotals, so footer-total has the rounded value
+    const grandTotalStr = document.getElementById('footer-total').textContent.replace(window.currencySymbol, '');
+    const grandTotal = parseFloat(grandTotalStr) || 0;
     const currentCustomerId = parseInt(document.getElementById('selected_customer_id').value) || 0;
     const customerName = document.getElementById('selected-customer-name').textContent || 'Walking Customer';
 
@@ -821,6 +846,11 @@ function submitPosSale(paymentData) {
     formData.append('tax_percent', document.getElementById('tax-input').value || 0);
     formData.append('shipping', document.getElementById('shipping-input').value || 0);
     formData.append('other_charge', document.getElementById('other-input').value || 0);
+
+    // Add Rounding Adjustment
+    const roundingAdj = document.getElementById('rounding-adjustment-input') ? document.getElementById('rounding-adjustment-input').value : 0;
+    formData.append('rounding_adjustment', roundingAdj);
+
     formData.append('amount_received', paymentData.amountReceived);
 
     // Ensure payments are formatted correctly for PHP
@@ -2866,4 +2896,37 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+});
+
+// --- NEW: Dynamic Currency Helper ---
+function updateCurrencyFromStore() {
+    const storeSelect = document.getElementById('store_select');
+    if (storeSelect && typeof stores !== 'undefined') {
+        const storeId = storeSelect.value;
+        if (storeId && storeId !== 'all') {
+            const selectedStore = stores.find(s => s.id == storeId);
+            if (selectedStore && selectedStore.currency_symbol) {
+                // Strictly use the store's currency symbol
+                window.currencySymbol = selectedStore.currency_symbol;
+
+                // Update specific elements directly
+                const grandTotalEl = document.getElementById('grand-total');
+                if (grandTotalEl) updateTotals();
+                // Check if cart is defined before using it
+                if (typeof cart !== 'undefined' && cart.length > 0) renderCart();
+            }
+        }
+    }
+}
+
+// Attach listeners
+document.addEventListener('DOMContentLoaded', function () {
+    // Initial check
+    setTimeout(updateCurrencyFromStore, 500);
+
+    // If store selector changes
+    const storeSelect = document.getElementById('store_select');
+    if (storeSelect) {
+        storeSelect.addEventListener('change', updateCurrencyFromStore);
+    }
 });
