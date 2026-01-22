@@ -12,11 +12,13 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id > 0) {
     $query = "SELECT io.*, si.grand_total as sale_total, si.created_at as sale_date, 
                      c.name as customer_name, c.mobile as customer_mobile, c.address as customer_address,
-                     s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email, s.vat_number
+                     s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email, s.vat_number,
+                     curr.symbol_left, curr.symbol_right, curr.currency_name as currency_full_name
               FROM installment_orders io
               JOIN selling_info si ON io.invoice_id = si.invoice_id
               LEFT JOIN customers c ON si.customer_id = c.id
               JOIN stores s ON io.store_id = s.id
+              LEFT JOIN currencies curr ON s.currency_id = curr.id
               WHERE io.id = $id";
               
     $res = mysqli_query($conn, $query);
@@ -42,6 +44,7 @@ if ($id > 0) {
     exit;
 }
 
+$installment['currency_symbol'] = $installment['symbol_left'] ?: ($installment['symbol_right'] ?: '৳');
 $page_title = "Installment - " . $installment['invoice_id'];
 ?>
 <!DOCTYPE html>
@@ -529,6 +532,11 @@ $page_title = "Installment - " . $installment['invoice_id'];
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        // Define global currency variables for payment_logic.js and numberToWords
+        window.currencySymbol = "<?= $installment['currency_symbol'] ?? '৳'; ?>";
+        window.currencyName = "<?= $installment['currency_full_name'] ?? 'Taka'; ?>";
+    </script>
     <script src="/pos/assets/js/payment_logic.js"></script>
     <script>
         // CRITICAL: Hide payment modal immediately on load
@@ -864,10 +872,11 @@ $page_title = "Installment - " . $installment['invoice_id'];
             
             if (decimal !== '00') {
                 let decimalWord = formatTrio('0' + decimal);
-                result += ' and ' + decimalWord + ' Cents';
+                result += ' and ' + decimalWord + ' ' + (window.currencyPaisaName || 'Cents');
             }
             
-            return result + ' Only';
+            const currencyName = window.currencyName || 'Taka';
+            return result + ' ' + currencyName + ' Only';
         }
         
         // Function to close invoice modal

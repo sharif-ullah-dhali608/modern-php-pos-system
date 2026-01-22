@@ -30,12 +30,14 @@ $query = "SELECT sl.*,
           c.name as customer_name, c.mobile as customer_phone, c.address as customer_address,
           pm.name as pmethod_name, pm.code as pmethod_code,
           u.name as created_by_name,
-          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email
+          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email,
+          curr.symbol_left, curr.symbol_right, curr.currency_name as currency_full_name
           FROM sell_logs sl 
           LEFT JOIN customers c ON sl.customer_id = c.id 
           LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id
           LEFT JOIN users u ON sl.created_by = u.id
           LEFT JOIN stores s ON sl.store_id = s.id
+          LEFT JOIN currencies curr ON s.currency_id = curr.id
           WHERE sl.id = $id";
 
 $result = mysqli_query($conn, $query);
@@ -190,7 +192,7 @@ if (empty($phone_display)) {
             <table style="width: 100%;">
                 <tr class="font-bold text-lg">
                     <td class="text-right" style="width: 60%"><?= $log['type'] === 'payment' ? 'Payment Amount:' : 'Amount:'; ?></td>
-                    <td class="text-right text-emerald-600">৳<?= number_format($log['amount'], 2); ?></td>
+                    <td class="text-right text-emerald-600"><?= $log['symbol_left'] ?: ($log['symbol_right'] ?: '৳'); ?><?= number_format($log['amount'], 2); ?></td>
                 </tr>
             </table>
         </div>
@@ -275,7 +277,8 @@ if (empty($phone_display)) {
                     }
                     result = result.trim() || 'Zero';
                     if (decimal !== '00') result += ' and ' + formatTrio('0' + decimal) + ' Cents';
-                    return result + ' Only';
+                    const currencyName = "<?= $log['currency_full_name'] ?? 'Taka'; ?>";
+                    return result + ' ' + currencyName + ' Only';
                 }
                 document.getElementById('in-words').textContent = numberToWords(<?= (float)($log['amount'] ?? 0); ?>); 
             </script>

@@ -21,6 +21,7 @@ if(isset($_POST['save_store_btn']))
     $city_zip = mysqli_real_escape_string($conn, $_POST['city_zip']);
     $vat_number = mysqli_real_escape_string($conn, $_POST['vat_number']);
     $timezone = mysqli_real_escape_string($conn, $_POST['timezone']);
+    $currency_id = !empty($_POST['currency_id']) ? mysqli_real_escape_string($conn, $_POST['currency_id']) : "NULL"; // Handle Currency
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
@@ -49,12 +50,12 @@ if(isset($_POST['save_store_btn']))
 
     $query = "INSERT INTO stores (
         store_name, store_code, business_type, email, phone, address, city_zip, 
-        vat_number, timezone, max_line_disc, max_inv_disc, approval_disc, 
+        vat_number, timezone, currency_id, max_line_disc, max_inv_disc, approval_disc, 
         overselling, low_stock, status, daily_target, open_time, close_time, 
         allow_manual_price, allow_backdate
     ) VALUES (
         '$store_name', '$store_code', '$business_type', '$email', '$phone', '$address', '$city_zip', 
-        '$vat_number', '$timezone', '$max_line_disc', '$max_inv_disc', '$approval_disc', 
+        '$vat_number', '$timezone', $currency_id, '$max_line_disc', '$max_inv_disc', '$approval_disc', 
         '$overselling', '$low_stock', '$status', '$daily_target', '$open_time', '$close_time', 
         '$allow_manual_price', '$allow_backdate'
     )";
@@ -85,6 +86,7 @@ if(isset($_POST['update_store_btn']))
     $city_zip = mysqli_real_escape_string($conn, $_POST['city_zip']);
     $vat_number = mysqli_real_escape_string($conn, $_POST['vat_number']);
     $timezone = mysqli_real_escape_string($conn, $_POST['timezone']);
+    $currency_id = !empty($_POST['currency_id']) ? mysqli_real_escape_string($conn, $_POST['currency_id']) : "NULL"; // Handle Currency Update
     $overselling = mysqli_real_escape_string($conn, $_POST['overselling']);
     $open_time = mysqli_real_escape_string($conn, $_POST['open_time']);
     $close_time = mysqli_real_escape_string($conn, $_POST['close_time']);
@@ -112,9 +114,9 @@ if(isset($_POST['update_store_btn']))
     $query = "UPDATE stores SET 
                 store_name='$store_name', store_code='$store_code', business_type='$business_type', 
                 email='$email', phone='$phone', address='$address', city_zip='$city_zip', 
-                vat_number='$vat_number', timezone='$timezone', max_line_disc='$max_line_disc', 
-                max_inv_disc='$max_inv_disc', approval_disc='$approval_disc', overselling='$overselling', 
-                low_stock='$low_stock', status='$status', daily_target='$daily_target', 
+                vat_number='$vat_number', timezone='$timezone', currency_id=$currency_id, 
+                max_line_disc='$max_line_disc', max_inv_disc='$max_inv_disc', approval_disc='$approval_disc', 
+                overselling='$overselling', low_stock='$low_stock', status='$status', daily_target='$daily_target', 
                 open_time='$open_time', close_time='$close_time', allow_manual_price='$allow_manual_price', 
                 allow_backdate='$allow_backdate' 
               WHERE id='$store_id'";

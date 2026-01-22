@@ -23,14 +23,23 @@ if(empty($invoice_id)){
 // Note: Adjusted query to use `invoice_id` if that's what's passed, or `info_id`. 
 // The link in invoice.php uses 'info_id' but let's support both or check what's passed.
 $query = "SELECT si.*, c.name as customer_name, c.mobile as customer_phone, c.address as customer_address, 
-          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email
+          s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email,
+          curr.symbol_left, curr.symbol_right, curr.currency_name as currency_full_name
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN stores s ON si.store_id = s.id
+          LEFT JOIN currencies curr ON s.currency_id = curr.id
           WHERE si.info_id = '$invoice_id' OR si.invoice_id = '$invoice_id'";
 
 $result = mysqli_query($conn, $query);
 $invoice = mysqli_fetch_assoc($result);
+
+// Robust fallback for currency name
+$currency_full_name = $invoice['currency_full_name'] ?? 'Taka';
+if(empty($invoice['currency_full_name']) && !empty($invoice['store_id'])) {
+    $c_q = mysqli_query($conn, "SELECT c.currency_name FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.id = '{$invoice['store_id']}'");
+    if($c_row = mysqli_fetch_assoc($c_q)) $currency_full_name = $c_row['currency_name'];
+}
 
 if(!$invoice){
     echo "Invoice not found";
@@ -211,6 +220,7 @@ $payments_result = mysqli_query($conn, $payments_query);
                      $total_paid += $pay['amount'];
                  }
                  $due = $invoice['grand_total'] - $total_paid;
+                 if($due < 0.05) $due = 0;
                  ?>
                  
                 <tr>
@@ -265,7 +275,8 @@ $payments_result = mysqli_query($conn, $payments_query);
                         result += ' and ' + decimalWord + ' Cents';
                     }
                     
-                    return result + ' Only';
+                    const currencyName = "<?= $currency_full_name; ?>";
+                    return result + ' ' + currencyName + ' Only';
                 }
                 
                 document.getElementById('in-words').textContent = numberToWords(<?= (float)($invoice['grand_total'] ?? 0); ?>); 

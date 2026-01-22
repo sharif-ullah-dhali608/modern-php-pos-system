@@ -28,10 +28,12 @@ if($id <= 0) {
 // Get return info with all related data
 $query = "SELECT si.*, c.name as customer_name, c.mobile as customer_phone, c.address as customer_address, 
           s.store_name, s.address as store_address, s.phone as store_phone, s.email as store_email,
+          curr.symbol_left, curr.symbol_right, curr.currency_name as currency_full_name,
           u.name as created_by_name
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN stores s ON si.store_id = s.id
+          LEFT JOIN currencies curr ON s.currency_id = curr.id
           LEFT JOIN users u ON si.created_by = u.id
           WHERE si.info_id = $id AND si.inv_type = 'return'";
 
@@ -244,7 +246,8 @@ if(!empty($return['ref_invoice_id'])) {
                     }
                     result = result.trim() || 'Zero';
                     if (decimal !== '00') result += ' and ' + formatTrio('0' + decimal) + ' Cents';
-                    return result + ' Only';
+                    const currencyName = "<?= $return['currency_full_name'] ?? 'Taka'; ?>";
+                    return result + ' ' + currencyName + ' Only';
                 }
                 document.getElementById('in-words').textContent = numberToWords(<?= (float)($return['grand_total'] ?? 0); ?>); 
             </script>

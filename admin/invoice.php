@@ -183,9 +183,9 @@ $config = [
     
     // New: Summary Cards
     'summary_cards' => [
-        ['label' => 'Grand Total', 'value' => number_format($summary_grand_total, 2), 'border_color' => 'border-teal-500'],
-        ['label' => 'Total Paid', 'value' => number_format($summary_total_paid, 2), 'border_color' => 'border-emerald-500'],
-        ['label' => 'Total Due', 'value' => number_format($summary_total_due, 2), 'border_color' => 'border-amber-500'],
+        ['label' => 'Grand Total', 'value' => $global_symbol . number_format($summary_grand_total, 2), 'border_color' => 'border-teal-500'],
+        ['label' => 'Total Paid', 'value' => $global_symbol . number_format($summary_total_paid, 2), 'border_color' => 'border-emerald-500'],
+        ['label' => 'Total Due', 'value' => $global_symbol . number_format($summary_total_due, 2), 'border_color' => 'border-amber-500'],
         ['label' => 'Total Invoices', 'value' => number_format($summary_total_invoices), 'border_color' => 'border-red-500']
     ],
     
@@ -374,7 +374,7 @@ function payAllDue() {
     Swal.fire({
         title: 'Pay All Due Invoices?',
         html: `<div class="text-left">
-            <p class="mb-2">Total Due Amount: <strong class="text-red-600">৳${totalDue.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></p>
+            <p class="mb-2">Total Due Amount: <strong class="text-red-600">${window.currencySymbol || '৳'}${totalDue.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></p>
             <p class="text-sm text-slate-500">This will open individual payment modals for each due invoice.</p>
         </div>`,
         icon: 'question',

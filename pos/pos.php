@@ -16,14 +16,33 @@ $user_name = $_SESSION['auth_user']['name'] ?? 'Admin';
 
 
 
-// Fetch active stores
-$stores_query = "SELECT * FROM stores WHERE status=1 ORDER BY store_name ASC";
+// Fetch active stores with currency symbols and names
+$stores_query = "SELECT s.*, c.symbol_left, c.symbol_right, c.currency_name as currency_full_name 
+                FROM stores s 
+                LEFT JOIN currencies c ON s.currency_id = c.id 
+                WHERE s.status=1 ORDER BY s.store_name ASC";
 $stores_result = mysqli_query($conn, $stores_query);
 $stores = [];
 while($store = mysqli_fetch_assoc($stores_result)) {
+    // Determine the symbol
+    $store['currency_symbol'] = $store['symbol_left'] ?: ($store['symbol_right'] ?: '৳');
     $stores[] = $store;
 }
 $current_store = $stores[0] ?? ['id' => 1, 'store_name' => 'Default Store'];
+
+// --- NEW: Fetch Store Currency ---
+$currency_symbol = "৳"; // Default
+$currency_code = "USD";
+$currency_name = "Taka";
+if(!empty($current_store['currency_id'])) {
+    $curr_q = mysqli_query($conn, "SELECT * FROM currencies WHERE id = '{$current_store['currency_id']}'");
+    if($curr = mysqli_fetch_assoc($curr_q)) {
+        $currency_symbol = $curr['symbol_left'] ? $curr['symbol_left'] : $curr['symbol_right'];
+        $currency_code = $curr['code'];
+        $currency_name = $curr['currency_name'];
+    }
+}
+// ---------------------------------
 
 // Pagination settings
 $items_per_page = 20;
@@ -203,7 +222,7 @@ include('../includes/header.php');
                             <?php endif; ?>
                             <div class="info">
                                 <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
-                                <div class="price">৳<?= number_format($product['selling_price'], 2); ?></div>
+                                <div class="price"><?= $currency_symbol; ?><?= number_format($product['selling_price'], 2); ?></div>
                                 <div class="stock">Stock: <?= number_format($stock, 0); ?></div>
                             </div>
                             <?php if($is_out_of_stock): ?>
@@ -315,7 +334,7 @@ include('../includes/header.php');
                     </div>
                     <div class="totals-row total">
                         <span>TOTAL PAYABLE</span>
-                        <span id="grand-total">৳0.00</span>
+                        <span id="grand-total"><?= $currency_symbol; ?>0.00</span>
                     </div>
                 </div>
                 
@@ -323,7 +342,7 @@ include('../includes/header.php');
                 <div class="pos-footer">
                     <div class="total-display">
                         <div class="label">TOTAL</div>
-                        <div class="amount" id="footer-total">৳0.00</div>
+                        <div class="amount" id="footer-total"><?= $currency_symbol; ?>0.00</div>
                     </div>
                     <div class="footer-controls">
                         <input type="date" class="date-input" id="sale-date" value="<?= date('Y-m-d'); ?>">
@@ -508,7 +527,7 @@ include('../includes/header.php');
                      <h2 id="pd-name" style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 10px 0; line-height: 1.2;">Product Name</h2>
                      
                      <div class="pd-mobile-row" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                        <span id="pd-price" style="font-size: 28px; font-weight: 800; color: #0d9488;">৳0.00</span>
+                        <span id="pd-price" style="font-size: 28px; font-weight: 800; color: #0d9488;"><?= $global_symbol; ?>0.00</span>
                         <span id="pd-unit" style="font-size: 13px; font-weight: 600; color: #94a3b8; background: #f1f5f9; padding: 4px 10px; border-radius: 20px;">Unit</span>
                     </div>
 
@@ -1259,6 +1278,8 @@ include('../includes/header.php');
 <script src="/pos/assets/js/payment_logic.js"></script>
 <script>
     const stores = <?= json_encode($stores); ?>;
+    window.currencySymbol = "<?= $currency_symbol; ?>"; // Dynamic Currency for JS
+    window.currencyName = "<?= $currency_name; ?>"; // Dynamic Currency Name for JS
 </script>
 <script src="/pos/assets/js/pos.js"></script>
 

@@ -61,11 +61,14 @@ $items = [];
 
 if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
+        $due = floatval($row['due']);
+        if($due < 0.05) $due = 0;
+        
         $row['formatted_payable'] = number_format($row['payable'], 2);
         $row['formatted_capital'] = number_format($row['capital'], 2);
         $row['formatted_interest'] = number_format($row['interest'], 2);
         $row['formatted_paid'] = number_format($row['paid'], 2);
-        $row['formatted_due'] = number_format($row['due'], 2);
+        $row['formatted_due'] = number_format($due, 2);
         $row['formatted_date'] = date('d M, Y', strtotime($row['payment_date']));
         $items[] = $row;
     }
@@ -219,52 +222,20 @@ function submitInstallmentPayment(paymentId, invoiceId, paymentData) {
             // Close payment modal first
             closeModal('paymentModal');
             
-            console.log('Fetching invoice data for:', currentInvoiceId);
-            // Fetch invoice data to display in modal
-            fetch(`/pos/invoice/get_invoice_data.php?invoice_id=${currentInvoiceId}`)
-                .then(res => {
-                    console.log('Invoice API response status:', res.status);
-                    return res.json();
-                })
-                .then(invoiceData => {
-                    console.log('Invoice data received:', invoiceData);
-                    if(invoiceData.success) {
-                        console.log('Opening invoice modal...');
-                        // Open invoice modal with fetched data
-                        window.openInvoiceModal({
-                            invoiceId: invoiceData.invoice_id,
-                            store: invoiceData.store,
-                            customer: invoiceData.customer,
-                            items: invoiceData.items,
-                            totals: invoiceData.totals,
-                            paymentMethod: invoiceData.payment_method || 'Payment',
-                            onClose: () => window.location.reload()
-                        });
-                    } else {
-                        console.error('Invoice data fetch failed:', invoiceData.message);
-                        // Fallback: show success and reload
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Payment Successful',
-                            text: data.message + ' (Invoice display unavailable)',
-                            confirmButtonColor: '#10b981'
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching invoice:', error);
-                    // Fallback: show success and reload
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Payment Successful',
-                        text: data.message + ' (Invoice display error)',
-                        confirmButtonColor: '#10b981'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                });
+            // Show Success Notification
+            Swal.fire({
+                icon: 'success',
+                title: 'Payment Successful',
+                text: 'Processing invoice...',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            // Open invoice view modal
+            setTimeout(() => {
+                openInvoiceViewModal(currentInvoiceId);
+            }, 1600);
+
         } else {
             Swal.fire({ icon: 'error', title: 'Error', text: data.message });
             btn.innerHTML = originalText;
@@ -278,4 +249,95 @@ function submitInstallmentPayment(paymentId, invoiceId, paymentData) {
         btn.disabled = false;
     });
 }
+
+// Function to open invoice view modal (Ported from view_installment.php)
+function openInvoiceViewModal(invoiceId) {
+    fetch('/pos/admin/invoice_content.php?id=' + invoiceId)
+        .then(res => res.text())
+        .then(html => {
+            // Create modal container if not exists
+            let modalContainer = document.getElementById('invoice-view-modal-container');
+            if (!modalContainer) {
+                modalContainer = document.createElement('div');
+                modalContainer.id = 'invoice-view-modal-container';
+                document.body.appendChild(modalContainer);
+            }
+            
+            // Wrap invoice content in modal structure
+            const modalHTML = `
+                <div class="pos-modal active" id="invoiceViewModal" style="display: flex; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1050; align-items: center; justify-content: center; padding: 10px;">
+                    <div style="background: white; border-radius: 12px; max-width: 480px; width: 100%; max-height: 98vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative;">
+                        <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+                            ${html}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert modal HTML
+            modalContainer.innerHTML = modalHTML;
+            
+            // Trigger Barcode Generation
+            setTimeout(() => {
+                if(window.JsBarcode && document.getElementById('barcode-modal')) {
+                    JsBarcode("#barcode-modal", invoiceId, {
+                        format: "CODE128",
+                        lineColor: "#000",
+                        width: 2,
+                        height: 40,
+                        displayValue: true,
+                        fontSize: 10
+                    });
+                }
+            }, 100);
+
+            // Trigger Number to Words
+            setTimeout(() => {
+                const totalEl = document.getElementById('base-grand-total');
+                const wordsEl = document.getElementById('in-words');
+                if(totalEl && wordsEl) {
+                    const amount = parseFloat(totalEl.value || 0);
+                    // Use numberToWords from invoice_modal.js
+                    if(typeof numberToWords === 'function') {
+                        wordsEl.textContent = numberToWords(amount);
+                    }
+                }
+            }, 100);
+        })
+        .catch(error => {
+            console.error('Error loading invoice:', error);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load invoice' });
+        });
+}
+
+// Ensure the onClose of this modal reloads the page
+function closeInvoiceModal() {
+    window.location.reload();
+}
+
+// Global Enter Key Handler for Payment and Invoice Modals
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        // 1. If Invoice Modal is open, Print
+        const invoiceModal = document.getElementById('invoiceViewModal');
+        if (invoiceModal && invoiceModal.classList.contains('active')) {
+            e.preventDefault();
+            window.print();
+            return;
+        }
+
+        // 2. If Payment Modal is open, Checkout
+        const paymentModal = document.getElementById('paymentModal');
+        if (paymentModal && paymentModal.classList.contains('active')) {
+            // Only trigger if no other modal (like a Swal alert) is on top
+            if (!document.querySelector('.swal2-container')) {
+                e.preventDefault();
+                const checkoutBtn = document.querySelector('.complete-btn');
+                if (checkoutBtn && !checkoutBtn.disabled) {
+                    checkoutBtn.click();
+                }
+            }
+        }
+    }
+});
 </script>

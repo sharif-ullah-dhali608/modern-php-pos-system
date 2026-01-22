@@ -30,6 +30,7 @@ function ensure_core_tables(mysqli $conn) {
         city_zip VARCHAR(255) DEFAULT NULL,
         vat_number VARCHAR(100) DEFAULT NULL,
         timezone VARCHAR(50) DEFAULT 'Asia/Dhaka',
+        currency_id INT(11) DEFAULT NULL,
         max_line_disc DECIMAL(10,2) DEFAULT 0,
         max_inv_disc DECIMAL(10,2) DEFAULT 0,
         approval_disc DECIMAL(10,2) DEFAULT 0,
@@ -43,7 +44,8 @@ function ensure_core_tables(mysqli $conn) {
         allow_backdate TINYINT(1) DEFAULT 0,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+        FOREIGN KEY (currency_id) REFERENCES currencies(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // Currencies table
@@ -951,4 +953,22 @@ mysqli_query($conn, $userStoreMapSql);
 }
 
 ensure_core_tables($conn);
+
+// Ensure currency_id column exists in stores table (Added via Implementation Plan)
+$checkStoreCurrency = @mysqli_query($conn, "SHOW COLUMNS FROM stores LIKE 'currency_id'");
+if($checkStoreCurrency && mysqli_num_rows($checkStoreCurrency) == 0) {
+    @mysqli_query($conn, "ALTER TABLE stores ADD CONSTRAINT fk_store_currency FOREIGN KEY (currency_id) REFERENCES currencies(id) ON DELETE SET NULL");
+}
+
+// Seed currencies if none exist
+// $checkCurrencies = mysqli_query($conn, "SELECT id FROM currencies LIMIT 1");
+// if($checkCurrencies && mysqli_num_rows($checkCurrencies) == 0) {
+//     mysqli_query($conn, "INSERT INTO currencies (currency_name, code, symbol_left, status, sort_order) VALUES 
+//         ('Bangladeshi Taka', 'BDT', '৳', 1, 1),
+//         ('US Dollar', 'USD', '$', 1, 2),
+//         ('Euro', 'EUR', '€', 1, 3),
+//         ('British Pound', 'GBP', '£', 1, 4),
+//         ('Indian Rupee', 'INR', '₹', 1, 5)
+//     ");
+// }
 ?>
