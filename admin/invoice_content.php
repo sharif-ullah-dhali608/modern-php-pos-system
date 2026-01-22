@@ -55,7 +55,9 @@ if($is_installment){
     while($ip = mysqli_fetch_assoc($inst_pay_result)){
         $installment_payments[] = $ip;
         $total_installment_paid += $ip['paid'];
-        $total_installment_due += ($ip['payable'] - $ip['paid']);
+        $dueAmount = $ip['payable'] - $ip['paid'];
+        if($dueAmount < 0.05) $dueAmount = 0;
+        $total_installment_due += $dueAmount;
     }
 }
 
@@ -63,580 +65,379 @@ if($is_installment){
 $payments_query = "SELECT sl.*, pm.name as pmethod_name, pm.id as method_id
                    FROM sell_logs sl 
                    LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id
-                   WHERE sl.ref_invoice_id = '{$invoice['invoice_id']}'
+                   WHERE sl.ref_invoice_id = '{$invoice['invoice_id']}' 
+                   AND sl.type IN ('payment', 'full_payment', 'partial_payment')
                    ORDER BY sl.created_at ASC";
 $payments_result = mysqli_query($conn, $payments_query);
-
-// Debug: Check what we're getting from sell_logs
-// Uncomment to debug:
-// echo "<!-- DEBUG SELL_LOGS:\n";
-// mysqli_data_seek($payments_result, 0);
-// while($debug_log = mysqli_fetch_assoc($payments_result)){
-//     echo "ID: {$debug_log['id']}, Amount: {$debug_log['amount']}, Method: {$debug_log['pmethod_name']} (ID: {$debug_log['method_id']}), Date: {$debug_log['created_at']}\n";
-// }
-// echo "-->\n";
-// mysqli_data_seek($payments_result, 0);
 ?>
+<!-- Styles from invoice_view.php -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    .invoice-modal-content {
+    /* Scoped styles for modal content to match invoice_view.php body/container */
+    .receipt-container {
         background: white;
-        max-width: 650px;
-        width: 100%;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 480px; /* Receipt width */
+        margin: 0 auto;
+        padding: 20px; /* Reduced padding for compact look */
+        padding-bottom: 40px; /* Added extra bottom padding for "long" look */
+        /* box-shadow: 0 10px 25px rgba(0,0,0,0.2); Removed box-shadow as it's inside a modal usually */
+        font-size: 11px; /* Small font like POS receipt */
         color: #000;
+        font-family: 'Inter', sans-serif;
+        min-height: 80vh; /* Ensure it feels "long" even with less content */
     }
+    .mono { font-family: 'Courier Prime', monospace; }
     
-    .invoice-modal-header {
-        background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-        color: white;
-        padding: 12px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 12px 12px 0 0;
-        position: relative;
-    }
-    
-    /* Hide close button */
-    .invoice-modal-header button,
-    .invoice-modal-header .close,
-    .invoice-modal-header [onclick*="close"] {
-        display: none !important;
-    }
-    
+    /* Ensure the modal body itself allows for full height scrolling */
     .invoice-modal-body {
-        padding: 20px 25px;
-        max-height: 95vh;
-        overflow-y: auto;
+        max-height: 98vh !important; /* Maximized height */
+        padding: 0 !important; /* Reset padding to let container handle it */
     }
     
-    .text-center { text-align: center; }
-    .company-logo {
-        max-height: 45px;
-        margin: 0 auto 8px;
-        display: block;
-    }
-    .company-name {
-        font-size: 16px;
-        font-weight: 800;
-        margin: 0 0 3px 0;
-        text-transform: uppercase;
-        color: #1e293b;
-    }
-    .company-info {
-        font-size: 9px;
-        color: #64748b;
-        line-height: 1.4;
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; border-bottom: 1px dashed #000; padding: 5px 0; font-weight: bold; text-transform: uppercase; }
+    td { padding: 4px 0; vertical-align: top; }
+    .text-right { text-align: right; }
+    .border-top-dashed { border-top: 1px dashed #000; }
+    .border-bottom-dashed { border-bottom: 1px dashed #000; }
+    
+    /* Print specific overrides */
+    @media print {
+        @page { size: A4 portrait; margin: 0; }
+        html, body { background-color: #fff !important; margin: 0 !important; padding: 0 !important; visibility: hidden; height: 100%; }
+        
+        /* Show only the receipt container */
+        .receipt-container, .receipt-container * {
+            visibility: visible;
+        }
+        
+        .receipt-container {
+            position: fixed; /* Use fixed to anchor to page viewport */
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 1in !important; /* 1 Inch gap on all 4 sides */
+            box-sizing: border-box !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+            z-index: 9999;
+        }
+        
+        .no-print { display: none !important; }
+        
+        /* Hide parent modal artifacts */
+        .invoice-modal-header, .close, .pos-modal-header { display: none !important; }
+        
+        /* Force background colors */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
     
-    .info-grid {
-        display: grid;
-        grid-template-columns: 85px 1fr;
-        gap: 4px;
-        font-size: 10px;
-        margin: 15px 0;
-        text-align: left;
-        background: #f8fafc;
-        padding: 10px;
-        border-radius: 6px;
-    }
-    .info-label { color: #64748b; font-weight: 500; }
-    .info-value { font-weight: 600; color: #1e293b; }
-    
-    .section-title {
-        text-align: center;
-        font-weight: 800;
-        border-bottom: 2px solid #000;
-        padding-bottom: 4px;
-        margin: 15px 0 10px;
-        font-size: 11px;
-        letter-spacing: 1px;
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px;
-        margin-bottom: 12px;
-    }
-    thead tr { border-bottom: 1px dashed #000; }
-    th {
-        padding: 5px 3px;
-        text-align: left;
-        font-weight: 700;
-        font-size: 9px;
-        text-transform: uppercase;
-        color: #475569;
-    }
-    th.text-right, td.text-right { text-align: right; }
-    th.text-center, td.text-center { text-align: center; }
-    tbody tr { border-bottom: 1px dashed #e2e8f0; }
-    td { padding: 6px 3px; font-size: 10px; }
-    
-    .totals-table {
-        background: #f8fafc;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 12px;
-    }
-    .totals-table td {
-        padding: 4px 0;
-        font-size: 10px;
-    }
-    .total-row {
-        font-weight: 700;
-        border-top: 1px dashed #000;
-        border-bottom: 1px dashed #000;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-    }
-    
-    .payments-title {
-        font-weight: 700;
-        font-size: 11px;
-        margin: 15px 0 8px;
-        padding-bottom: 4px;
-        border-bottom: 1px dashed #cbd5e1;
-        color: #0d9488;
-    }
-    
-    .footer-text {
-        text-align: center;
-        font-size: 9px;
-        margin-top: 15px;
-        padding-top: 12px;
-        border-top: 1px dashed #cbd5e1;
-        color: #64748b;
-        line-height: 1.5;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        padding: 12px 20px;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        border-radius: 0 0 12px 12px;
-    }
-    .btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
+    /* Button Styles for Modal (Tailwind doesn't load in AJAX) */
+    .action-btn {
         display: flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
-        transition: all 0.2s;
+        justify-content: center;
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        text-decoration: none;
+        color: white;
+        font-size: 13px;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.2s;
+        font-family: inherit;
     }
-    .btn-print { background: #0ea5e9; color: white; }
-    .btn-print:hover { background: #0284c7; }
-    .btn-email { background: #10b981; color: white; }
-    .btn-email:hover { background: #059669; }
-    .btn-back { background: #64748b; color: white; }
-    .btn-back:hover { background: #475569; }
-    
-    @media print {
-        /* Reset everything for clean print */
-        * {
-            box-shadow: none !important;
-        }
-        
-        /* Reset body and page */
-        body { 
-            background: white !important; 
-            padding: 0 !important; 
-            margin: 0 !important; 
-        }
-        
-        /* Remove ALL modal styling for print */
-        .invoice-modal-content { 
-            max-width: 100% !important; 
-            width: 100% !important;
-            box-shadow: none !important; 
-            border-radius: 0 !important;
-            background: white !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        /* Hide modal header completely in print */
-        .invoice-modal-header { 
-            display: none !important;
-        }
-        
-        /* Adjust body for print - full width */
-        .invoice-modal-body { 
-            max-height: none !important; 
-            overflow: visible !important; 
-            padding: 0 20px !important;
-            background: white !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-        }
-        
-        /* Hide action buttons */
-        .action-buttons { 
-            display: none !important; 
-        }
-        
-        /* Ensure colors print correctly */
-        .invoice-modal-header,
-        .badge,
-        .totals-table,
-        .info-grid { 
-            print-color-adjust: exact !important; 
-            -webkit-print-color-adjust: exact !important; 
-        }
-        
-        /* Prevent page breaks inside tables */
-        table { 
-            page-break-inside: avoid !important; 
-        }
-        
-        /* Adjust font sizes for print */
-        .company-name { font-size: 18px !important; }
-        .company-info { font-size: 10px !important; }
-        .info-grid { font-size: 11px !important; }
-        table { font-size: 11px !important; }
-        th { font-size: 10px !important; }
-        td { font-size: 11px !important; }
-        
-        /* Remove background colors from info-grid and totals-table for cleaner print */
-        .info-grid,
-        .totals-table {
-            background: white !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-        
-        /* Ensure proper spacing */
-        .section-title {
-            margin: 20px 0 15px !important;
-        }
-        
-        /* Print badges with borders instead of backgrounds */
-        .badge {
-            border: 1px solid currentColor !important;
-            background: white !important;
-        }
-        .badge-down {
-            color: #1e40af !important;
-            border-color: #1e40af !important;
-        }
-        .badge-installment {
-            color: #065f46 !important;
-            border-color: #065f46 !important;
-        }
-        
-        /* Remove any remaining shadows or effects */
-        .invoice-modal-content,
-        .invoice-modal-header,
-        .invoice-modal-body,
-        .info-grid,
-        .totals-table,
-        table,
-        .badge {
-            box-shadow: none !important;
-            filter: none !important;
-        }
-    }
-    
-    .badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 8px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .badge-down { background: #dbeafe; color: #1e40af; }
-    .badge-installment { background: #d1fae5; color: #065f46; }
+    .action-btn:hover { opacity: 0.9; }
+    .btn-print-custom { background-color: #06b6d4; } /* Cyan */
+    .btn-close-custom { background-color: #64748b; } /* Slate */
 </style>
 
-<div class="invoice-modal-content">
-    <div class="invoice-modal-header">
-        <div style="font-size: 12px; font-weight: 600;">
-            <i class="fas fa-file-invoice"></i> Invoice - <?= htmlspecialchars($invoice['invoice_id']); ?>
+<div class="receipt-container" id="printableArea">
+    
+    <!-- Header -->
+    <div class="text-center mb-4">
+        <!-- Logo -->
+        <div class="flex justify-center mb-1">
+            <img src="/pos/assets/images/logo-fav.png" style="max-height: 50px;" alt="Logo">
+        </div>
+        
+        <h1 class="font-bold text-sm uppercase mt-1"><?= htmlspecialchars($invoice['store_name'] ?? 'STORE NAME'); ?></h1>
+        <div class="text-[10px] text-gray-600">
+            <?= htmlspecialchars($invoice['store_address'] ?? 'Store Address'); ?><br>
+            Mobile: <?= htmlspecialchars($invoice['store_phone'] ?? ''); ?>, Email: <?= htmlspecialchars($invoice['store_email'] ?? ''); ?>
+            <?php if (!empty($invoice['vat_number'])): ?>
+            <br>BIN: <?= htmlspecialchars($invoice['vat_number']); ?>
+            <?php endif; ?>
         </div>
     </div>
 
-    <div class="invoice-modal-body">
-        <div class="text-center">
-            <img src="/pos/assets/images/logo-fav.png" class="company-logo" alt="Logo">
-            <h1 class="company-name"><?= htmlspecialchars($invoice['store_name'] ?? 'STORE NAME'); ?></h1>
-            <div class="company-info">
-                <?= htmlspecialchars($invoice['store_address'] ?? 'Store Address'); ?><br>
-                Mobile: <?= htmlspecialchars($invoice['store_phone'] ?? '--'); ?>, 
-                Email: <?= htmlspecialchars($invoice['store_email'] ?? '--'); ?>
-                <?php if (!empty($invoice['vat_number'])): ?>
-                <br>BIN Number: <?= htmlspecialchars($invoice['vat_number']); ?>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-label">Invoice ID:</div>
-            <div class="info-value"><?= htmlspecialchars($invoice['invoice_id']); ?></div>
-            
-            <div class="info-label">Date:</div>
-            <div class="info-value"><?= date('d M Y, h:i A', strtotime($invoice['created_at'])); ?></div>
-            
-            <div class="info-label">Customer:</div>
-            <div class="info-value"><?= htmlspecialchars($invoice['customer_name'] ?? 'Walking Customer'); ?></div>
-            
-            <div class="info-label">Phone:</div>
-            <div class="info-value"><?= htmlspecialchars($invoice['customer_phone'] ?? '--'); ?></div>
-            
-            <div class="info-label">Address:</div>
-            <div class="info-value"><?= htmlspecialchars($invoice['customer_address'] ?? '-'); ?></div>
-        </div>
-
-        <div class="section-title">INVOICE</div>
-
-        <div style="margin-bottom: 12px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 5%">SL</th>
-                        <th style="width: 50%">NAME</th>
-                        <th class="text-right" style="width: 15%">QTY</th>
-                        <th class="text-right" style="width: 15%">PRICE</th>
-                        <th class="text-right" style="width: 15%">AMOUNT</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                    $sl = 1;
-                    $calculated_subtotal = 0;
-                    while($item = mysqli_fetch_assoc($items_result)): 
-                        $calculated_subtotal += $item['subtotal'];
-                    ?>
-                    <tr>
-                        <td><?= $sl++; ?></td>
-                        <td><?= htmlspecialchars($item['item_name']); ?></td>
-                        <td class="text-right"><?= number_format($item['qty_sold'], 2); ?></td>
-                        <td class="text-right"><?= number_format($item['price_sold'], 2); ?></td>
-                        <td class="text-right"><?= number_format($item['subtotal'], 2); ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Totals -->
-        <div class="totals-table">
-            <table style="margin-bottom: 0;">
-                <tr>
-                    <td class="text-right" style="width: 65%">Subtotal:</td>
-                    <td class="text-right"><?= number_format($calculated_subtotal, 2); ?></td>
-                </tr>
-                
-                <?php if($invoice['tax_amount'] > 0): ?>
-                <tr>
-                    <td class="text-right">Order Tax:</td>
-                    <td class="text-right"><?= number_format($invoice['tax_amount'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-                
-                <?php if($invoice['discount_amount'] > 0): ?>
-                <tr>
-                    <td class="text-right">Discount:</td>
-                    <td class="text-right">-<?= number_format($invoice['discount_amount'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-                
-                <?php if($invoice['shipping_charge'] > 0): ?>
-                <tr>
-                    <td class="text-right">Shipping:</td>
-                    <td class="text-right"><?= number_format($invoice['shipping_charge'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-
-                <tr class="total-row">
-                    <td class="text-right">Grand Total:</td>
-                    <td class="text-right"><?= number_format($invoice['grand_total'], 2); ?></td>
-                </tr>
-                
-                <?php if($is_installment && isset($installment_order['interest_amount']) && $installment_order['interest_amount'] > 0): ?>
-                <tr>
-                    <td class="text-right" style="padding-top: 6px; color: #64748b;">Interest Amount:</td>
-                    <td class="text-right" style="padding-top: 6px; color: #f59e0b; font-weight: 600;"><?= number_format($installment_order['interest_amount'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-                
-                <?php
-                // Calculate Amount Paid and Due based on installment or regular payment
-                if($is_installment){
-                    // For installment: Down Payment + All Installment Payments
-                    $amount_paid = $down_payment_amount + $total_installment_paid;
-                    // Due: Remaining installments (round to avoid 0.01 issues)
-                    $due_amount = round($total_installment_due, 2);
-                    // If due is less than 0.01, consider it as 0
-                    if($due_amount < 0.01) $due_amount = 0;
-                } else {
-                    // For regular invoice: Sum of all payments from sell_logs
-                    mysqli_data_seek($payments_result, 0);
-                    $amount_paid = 0;
-                    while($pay = mysqli_fetch_assoc($payments_result)){
-                        $amount_paid += $pay['amount'];
-                    }
-                    $due_amount = max(0, $invoice['grand_total'] - $amount_paid);
-                }
-                ?>
-                
-                <tr>
-                    <td class="text-right" style="padding-top: 6px;"><?= $is_installment ? 'Amount Paid With Interest:' : 'Amount Paid:'; ?></td>
-                    <td class="text-right" style="padding-top: 6px; color: #10b981; font-weight: 700;"><?= number_format($amount_paid, 2); ?></td>
-                </tr>
-                <tr>
-                    <td class="text-right">Due Amount:</td>
-                    <td class="text-right" style="color: <?= $due_amount > 0 ? '#ef4444' : '#10b981'; ?>; font-weight: 700;"><?= number_format($due_amount, 2); ?></td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Payments Section -->
-        <?php if($is_installment && ($down_payment_amount > 0 || count($installment_payments) > 0)): ?>
-        <div class="payments-title">Payments</div>
-        <table>
-            <thead>
-               <tr>
-                   <th style="width: 8%">SL</th>
-                   <th style="width: 35%">TYPE</th>
-                   <th style="width: 35%">METHOD</th>
-                   <th class="text-right" style="width: 22%">AMOUNT</th>
-               </tr> 
-            </thead>
-            <tbody>
-                <?php 
-                $p_sl = 1;
-                
-                // Show Down Payment first
-                if($down_payment_amount > 0):
-                    // Get down payment method from sell_logs (first payment is down payment)
-                    mysqli_data_seek($payments_result, 0);
-                    $down_payment_method = 'Cash on Hand';
-                    $down_payment_date = $invoice['created_at'];
-                    $first_payment = mysqli_fetch_assoc($payments_result);
-                    if($first_payment){
-                        $down_payment_method = $first_payment['pmethod_name'] ?? 'Cash on Hand';
-                        $down_payment_date = $first_payment['created_at'];
-                    }
-                ?>
-                <tr>
-                    <td><?= $p_sl++; ?></td>
-                    <td>
-                        <span class="badge badge-down">Down Payment</span>
-                        <div style="font-size: 8px; color: #64748b; margin-top: 2px;"><?= date('d M Y, h:i A', strtotime($down_payment_date)); ?></div>
-                    </td>
-                    <td style="font-weight: 600; color: #1e293b;"><?= htmlspecialchars($down_payment_method); ?></td>
-                    <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($down_payment_amount, 2); ?></td>
-                </tr>
-                <?php endif; ?>
-                
-                <?php 
-                // Show Installment Payments (only paid ones)
-                // First, collect all sell_logs payments into an array
-                mysqli_data_seek($payments_result, 0);
-                $all_sell_logs = [];
-                while($log = mysqli_fetch_assoc($payments_result)){
-                    $all_sell_logs[] = $log;
-                }
-                
-                // Track which sell_log we're on
-                $sell_log_index = 0;
-                
-                // If there's a down payment, skip the first sell_log
-                if($down_payment_amount > 0){
-                    $sell_log_index = 1;
-                }
-                
-                foreach($installment_payments as $inst_index => $ip):
-                    if($ip['paid'] > 0):
-                        // Get the corresponding sell_log entry
-                        $inst_method = 'Cash on Hand';
-                        $inst_date = $ip['payment_date'];
-                        
-                        // Try to match by index first
-                        if(isset($all_sell_logs[$sell_log_index])){
-                            $matched_log = $all_sell_logs[$sell_log_index];
-                            $inst_method = $matched_log['pmethod_name'] ?? 'Cash on Hand';
-                            $inst_date = $matched_log['created_at'];
-                            $sell_log_index++; // Increment AFTER using
-                        } else {
-                            // Fallback: try to match by amount
-                            foreach($all_sell_logs as $log){
-                                if(abs($log['amount'] - $ip['paid']) < 0.01){
-                                    $inst_method = $log['pmethod_name'] ?? 'Cash on Hand';
-                                    $inst_date = $log['created_at'];
-                                    break;
-                                }
-                            }
-                        }
-                ?>
-                <tr>
-                    <td><?= $p_sl++; ?></td>
-                    <td>
-                        <span class="badge badge-installment">Installment</span>
-                        <div style="font-size: 8px; color: #64748b; margin-top: 2px;"><?= date('d M Y, h:i A', strtotime($inst_date)); ?></div>
-                    </td>
-                    <td style="font-weight: 600; color: #1e293b;"><?= htmlspecialchars($inst_method); ?></td>
-                    <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($ip['paid'], 2); ?></td>
-                </tr>
-                <?php 
-                    endif;
-                endforeach; 
-                ?>
-            </tbody>
+    <!-- Info Grid -->
+    <div class="mb-3 leading-tight text-[10px]">
+        <table style="width: 100%">
+            <tr>
+                <td style="width: 25%">Invoice ID:</td>
+                <td class="font-bold"><?= $invoice['invoice_id']; ?></td>
+            </tr>
+            <tr>
+                <td>Date:</td>
+                <td><?= date('d M Y h:i A', strtotime($invoice['created_at'])); ?></td>
+            </tr>
+            <tr>
+                <td>Customer:</td>
+                <td><?= htmlspecialchars($invoice['customer_name'] ?? 'Walking Customer'); ?></td>
+            </tr>
+            <tr>
+                <td>Phone:</td>
+                <td><?= htmlspecialchars($invoice['customer_phone'] ?? 'N/A'); ?></td>
+            </tr>
+            <tr>
+                <td>Address:</td>
+                <td><?= htmlspecialchars($invoice['customer_address'] ?? '-'); ?></td>
+            </tr>
         </table>
-        <?php elseif(mysqli_num_rows($payments_result) > 0): ?>
-        <!-- Regular payments for non-installment invoices -->
-        <div class="payments-title">Payments</div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="mb-2">
+        <h3 class="text-center font-bold uppercase border-bottom-dashed mb-1 pb-1">Invoice</h3>
         <table>
             <thead>
-               <tr>
-                   <th style="width: 8%">SL</th>
-                   <th style="width: 57%">METHOD</th>
-                   <th class="text-right" style="width: 35%">AMOUNT</th>
-               </tr> 
+                <tr>
+                    <th style="width: 5%">SL</th>
+                    <th style="width: 45%">Name</th>
+                    <th class="text-right" style="width: 15%">Qty</th>
+                    <th class="text-right" style="width: 15%">Price</th>
+                    <th class="text-right" style="width: 20%">Amount</th>
+                </tr>
             </thead>
             <tbody>
                 <?php 
-                mysqli_data_seek($payments_result, 0);
-                $p_sl = 1;
-                while($pay = mysqli_fetch_assoc($payments_result)): 
+                $sl = 1;
+                // Reset pointer just in case
+                if(mysqli_num_rows($items_result) > 0) mysqli_data_seek($items_result, 0);
+                while($item = mysqli_fetch_assoc($items_result)): 
                 ?>
                 <tr>
-                    <td><?= $p_sl++; ?></td>
+                    <td><?= $sl++; ?></td>
                     <td>
-                        <div style="font-weight: 600; color: #1e293b;"><?= htmlspecialchars($pay['pmethod_name'] ?? 'Cash on Hand'); ?></div>
-                        <div style="font-size: 8px; color: #64748b;"><?= date('d M Y, h:i A', strtotime($pay['created_at'])); ?></div>
+                        <?= htmlspecialchars($item['item_name']); ?>
+                        <!-- <div class="text-[9px] text-gray-500"><?= $item['description'] ?? ''; ?></div> -->
                     </td>
-                    <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($pay['amount'], 2); ?></td>
+                    <td class="text-right"><?= number_format($item['qty_sold'], 2); ?></td>
+                    <td class="text-right"><?= number_format($item['price_sold'], 2); ?></td>
+                    <td class="text-right"><?= number_format($item['subtotal'], 2); ?></td>
                 </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
-        <?php endif; ?>
+    </div>
 
-        <div class="footer-text">
-            Thank you for choosing us!<br>
-            For Support: <?= htmlspecialchars($invoice['store_name']); ?> | Developed by STS
+    <!-- Totals -->
+    <div class="border-top-dashed pt-1 mb-2">
+        <table style="width: 100%; font-weight: 500;">
+            <tr>
+                <td class="text-right" style="width: 60%">Total Amount:</td>
+                <td class="text-right"><?= number_format($invoice['total_items'] ?? $invoice['grand_total'], 2); ?></td> <!-- Fallback if total_items not set correctly -->
+            </tr>
+            
+            <?php if($invoice['tax_amount'] > 0): ?>
+            <tr>
+                <td class="text-right">Order Tax:</td>
+                <td class="text-right"><?= number_format($invoice['tax_amount'], 2); ?></td>
+            </tr>
+            <?php endif; ?>
+            
+            <?php if($invoice['discount_amount'] > 0): ?>
+            <tr>
+                <td class="text-right">Discount:</td>
+                <td class="text-right"><?= number_format($invoice['discount_amount'], 2); ?></td>
+            </tr>
+            <?php endif; ?>
+            
+            <?php if($invoice['shipping_charge'] > 0): ?>
+            <tr>
+                <td class="text-right">Shipping Chrg:</td>
+                <td class="text-right"><?= number_format($invoice['shipping_charge'], 2); ?></td>
+            </tr>
+            <?php endif; ?>
+
+            <tr class="font-bold border-top-dashed border-bottom-dashed">
+                <td class="text-right py-1">Total Due:</td>
+                <?php 
+                // User Request: Total Due = Total amount - down payment (for installments)
+                $display_due = $invoice['grand_total'];
+                if($is_installment && $down_payment_amount > 0) {
+                    $display_due = $invoice['grand_total'] - $down_payment_amount;
+                }
+                ?>
+                <td class="text-right py-1"><?= number_format($display_due, 2); ?></td>
+            </tr>
+            
+             <?php
+             // Calculate Total Paid and Due (Handling Installment Logic Integration)
+             if($is_installment){
+                 $amount_paid = $down_payment_amount + $total_installment_paid;
+                 $due = round($total_installment_due, 2);
+                 if($due < 0.05) $due = 0;
+                 $paid_label = "Amt Paid (Inc. Inst):";
+             } else {
+                 if(mysqli_num_rows($payments_result) > 0) mysqli_data_seek($payments_result, 0);
+                 $amount_paid = 0;
+                 while($pay = mysqli_fetch_assoc($payments_result)){
+                     $amount_paid += $pay['amount'];
+                 }
+                 $due = $invoice['grand_total'] - $amount_paid;
+                 $paid_label = "Amount Paid:";
+             }
+             ?>
+             
+            <tr>
+                <td class="text-right pt-1"><?= $paid_label; ?></td>
+                <td class="text-right pt-1"><?= number_format($amount_paid, 2); ?></td>
+            </tr>
+            <tr>
+                <td class="text-right">Due:</td>
+                <td class="text-right"><?= number_format($due, 2); ?></td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- In Words -->
+    <div class="text-[9px] italic mb-3 text-gray-500">
+        In Text: <span id="in-words" class="uppercase">...</span>
+        <!-- Hidden input for total to be read by parent JS -->
+        <input type="hidden" id="base-grand-total" value="<?= $invoice['grand_total'] ?? 0; ?>">
+    </div>
+
+    <!-- Payments -->
+    <div class="mb-3">
+        <h4 class="font-bold border-bottom-dashed mb-1 pb-1">Payments</h4>
+        <table>
+            <thead>
+               <tr>
+                   <th style="width: 10%">SL</th>
+                   <th style="width: 40%">Type</th>
+                   <th style="width: 25%">Method</th>
+                   <th class="text-right" style="width: 25%">Amount</th>
+               </tr> 
+            </thead>
+            <tbody>
+                <?php 
+                $p_sl = 1;
+
+                if(mysqli_num_rows($payments_result) > 0):
+                    mysqli_data_seek($payments_result, 0);
+                    
+                    // Validation Pools (Budgets)
+                    // We only display payments that can be "explained" by the installment records
+                    $down_payment_budget = $is_installment ? $down_payment_amount : 0;
+                    $installment_payment_budget = $is_installment ? $total_installment_paid : 0;
+                    
+                    // Tolerance for floating point matching
+                    $epsilon = 0.05;
+
+                    while($pay = mysqli_fetch_assoc($payments_result)): 
+                        $amount = floatval($pay['amount']);
+                        $is_valid_row = false;
+                        $display_type = "Regular Payment";
+
+                        if ($is_installment) {
+                            // 1. Check if it fits Down Payment Budget
+                            if ($down_payment_budget > 0 && abs($amount - $down_payment_budget) <= $epsilon) {
+                                $display_type = "Down Payment";
+                                $down_payment_budget -= $amount; // Consume budget (usually fully)
+                                if($down_payment_budget < 0) $down_payment_budget = 0;
+                                $is_valid_row = true;
+                            } 
+                            // 2. Check if it fits Installment Payment Budget
+                            else if ($installment_payment_budget > 0 && ($installment_payment_budget - $amount) >= -$epsilon) {
+                                $display_type = "Installment Payment";
+                                $installment_payment_budget -= $amount;
+                                $is_valid_row = true;
+                            }
+                            // 3. Phantom Payment (Doesn't fit either budget) -> Skip
+                            else {
+                                continue; 
+                            }
+                        } else {
+                            // Non-installment invoice: Show all
+                            $is_valid_row = true;
+                        }
+
+                        if ($is_valid_row):
+                            $method_name = $pay['pmethod_name'] ?? 'Cash on Hand';
+                ?>
+                <tr>
+                    <td><?= $p_sl++; ?></td>
+                    <td>
+                        <div style="font-weight: 600;"><?= $display_type; ?></div>
+                        <div class="text-[9px] text-gray-500"><?= date('d M Y', strtotime($pay['created_at'])); ?></div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;"><?= htmlspecialchars($method_name); ?></div>
+                    </td>
+                    <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($amount, 2); ?></td>
+                </tr>
+                <?php 
+                        endif;
+                    endwhile; 
+                else:
+                ?>
+                <tr>
+                    <td colspan="4" class="text-center text-gray-500 italic">No payments found</td>
+                </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-4">
+        <div class="flex justify-center">
+            <svg id="barcode-modal"></svg>
         </div>
+        <div class="text-[9px] text-gray-500 mt-1">
+            Thank you for choosing us!<br>
+            For Support: <?= htmlspecialchars($invoice['store_name'] ?? ''); ?>
+        </div>
+        <div class="text-[8px] text-gray-400 mt-1">Developed by STS</div>
     </div>
 
-    <div class="action-buttons">
-        <button onclick="window.print()" class="btn btn-print">
-            <i class="fas fa-print"></i> Print
+    <!-- Action Buttons (Screen Only) -->
+    <div class="no-print mt-6" style="display: flex; gap: 10px; margin-top: 25px;">
+        <button onclick="window.print()" class="action-btn btn-print-custom">
+            <i class="fas fa-print" style="margin-right: 6px;"></i> Print
         </button>
-        <button class="btn btn-email">
-            <i class="fas fa-envelope"></i> Email
+        <!--
+        <button class="action-btn" style="background-color: #10b981;">
+            <i class="fas fa-envelope" style="margin-right: 6px;"></i> Email
         </button>
-        <button onclick="closeInvoiceModal()" class="btn btn-back">
-            <i class="fas fa-times"></i> Close
-        </button>
+        -->
+        <a href="javascript:void(0)" onclick="if(typeof closeInvoiceModal === 'function') { closeInvoiceModal(); } else { const m = document.getElementById('invoiceViewModal'); if(m) { m.remove(); } else { window.history.back(); } }" class="action-btn btn-close-custom">
+            <i class="fas fa-times" style="margin-right: 6px;"></i> Close
+        </a>
     </div>
+
 </div>
+
+<script>
+    // Use a unique ID for modal barcode to avoid conflict if multiple on page
+    JsBarcode("#barcode-modal", "<?= $invoice['invoice_id']; ?>", {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 40,
+        displayValue: true,
+        fontSize: 10
+    });
+</script>
