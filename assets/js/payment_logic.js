@@ -310,7 +310,8 @@ function selectPaymentMethod(element, id) {
                     
                 ${!isCashMethod ? `
                 <label style="display: block; text-align: left; font-size: 12px; color: #64748b; margin: 15px 0 6px 0; font-weight: 600;">TRANSACTION ID *</label>
-                <input type="text" id="swal-input-transaction-id" class="swal2-input" 
+                <input type="text" id="swal-input-transaction-id" class="swal2-input"
+                autocomplete="off" autofocus 
                     placeholder="Enter Transaction ID" 
                     style="width: 100%; margin: 0; text-align: center; font-size: 16px; font-weight: 600; color: #1e293b; border: 2px solid #e2e8f0; border-radius: 10px;">
                 <div style="font-size: 11px; color: #dc2626; margin-top: 5px; text-align: left;">* Required for non-cash payments</div>

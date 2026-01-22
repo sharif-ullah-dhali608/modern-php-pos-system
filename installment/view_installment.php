@@ -412,10 +412,10 @@ $page_title = "Installment - " . $installment['invoice_id'];
                             <th class="text-center no-print">ACTION</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="payments-table-body">
                         <?php foreach ($payments as $pay): 
                             $dueAmount = $pay['payable'] - $pay['paid'];
-                            if($dueAmount <= 0.01) $dueAmount = 0;
+                            if($dueAmount < 0.05) $dueAmount = 0;
                             $displayStatus = ($dueAmount <= 0) ? 'paid' : $pay['payment_status'];
                         ?>
                         <tr>
@@ -485,11 +485,11 @@ $page_title = "Installment - " . $installment['invoice_id'];
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Payment Status</span>
-                        <span class="detail-value"><?= strtoupper($installment['payment_status']); ?></span>
+                        <span class="detail-value" id="detail-payment-status"><?= strtoupper($installment['payment_status']); ?></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Last Installment Date</span>
-                        <span class="detail-value"><?= $installment['last_installment_date'] ? date('d/m/Y', strtotime($installment['last_installment_date'])) : 'N/A'; ?></span>
+                        <span class="detail-value" id="detail-last-installment"><?= $installment['last_installment_date'] ? date('d/m/Y', strtotime($installment['last_installment_date'])) : 'N/A'; ?></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Installment End Date</span>
@@ -528,6 +528,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
     ?>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="/pos/assets/js/payment_logic.js"></script>
     <script>
         // CRITICAL: Hide payment modal immediately on load
@@ -552,11 +553,26 @@ $page_title = "Installment - " . $installment['invoice_id'];
             setTimeout(hideModal, 100);
             setTimeout(hideModal, 500);
         })();
-        // Print on Enter key
+        // Print on Enter key, BUT ONLY IF Payment Modal is NOT open
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                e.preventDefault();
-                window.print();
+                const paymentModal = document.getElementById('paymentModal');
+                const isPaymentModalActive = paymentModal && (paymentModal.classList.contains('active') || paymentModal.style.display !== 'none');
+                
+                if (isPaymentModalActive) {
+                    // If payment modal is open, Enter should submit the payment (Checkout)
+                    e.preventDefault();
+                    
+                    // Trigger the checkout button click
+                    const checkoutBtn = document.querySelector('.complete-btn');
+                    if (checkoutBtn && !checkoutBtn.disabled) {
+                        checkoutBtn.click();
+                    }
+                } else {
+                    // Only print if payment modal is NOT open
+                    e.preventDefault();
+                    window.print();
+                }
             }
         });
 
@@ -767,15 +783,41 @@ $page_title = "Installment - " . $installment['invoice_id'];
                     
                     // Wrap invoice content in modal structure
                     const modalHTML = `
-                        <div class="pos-modal active" id="invoiceViewModal" style="display: flex; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1050; align-items: center; justify-content: center; padding: 20px;">
-                            <div style="background: white; border-radius: 12px; max-width: 650px; width: 100%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative;">
-                                ${html}
+                        <div class="pos-modal active" id="invoiceViewModal" style="display: flex; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1050; align-items: center; justify-content: center; padding: 10px;">
+                            <div style="background: white; border-radius: 12px; max-width: 480px; width: 100%; max-height: 98vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative;">
+                                <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+                                    ${html}
+                                </div>
                             </div>
                         </div>
                     `;
                     
                     // Insert modal HTML
                     modalContainer.innerHTML = modalHTML;
+                    
+                    // Trigger Barcode Generation
+                    setTimeout(() => {
+                        if(window.JsBarcode && document.getElementById('barcode-modal')) {
+                            JsBarcode("#barcode-modal", invoiceId, {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: 2,
+                                height: 40,
+                                displayValue: true,
+                                fontSize: 10
+                            });
+                        }
+                    }, 100);
+
+                    // Trigger Number to Words
+                    setTimeout(() => {
+                        const totalEl = document.getElementById('base-grand-total');
+                        const wordsEl = document.getElementById('in-words');
+                        if(totalEl && wordsEl) {
+                            const amount = parseFloat(totalEl.value || 0);
+                            wordsEl.textContent = numberToWords(amount);
+                        }
+                    }, 100);
                 })
                 .catch(error => {
                     console.error('Error loading invoice:', error);
@@ -787,14 +829,91 @@ $page_title = "Installment - " . $installment['invoice_id'];
                 });
         }
         
+        // Number to Words Converter
+        function numberToWords(num) {
+            const single = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const double = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const formatTrio = (trio) => {
+                let res = '';
+                if (trio[0] !== '0') {
+                    res += single[parseInt(trio[0])] + ' Hundred ';
+                }
+                if (trio[1] === '1') {
+                    res += double[parseInt(trio[2])];
+                } else {
+                    res += tens[parseInt(trio[1])] + (trio[1] !== '0' && trio[2] !== '0' ? '-' : '') + single[parseInt(trio[2])];
+                }
+                return res.trim();
+            };
+
+            let [integer, decimal] = num.toFixed(2).split('.');
+            integer = integer.padStart(12, '0');
+            const units = ['Billion', 'Million', 'Thousand', ''];
+            let result = '';
+
+            for (let i = 0; i < 4; i++) {
+                let trio = integer.substring(i * 3, i * 3 + 3);
+                let word = formatTrio(trio);
+                if (word) {
+                    result += word + ' ' + units[i] + ' ';
+                }
+            }
+
+            result = result.trim() || 'Zero';
+            
+            if (decimal !== '00') {
+                let decimalWord = formatTrio('0' + decimal);
+                result += ' and ' + decimalWord + ' Cents';
+            }
+            
+            return result + ' Only';
+        }
+        
         // Function to close invoice modal
         function closeInvoiceModal() {
             const modalContainer = document.getElementById('invoice-view-modal-container');
             if (modalContainer) {
                 modalContainer.innerHTML = '';
             }
-            // Reload page to show updated data
-            window.location.reload();
+            // Update data dynamically without reload
+            refreshInstallmentView(); 
+        }
+
+        // Function to refresh installment view data
+        function refreshInstallmentView() {
+            // Get current installment order ID
+            const installmentId = <?= $id; ?>;
+            
+            fetch('/pos/installment/get_installment_details.php?id=' + installmentId)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        // Update Payments Table
+                        const tbody = document.getElementById('payments-table-body');
+                        if(tbody) tbody.innerHTML = data.payments_html;
+                        
+                        // Update Details
+                        const statusEl = document.getElementById('detail-payment-status');
+                        if(statusEl) statusEl.textContent = data.details.payment_status;
+                        
+                        const lastDateEl = document.getElementById('detail-last-installment');
+                        if(lastDateEl) lastDateEl.textContent = data.details.last_installment_date;
+                        
+                        // Optional: Show simplified toast
+                        /*
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'View Updated',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        */
+                    }
+                })
+                .catch(err => console.error('Failed to refresh data:', err));
         }
     </script>
 </body>

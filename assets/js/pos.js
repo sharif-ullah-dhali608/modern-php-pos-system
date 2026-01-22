@@ -2741,6 +2741,9 @@ document.addEventListener('keydown', function (e) {
                 showToast('Cart is empty', 'error');
             }
         } else if (e.key === 'Enter') {
+            // DISABLED: Duplicate Enter Handler
+            // This logic is already handled by the main Enter key listener at line 23
+            /*
             if (document.activeElement.id === 'product_search') return;
             if (cart.length > 0) {
                 e.preventDefault();
@@ -2754,6 +2757,7 @@ document.addEventListener('keydown', function (e) {
                     }
                 });
             }
+            */
         }
     }
 });
