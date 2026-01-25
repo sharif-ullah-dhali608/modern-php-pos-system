@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -613,88 +613,9 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
-mysqli_query($conn, $usersSql);
-mysqli_query($conn, $userStoreMapSql);
-
-
-    mysqli_query($conn, $storesSql);
-    mysqli_query($conn, $currencySql);
-    mysqli_query($conn, $paymentSql);
-    mysqli_query($conn, $unitsSql);
-    mysqli_query($conn, $brandsSql);
-    mysqli_query($conn, $taxSql);
-    mysqli_query($conn, $boxesSql); 
-    mysqli_query($conn, $categorySql); 
-    mysqli_query($conn, $suppliersSql);
-    mysqli_query($conn, $productsSql);
-    mysqli_query($conn, $quotationsSql);
-    mysqli_query($conn, $purchaseInfoSql);
-    mysqli_query($conn, $purchaseItemSql);
-    mysqli_query($conn, $purchaseLogsSql);
-    mysqli_query($conn, $purchaseImageSql);
-    mysqli_query($conn, $userGroupSql);
-    mysqli_query($conn, $customersSql); // Execute Customers
 
 
 
-    // Ensure return_quantity column exists in purchase_item table (for existing databases)
-    $checkColumn = @mysqli_query($conn, "SHOW COLUMNS FROM purchase_item LIKE 'return_quantity'");
-    if($checkColumn && mysqli_num_rows($checkColumn) == 0) {
-        // Just add at the end without specifying AFTER clause to avoid issues
-        @mysqli_query($conn, "ALTER TABLE purchase_item ADD COLUMN return_quantity DECIMAL(15,4) DEFAULT 0.0000");
-    }
-
-    // Ensure permission column exists in user_groups table
-    $checkPermColumn = @mysqli_query($conn, "SHOW COLUMNS FROM user_groups LIKE 'permission'");
-    if($checkPermColumn && mysqli_num_rows($checkPermColumn) == 0) {
-        @mysqli_query($conn, "ALTER TABLE user_groups ADD COLUMN permission LONGTEXT DEFAULT NULL AFTER slug");
-    }
-
-    // Ensure city, state, country exist in users table
-    $checkUsersCity = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'city'");
-    if($checkUsersCity && mysqli_num_rows($checkUsersCity) == 0) {
-        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN city VARCHAR(100) DEFAULT NULL AFTER address");
-    }
-    $checkUsersState = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'state'");
-    if($checkUsersState && mysqli_num_rows($checkUsersState) == 0) {
-        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN state VARCHAR(100) DEFAULT NULL AFTER city");
-    }
-    $checkUsersCountry = @mysqli_query($conn, "SHOW COLUMNS FROM users LIKE 'country'");
-    if($checkUsersCountry && mysqli_num_rows($checkUsersCountry) == 0) {
-        @mysqli_query($conn, "ALTER TABLE users ADD COLUMN country VARCHAR(100) DEFAULT NULL AFTER state");
-    }
-
-    // Ensure current_due column exists in customers table (for transaction-based dues)
-    $checkCurrentDue = @mysqli_query($conn, "SHOW COLUMNS FROM customers LIKE 'current_due'");
-    if($checkCurrentDue && mysqli_num_rows($checkCurrentDue) == 0) {
-        @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN current_due DECIMAL(15,2) DEFAULT 0.00 AFTER opening_balance");
-    }
-
-    // Ensure has_installment column exists in customers table (to track active installments)
-    $checkHasInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM customers LIKE 'has_installment'");
-    if($checkHasInstallment && mysqli_num_rows($checkHasInstallment) == 0) {
-        @mysqli_query($conn, "ALTER TABLE customers ADD COLUMN has_installment TINYINT(1) DEFAULT 0 AFTER current_due");
-    }
-
-    // Ensure stock column exists in product_store_map table (for store-wise stock tracking)
-    $checkPsmStock = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'stock'");
-    if($checkPsmStock && mysqli_num_rows($checkPsmStock) == 0) {
-        @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000 AFTER store_id");
-        
-        // Sync existing products' opening_stock to product_store_map.stock
-        // This only runs once when stock column is first added
-        @mysqli_query($conn, "UPDATE product_store_map psm 
-                              JOIN products p ON psm.product_id = p.id 
-                              SET psm.stock = p.opening_stock 
-                              WHERE psm.stock = 0 OR psm.stock IS NULL");
-    }
-    
-    // One-time sync: If product_store_map.stock is 0 but products.opening_stock has value, sync it
-    // This helps with existing installations
-    @mysqli_query($conn, "UPDATE product_store_map psm 
-                          JOIN products p ON psm.product_id = p.id 
-                          SET psm.stock = p.opening_stock 
-                          WHERE psm.stock = 0 AND p.opening_stock > 0");
 
 
 
@@ -706,22 +627,9 @@ mysqli_query($conn, $userStoreMapSql);
     
     
     // Pivot tables (must run after core tables are created)
-    mysqli_query($conn, $storeCurrencySql);
-    mysqli_query($conn, $paymentStoreMapSql);
-    mysqli_query($conn, $brandStoreSql);
-    mysqli_query($conn, $taxStoreSql);
-    mysqli_query($conn, $boxStoreSql);
-    mysqli_query($conn, $categoryStoreSql);
-    mysqli_query($conn, $supplierStoreSql);
-    mysqli_query($conn, $productStoreSql);
-    mysqli_query($conn, $quotationItemsSql);
-    mysqli_query($conn, $customerStoreMapSql); // Execute Customer-Store Map
 
 
 
-    mysqli_query($conn, $productImagesSql);
-    mysqli_query($conn, $giftcardsSql);
-    mysqli_query($conn, $giftcardTopupsSql);
 
     // --- NEW: Selling Info Table (POS Sale Headers) ---
     $sellingInfoSql = "CREATE TABLE IF NOT EXISTS selling_info (
@@ -772,6 +680,7 @@ mysqli_query($conn, $userStoreMapSql);
         tax_type VARCHAR(20) DEFAULT 'exclusive',
         tax_rate DECIMAL(10,2) DEFAULT 0.00,
         return_item DECIMAL(15,4) DEFAULT 0.0000,
+        installment_quantity INT(11) DEFAULT 0,
         hold_status TINYINT(1) DEFAULT 0,
         created_by INT(11) NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -848,17 +757,7 @@ mysqli_query($conn, $userStoreMapSql);
         KEY store_id (store_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
-    mysqli_query($conn, $sellingInfoSql);
-    mysqli_query($conn, $sellingItemSql);
-    mysqli_query($conn, $sellLogsSql);
-    mysqli_query($conn, $installmentOrdersSql);
-    mysqli_query($conn, $installmentPaymentsSql);
 
-    // Ensure installment_quantity column exists in selling_item table
-    $checkSellItemInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM selling_item LIKE 'installment_quantity'");
-    if($checkSellItemInstallment && mysqli_num_rows($checkSellItemInstallment) == 0) {
-        @mysqli_query($conn, "ALTER TABLE selling_item ADD COLUMN installment_quantity INT(11) DEFAULT 0");
-    }
 
     $holdingInfoSql = "CREATE TABLE IF NOT EXISTS holding_info (
         info_id INT(11) NOT NULL AUTO_INCREMENT,
@@ -918,17 +817,63 @@ mysqli_query($conn, $userStoreMapSql);
         UNIQUE KEY idx_unique_hold_price_ref (ref_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+
+
+    // --- 3. Execute Queries in Dependency Order ---
+
+    // Level 1: Independent Tables
+    mysqli_query($conn, $currencySql);
+    mysqli_query($conn, $userGroupSql);
+    mysqli_query($conn, $paymentSql);
+    mysqli_query($conn, $unitsSql);
+    mysqli_query($conn, $brandsSql);
+    mysqli_query($conn, $taxSql);
+    mysqli_query($conn, $boxesSql);
+    mysqli_query($conn, $categorySql);
+    mysqli_query($conn, $suppliersSql);
+    mysqli_query($conn, $customersSql);
+    mysqli_query($conn, $holdingPriceSql);
+
+    // Level 2: Tables referencing Level 1
+    mysqli_query($conn, $storesSql);
+    mysqli_query($conn, $usersSql);
+    mysqli_query($conn, $productsSql);
+    mysqli_query($conn, $quotationsSql);
+    mysqli_query($conn, $giftcardsSql);
+
+    // Level 3: Tables referencing Level 1 & 2
+    mysqli_query($conn, $purchaseInfoSql);
+    mysqli_query($conn, $purchaseItemSql);
+    mysqli_query($conn, $purchaseLogsSql);
+    mysqli_query($conn, $purchaseImageSql);
+    mysqli_query($conn, $sellingInfoSql);
+    mysqli_query($conn, $sellingItemSql);
+    mysqli_query($conn, $sellLogsSql);
     mysqli_query($conn, $holdingInfoSql);
     mysqli_query($conn, $holdingItemSql);
-    mysqli_query($conn, $holdingPriceSql);
+    mysqli_query($conn, $installmentOrdersSql);
+    mysqli_query($conn, $installmentPaymentsSql);
+    mysqli_query($conn, $giftcardTopupsSql);
+    mysqli_query($conn, $productImagesSql);
+
+    // Level 4: Pivot / Map Tables
+    mysqli_query($conn, $storeCurrencySql);
+    mysqli_query($conn, $paymentStoreMapSql);
+    mysqli_query($conn, $brandStoreSql);
+    mysqli_query($conn, $taxStoreSql);
+    mysqli_query($conn, $boxStoreSql);
+    mysqli_query($conn, $categoryStoreSql);
+    mysqli_query($conn, $supplierStoreSql);
+    mysqli_query($conn, $productStoreSql);
+    mysqli_query($conn, $quotationItemsSql);
+    mysqli_query($conn, $customerStoreMapSql);
+    mysqli_query($conn, $userStoreMapSql);
 
     // Ensure is_installment column exists in sell_logs table
     $checkSellLogInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'is_installment'");
     if($checkSellLogInstallment && mysqli_num_rows($checkSellLogInstallment) == 0) {
         @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN is_installment TINYINT(1) DEFAULT 0 AFTER type");
     }
-    
-    // Ensure transaction_id column exists in sell_logs table
     $checkTransactionId = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'transaction_id'");
     if($checkTransactionId && mysqli_num_rows($checkTransactionId) == 0) {
         @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN transaction_id VARCHAR(255) DEFAULT NULL AFTER pmethod_id");
