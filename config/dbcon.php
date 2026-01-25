@@ -295,7 +295,7 @@ function ensure_core_tables(mysqli $conn) {
         
         tax_rate_id INT(11) DEFAULT NULL,
         tax_method VARCHAR(20) DEFAULT 'exclusive',
-        opening_stock INT(11) DEFAULT 0,
+        opening_stock DECIMAL(15,2) UNSIGNED DEFAULT 0.00,
         alert_quantity INT(11) DEFAULT 5,
         supplier_id INT(11) DEFAULT NULL,
         expire_date DATE DEFAULT NULL,
@@ -424,7 +424,7 @@ function ensure_core_tables(mysqli $conn) {
         id INT(11) NOT NULL AUTO_INCREMENT,
         product_id INT(11) NOT NULL,
         store_id INT(11) NOT NULL,
-        stock DECIMAL(15,4) DEFAULT 0.0000,
+        stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000,
         PRIMARY KEY (id),
         UNIQUE KEY product_store_unique (product_id, store_id),
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -679,7 +679,7 @@ mysqli_query($conn, $userStoreMapSql);
     // Ensure stock column exists in product_store_map table (for store-wise stock tracking)
     $checkPsmStock = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'stock'");
     if($checkPsmStock && mysqli_num_rows($checkPsmStock) == 0) {
-        @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN stock DECIMAL(15,4) DEFAULT 0.0000 AFTER store_id");
+        @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000 AFTER store_id");
         
         // Sync existing products' opening_stock to product_store_map.stock
         // This only runs once when stock column is first added
@@ -971,4 +971,20 @@ if($checkStoreCurrency && mysqli_num_rows($checkStoreCurrency) == 0) {
 //         ('Indian Rupee', 'INR', '₹', 1, 5)
 //     ");
 // }
+
+// --- Ensure UNSIGNED constraints for stock (Auto-fix for existing tables) ---
+// This allows the user to simply reload the page to apply the DB updates.
+$checkUnsignedProd = mysqli_query($conn, "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '$database' AND TABLE_NAME = 'products' AND COLUMN_NAME = 'opening_stock'");
+if($res = mysqli_fetch_assoc($checkUnsignedProd)) {
+    if(stripos($res['COLUMN_TYPE'], 'unsigned') === false) {
+        mysqli_query($conn, "ALTER TABLE products MODIFY COLUMN opening_stock DECIMAL(15,2) UNSIGNED DEFAULT 0.00");
+    }
+}
+
+$checkUnsignedMap = mysqli_query($conn, "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '$database' AND TABLE_NAME = 'product_store_map' AND COLUMN_NAME = 'stock'");
+if($res = mysqli_fetch_assoc($checkUnsignedMap)) {
+    if(stripos($res['COLUMN_TYPE'], 'unsigned') === false) {
+         mysqli_query($conn, "ALTER TABLE product_store_map MODIFY COLUMN stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000");
+    }
+}
 ?>
