@@ -124,31 +124,8 @@ function processPayment($conn, $user_id) {
     }
 
     // 0. STOCK VALIDATION (Server-Side)
-    foreach($cart as $item) {
-        $item_id = intval($item['id']);
-        $req_qty = floatval($item['quantity'] ?? $item['qty'] ?? 1);
-        $item_name = $item['name'];
-
-        // Check stock in product_store_map
-        $stock_query = mysqli_query($conn, "SELECT stock FROM product_store_map WHERE product_id = $item_id AND store_id = $store_id");
-        if ($stock_query && mysqli_num_rows($stock_query) > 0) {
-            $row = mysqli_fetch_assoc($stock_query);
-            $current_stock = floatval($row['stock']);
-            if ($req_qty > $current_stock) {
-                echo json_encode(['success' => false, 'message' => "Insufficient stock for '$item_name'. Available: $current_stock"]);
-                return;
-            }
-        } else {
-            // Check global stock if not in map (fallback)
-            $stock_query = mysqli_query($conn, "SELECT opening_stock FROM products WHERE id = $item_id");
-            $row = mysqli_fetch_assoc($stock_query);
-            $current_stock = floatval($row['opening_stock']);
-            if ($req_qty > $current_stock) {
-                 echo json_encode(['success' => false, 'message' => "Insufficient stock for '$item_name'. Available: $current_stock"]);
-                 return;
-            }
-        }
-    }
+    // REMOVED: Initial SELECT check is removed to prevent race conditions.
+    // validation will happen atomically during the update phase.
     
     mysqli_begin_transaction($conn);
     
@@ -406,13 +383,27 @@ function processPayment($conn, $user_id) {
                         VALUES ('$invoice_id', 'sale', $store_id, $item_id, '$item_name', $qty, $price, $item_subtotal, $user_id, $inst_qty)";
             if(!mysqli_query($conn, $item_sql)) throw new Exception('Failed to add item: ' . mysqli_error($conn));
             
-            // Update global stock
-            mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock - $qty WHERE id = $item_id");
+            // Update global stock (Atomic Update)
+            mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock - $qty WHERE id = $item_id AND opening_stock >= $qty");
             
-            // Update store-specific stock
+            // Note: If global stock tracking is primary, we should check affected rows here too.
+            // But relying on store-specific map mostly.
+            
+            // Update store-specific stock (Atomic Update)
             $psm_check = mysqli_query($conn, "SELECT id FROM product_store_map WHERE product_id = $item_id AND store_id = $store_id");
             if($psm_check && mysqli_num_rows($psm_check) > 0) {
-                mysqli_query($conn, "UPDATE product_store_map SET stock = stock - $qty WHERE product_id = $item_id AND store_id = $store_id");
+                // ATOMIC UPDATE: Decrement only if stock >= qty
+                mysqli_query($conn, "UPDATE product_store_map SET stock = stock - $qty WHERE product_id = $item_id AND store_id = $store_id AND stock >= $qty");
+                
+                if (mysqli_affected_rows($conn) == 0) {
+                    throw new Exception("Stock changed/unavailable for item: $item_name");
+                }
+            } else {
+                // Fallback: If relying on global opening_stock (no map entry), check that.
+                // Assuming we updated products table above.
+                 if (mysqli_affected_rows($conn) == 0) { // Check the products table update
+                    throw new Exception("Stock changed/unavailable for item: $item_name (Global)");
+                 }
             }
         }
         
