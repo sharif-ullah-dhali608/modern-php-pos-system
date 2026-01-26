@@ -29,6 +29,9 @@ document.addEventListener('keydown', function (e) {
         // If searching product, let it handle its own logic (usually barcode scan or search trigger)
         if (document.activeElement.id === 'product_search') return;
 
+        // If editing quantity, do not open payment modal
+        if (document.activeElement.classList.contains('qty-input')) return;
+
         // Check for specific modals explicitly
         if (document.getElementById('invoiceModal').classList.contains('active')) {
             e.preventDefault();
@@ -322,6 +325,14 @@ document.getElementById('store_select').addEventListener('change', function () {
                 if (selectedStoreObj) {
                     window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
                     window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
+
+                    // --- UPDATE SETTINGS ON SWITCH ---
+                    if (window.storeSettingsMap && window.storeSettingsMap[selectedStore]) {
+                        window.posSettings = window.storeSettingsMap[selectedStore];
+                    } else {
+                        window.posSettings = {}; // Reset if no settings found
+                    }
+                    // ---------------------------------
                 }
                 // -------------------------------------------------------
 
@@ -341,6 +352,14 @@ document.getElementById('store_select').addEventListener('change', function () {
         if (selectedStoreObj) {
             window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
             window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
+
+            // --- UPDATE SETTINGS ON SWITCH ---
+            if (window.storeSettingsMap && window.storeSettingsMap[selectedStore]) {
+                window.posSettings = window.storeSettingsMap[selectedStore];
+            } else {
+                window.posSettings = {}; // Reset if no settings found
+            }
+            // ---------------------------------
         }
         // ----------------------------------------------
 
@@ -385,7 +404,7 @@ function loadProducts(page) {
         });
 }
 
-// Add to cart with strict stock validation
+// Add to cart with strict stock validation and max limit check
 function addToCart(id, name, price, stock = null, qtyToAdd = 1) {
     id = parseInt(id); // Ensure ID is a number
 
@@ -393,7 +412,6 @@ function addToCart(id, name, price, stock = null, qtyToAdd = 1) {
     const storeSelect = document.getElementById('store_select');
     if (!storeSelect || storeSelect.value === 'all' || storeSelect.value === '0') {
         showToast('Please select a specific store to add products to cart', 'warning');
-
         // Highlight store dropdown
         if (storeSelect) {
             storeSelect.style.border = '2px solid #f59e0b';
@@ -406,10 +424,16 @@ function addToCart(id, name, price, stock = null, qtyToAdd = 1) {
         return;
     }
 
-    // Get stock from product card if not provided
+    // Get stock and limit from product card
+    let limit = 0;
+    const productCard = document.querySelector(`.product-card[data-id="${id}"]`);
+
     if (stock === null) {
-        const productCard = document.querySelector(`.product-card[data-id="${id}"]`);
         stock = productCard ? parseFloat(productCard.dataset.stock) || 0 : 0;
+    }
+
+    if (productCard) {
+        limit = parseInt(productCard.dataset.limit) || 0;
     }
 
     const existingItem = cart.find(item => item.id === id);
@@ -422,16 +446,24 @@ function addToCart(id, name, price, stock = null, qtyToAdd = 1) {
         return;
     }
 
+    // Check max sell limit
+    if (limit > 0 && newTotalQty > limit) {
+        showToast(`Limit Exceeded! Max ${limit} per customer.`, 'error');
+        return;
+    }
+
     if (existingItem) {
         existingItem.qty = newTotalQty;
-        existingItem.stock = stock; // Update stock info
+        existingItem.stock = stock;
+        existingItem.limit = limit; // Update limit info
     } else {
         cart.push({
             id: id,
             name: name,
             price: parseFloat(price),
             qty: qtyToAdd,
-            stock: stock
+            stock: stock,
+            limit: limit
         });
     }
 
@@ -439,17 +471,24 @@ function addToCart(id, name, price, stock = null, qtyToAdd = 1) {
     showToast('Added to cart: ' + name);
 }
 
-// Update quantity with stock validation
+// Update quantity with stock validation and limit
 function updateQty(id, change) {
     id = parseInt(id);
     const item = cart.find(item => item.id === id);
     if (item) {
         const newQty = item.qty + change;
+        const limit = item.limit || 0;
 
-        if (change > 0 && newQty > item.stock) {
-            showToast(`Cannot exceed stock! Only ${item.stock} available.`, 'error');
-            window.lastStockErrorTime = Date.now(); // Mark that a stock error just occurred
-            return;
+        if (change > 0) {
+            if (newQty > item.stock) {
+                showToast(`Cannot exceed stock! Only ${item.stock} available.`, 'error');
+                window.lastStockErrorTime = Date.now();
+                return;
+            }
+            if (limit > 0 && newQty > limit) {
+                showToast(`Limit Exceeded! Max ${limit} per customer.`, 'error');
+                return;
+            }
         }
 
         if (newQty <= 0) {
@@ -461,17 +500,27 @@ function updateQty(id, change) {
     }
 }
 
-// Set quantity directly with stock validation
+// Set quantity directly with stock validation and limit
 function setQty(id, newQty) {
     id = parseInt(id);
     const item = cart.find(item => item.id === id);
     if (item) {
         newQty = parseInt(newQty) || 0;
+        const limit = item.limit || 0;
 
         if (newQty > item.stock) {
             showToast(`Cannot exceed stock! Only ${item.stock} available.`, 'error');
-            window.lastStockErrorTime = Date.now(); // Mark that a stock error just occurred
+            window.lastStockErrorTime = Date.now();
             item.qty = item.stock;
+            // Also check limit if stock allows but limit doesn't (though usually limit < stock)
+            if (limit > 0 && item.qty > limit) item.qty = limit;
+            renderCart();
+            return;
+        }
+
+        if (limit > 0 && newQty > limit) {
+            showToast(`Limit Exceeded! Max ${limit} per customer.`, 'error');
+            item.qty = limit;
             renderCart();
             return;
         }
@@ -595,6 +644,22 @@ function prepareAndOpenPaymentModal() {
         showToast('Cart is empty', 'error');
         return;
     }
+
+    // --- NEW: Validate Limits Before Checkout ---
+    for (const item of cart) {
+        if (item.limit > 0 && item.qty > item.limit) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Limit Exceeded',
+                text: `You cannot sell more than ${item.limit} of "${item.name}" per customer.`,
+                confirmButtonColor: '#f43f5e'
+            });
+            // Also show toast just in case
+            showToast(`Limit Exceeded: Max ${item.limit} for ${item.name}`, 'error');
+            return; // STOP execution
+        }
+    }
+    // --------------------------------------------
 
     // Prevent opening modal if a stock error just occurred (within last 1.5 seconds)
     const timeSinceLastError = Date.now() - window.lastStockErrorTime;
@@ -2280,7 +2345,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
-function closeWelcomeModal() {
+window.closeWelcomeModal = function () {
     const modal = document.getElementById('welcomeModal');
     if (modal) {
         modal.classList.remove('active');
@@ -2295,11 +2360,11 @@ function closeWelcomeModal() {
     }
 }
 
-function confirmWelcomeStats() {
-    closeWelcomeModal();
+window.confirmWelcomeStats = function () {
+    window.closeWelcomeModal();
 }
 
-function checkStoreStockAlert(storeId) {
+window.checkStoreStockAlert = function (storeId) {
     if (storeId === 'all') return;
 
     fetch('get_stock_alert_count.php?store_id=' + storeId)
@@ -2307,8 +2372,6 @@ function checkStoreStockAlert(storeId) {
         .then(data => {
             if (data.count > 0) {
                 showToast(`Alert: This store has ${data.count} products with low stock!`, 'warning');
-            } else {
-                // Optional: show positive msg? User only asked for alert
             }
         })
         .catch(err => console.error(err));
@@ -2518,10 +2581,7 @@ window.changeLightboxImage = function (direction) {
 window.openProductDetails = function (productId) {
     console.log('openProductDetails called with ID:', productId);
 
-    // Fetch product details
     currentProductDetailsId = productId;
-
-    // Show Modal with Loading
     const modal = document.getElementById('productDetailsModal');
     if (!modal) {
         console.error('Product Details Modal not found in DOM');
@@ -2529,29 +2589,25 @@ window.openProductDetails = function (productId) {
     }
 
     modal.style.display = 'flex';
-    // Force Z-Index
     modal.style.zIndex = '9999';
+    setTimeout(() => modal.classList.add('active'), 10);
 
-    setTimeout(() => modal.classList.add('active'), 10); // Anim
-
-    // Set loading state
     const nameEl = document.getElementById('pd-name');
     if (nameEl) nameEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
 
-    // Hide nav buttons initially
     const prevBtn = document.getElementById('pd-prev-btn');
     const nextBtn = document.getElementById('pd-next-btn');
     if (prevBtn) prevBtn.style.display = 'none';
     if (nextBtn) nextBtn.style.display = 'none';
 
-    fetch('get_product_details.php?id=' + productId)
+    const currentStoreId = document.getElementById('store_select').value;
+    fetch('get_product_details.php?id=' + productId + '&store_id=' + currentStoreId)
         .then(res => res.json())
         .then(resp => {
             if (resp.success) {
                 const p = resp.product;
-                currentProductName = p.name; // Capture name for lightbox
+                currentProductName = p.name;
 
-                // Safe Set Text
                 const safeSet = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) el.textContent = val;
@@ -2566,7 +2622,6 @@ window.openProductDetails = function (productId) {
                 if (window.currencySymbol) desc = desc.replace(/৳/g, window.currencySymbol);
                 safeSet('pd-description', desc);
 
-                // Populate Extra Info Grid
                 safeSet('pd-brand', p.brand);
                 safeSet('pd-code', p.code);
                 safeSet('pd-barcode', p.barcode_symbology);
@@ -2574,11 +2629,11 @@ window.openProductDetails = function (productId) {
                 safeSet('pd-tax', taxStr);
                 safeSet('pd-tax-method', p.tax_method);
                 safeSet('pd-alert-qty', p.alert_quantity);
+                safeSet('pd-limit', (p.effective_limit > 0) ? p.effective_limit : 'Unlimited');
 
-                // Image & Gallery Logic
                 currentGalleryImages = (p.images && p.images.length > 0) ? p.images : ['/pos/assets/images/no-image.png'];
                 currentGalleryIndex = 0;
-                galleryThumbnailPage = 0; // Reset pagination
+                galleryThumbnailPage = 0;
 
                 const imgEl = document.getElementById('pd-image');
                 if (imgEl) {
@@ -2588,72 +2643,105 @@ window.openProductDetails = function (productId) {
                     imgEl.onclick = () => window.openLightbox();
                 }
 
-                // Show/Hide Gallery Buttons (Main Modal)
                 if (currentGalleryImages.length > 1) {
                     if (prevBtn) prevBtn.style.display = 'flex';
                     if (nextBtn) nextBtn.style.display = 'flex';
                 }
 
-                // Render Thumbnails with Pagination
                 renderGalleryThumbnails();
 
-                // Stock List logic continues...
-
-                // Stock List logic continues...
-
-                // Stock List
+                // Stock List Breakdown
                 const stockList = document.getElementById('pd-stock-list');
+                const storeSelect = document.getElementById('store_select');
+                const selectedStoreId = storeSelect ? storeSelect.value : null;
+
                 if (stockList) {
                     stockList.innerHTML = '';
-                    let totalStock = 0;
                     if (p.stock_by_store) {
                         p.stock_by_store.forEach(store => {
                             const sQty = parseFloat(store.stock);
-                            totalStock += sQty;
-
                             const row = document.createElement('div');
-                            row.className = 'pd-mobile-row'; // Fix layout on mobile
+                            const isCurrent = selectedStoreId && store.store_id == selectedStoreId;
+
+                            row.className = 'pd-mobile-row';
                             row.style.display = 'flex';
                             row.style.justifyContent = 'space-between';
-                            row.style.padding = '10px 5px 10px 0';
+                            row.style.padding = '10px 12px';
                             row.style.fontSize = '12px';
                             row.style.borderBottom = '1px dashed #f1f5f9';
-                            row.style.alignItems = 'start'; // Vertical alignment
+                            row.style.alignItems = 'center';
+                            row.style.borderRadius = '8px';
+
+                            if (isCurrent) {
+                                row.style.background = '#f0fdfa';
+                                row.style.border = '1px solid #ccfbf1';
+                            }
 
                             const isLow = sQty <= p.alert_quantity;
                             const isOut = sQty <= 0;
                             const color = isOut ? '#ef4444' : (isLow ? '#f59e0b' : '#10b981');
 
                             row.innerHTML = `
-                                 <span style="color: #64748b;">${store.store_name}</span>
-                                 <div class="pd-mobile-row" style="display: flex; align-items: center; gap: 4px;">
-                                     <span style="font-weight: 700; color: ${color};">${sQty}</span>
-                                     ${p.location ? `<span style="font-weight: 600; color: #475569; font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-map-marker-alt" style="font-size: 10px; margin-right: 3px; gap: 12px;"></i>${p.location}</span>` : ''}
-                                 </div>
-                             `;
+                                <span style="color: ${isCurrent ? '#0d9488' : '#64748b'}; font-weight: ${isCurrent ? '700' : '500'};">
+                                    ${store.store_name} ${isCurrent ? ' <span style="font-size: 9px; opacity: 0.7;">(Current Store)</span>' : ''}
+                                </span>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <span style="font-weight: 700; color: ${color}; font-size: 14px;">${sQty}</span>
+                                    ${p.location ? `<span style="font-weight: 600; color: #475569; font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-map-marker-alt" style="font-size: 10px; margin-right: 3px;"></i>${p.location}</span>` : ''}
+                                </div>
+                            `;
                             stockList.appendChild(row);
                         });
                     }
+                }
 
-                    // Out of stock badge logic...
-                    const badge = document.getElementById('pd-stock-badge');
-                    if (totalStock <= 0) {
-                        if (badge) badge.style.display = 'block';
-                        document.getElementById('pd-add-btn').disabled = true;
-                        document.getElementById('pd-add-btn').style.opacity = '0.5';
-                        document.getElementById('pd-add-btn').style.cursor = 'not-allowed';
+                // Badge Logic for Modal Image
+                const stockBadge = document.getElementById('pd-stock-badge');
+                const limitBadge = document.getElementById('pd-limit-badge');
+                const primaryStock = p.stock || 0;
+                const alertQty = p.alert_quantity || 5;
+                const effectiveLimit = p.effective_limit || 0;
+
+                // 1. Stock Badge (Top Right)
+                if (stockBadge) {
+                    if (primaryStock <= 0) {
+                        stockBadge.textContent = 'Out of Stock';
+                        stockBadge.style.background = '#ef4444';
+                        stockBadge.style.display = 'block';
+                    } else if (primaryStock <= alertQty) {
+                        stockBadge.textContent = 'Low Stock';
+                        stockBadge.style.background = '#f59e0b';
+                        stockBadge.style.display = 'block';
                     } else {
-                        if (badge) badge.style.display = 'none';
-                        document.getElementById('pd-add-btn').disabled = false;
-                        document.getElementById('pd-add-btn').style.opacity = '1';
-                        document.getElementById('pd-add-btn').style.cursor = 'pointer';
+                        stockBadge.style.display = 'none';
                     }
                 }
 
-                // Dynamic details table logic removed (replaced by static grid in pos.php)
+                // 2. Limit Badge (Top Left)
+                if (limitBadge) {
+                    if (effectiveLimit > 0) {
+                        limitBadge.textContent = 'Limit: ' + effectiveLimit;
+                        limitBadge.style.display = 'block';
+                    } else {
+                        limitBadge.style.display = 'none';
+                    }
+                }
 
+                // 3. Add Button State
+                const addBtn = document.getElementById('pd-add-btn');
+                if (addBtn) {
+                    if (primaryStock <= 0) {
+                        addBtn.disabled = true;
+                        addBtn.style.opacity = '0.5';
+                        addBtn.style.cursor = 'not-allowed';
+                    } else {
+                        addBtn.disabled = false;
+                        addBtn.style.opacity = '1';
+                        addBtn.style.cursor = 'pointer';
+                    }
+                }
 
-                // --- NEW: Render Related Products ---
+                // Related Products
                 const relatedList = document.getElementById('pd-related-list');
                 if (relatedList) {
                     relatedList.innerHTML = '';
@@ -2661,21 +2749,10 @@ window.openProductDetails = function (productId) {
                         resp.related_products.forEach(rp => {
                             const item = document.createElement('div');
                             item.className = 'val-related-item';
-                            item.style.display = 'flex';
-                            item.style.alignItems = 'center';
-                            item.style.gap = '10px';
-                            item.style.padding = '8px';
-                            item.style.background = 'white';
-                            item.style.border = '1px solid #e2e8f0';
-                            item.style.borderRadius = '10px';
-                            item.style.cursor = 'pointer';
-                            item.style.transition = 'all 0.2s';
-
+                            item.style = 'display: flex; align-items: center; gap: 10px; padding: 8px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.2s;';
                             item.onclick = () => window.openProductDetails(rp.id);
                             item.onmouseover = () => { item.style.borderColor = '#0d9488'; item.style.transform = 'translateY(-2px)'; };
                             item.onmouseout = () => { item.style.borderColor = '#e2e8f0'; item.style.transform = 'translateY(0)'; };
-
-                            // Updated innerHTML with gap and flex: 1
                             item.innerHTML = `
                                 <img src="${rp.thumbnail}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
                                 <div style="flex: 1; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 8px;">
@@ -2690,9 +2767,7 @@ window.openProductDetails = function (productId) {
                     }
                 }
 
-                // Reset Qty
                 document.getElementById('pd-qty-input').value = 1;
-
             } else {
                 showToast('Error loading product details: ' + (resp.message || 'Unknown'), 'error');
                 closeModal('productDetailsModal');
@@ -2930,3 +3005,50 @@ document.addEventListener('DOMContentLoaded', function () {
         storeSelect.addEventListener('change', updateCurrencyFromStore);
     }
 });
+
+// Toggle POS Settings (Sound, Images, Auto Print)
+window.togglePosSetting = function (key, isChecked) {
+    const value = isChecked ? 1 : 0;
+
+    // Immediate UI Effect
+    if (key === 'show_images') {
+        const productGrid = document.getElementById('product-grid');
+        if (isChecked) {
+            productGrid.classList.remove('hide-images');
+            location.reload(); // Reload to fetch images if they were not loaded
+        } else {
+            productGrid.classList.add('hide-images');
+        }
+    }
+
+    // Save to Server
+    const formData = new FormData();
+    formData.append('update_setting', 'true');
+    formData.append('key', key);
+    formData.append('value', value);
+
+    // Get store ID from select if available, else standard
+    const storeSelect = document.getElementById('store_select');
+    if (storeSelect) {
+        formData.append('store_id', storeSelect.value);
+    }
+
+    fetch('/pos/stores/save_store_settings.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast('Setting updated', 'success');
+                // Reload if auto print is toggled to ensure state
+                if (key === 'auto_print' || key === 'enable_sound') {
+                    // No reload needed for sound/print usually, just variable update if we had global vars
+                    // For now, simpler to reload or just let it be saved
+                }
+            } else {
+                showToast('Failed to save setting', 'error');
+            }
+        })
+        .catch(err => console.error(err));
+};

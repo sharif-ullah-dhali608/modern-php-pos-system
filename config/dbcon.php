@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "";
+$password = "root";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -602,6 +602,19 @@ $usersSql = "CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: POS Settings Table ---
+    $posSettingsSql = "CREATE TABLE IF NOT EXISTS pos_settings (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) DEFAULT NULL,
+        setting_key VARCHAR(100) NOT NULL,
+        setting_value TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY unique_setting (store_id, setting_key),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 // --- NEW: User-Store Pivot Table (For assigning users to specific stores) ---
 $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     id INT(11) NOT NULL AUTO_INCREMENT,
@@ -855,6 +868,7 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $installmentPaymentsSql);
     mysqli_query($conn, $giftcardTopupsSql);
     mysqli_query($conn, $productImagesSql);
+    mysqli_query($conn, $posSettingsSql);
 
     // Level 4: Pivot / Map Tables
     mysqli_query($conn, $storeCurrencySql);
@@ -931,5 +945,11 @@ if($res = mysqli_fetch_assoc($checkUnsignedMap)) {
     if(stripos($res['COLUMN_TYPE'], 'unsigned') === false) {
          mysqli_query($conn, "ALTER TABLE product_store_map MODIFY COLUMN stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000");
     }
+}
+
+// Ensure per_customer_limit column exists in products table
+$checkLimitCol = @mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'per_customer_limit'");
+if($checkLimitCol && mysqli_num_rows($checkLimitCol) == 0) {
+    @mysqli_query($conn, "ALTER TABLE products ADD COLUMN per_customer_limit INT(11) DEFAULT 0 AFTER alert_quantity");
 }
 ?>

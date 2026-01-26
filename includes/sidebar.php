@@ -125,7 +125,8 @@ $menu_items = [
         'link' => '#',
         'submenu' => [
             ['title' => 'Add Store', 'link' => '/pos/stores/add'],
-            ['title' => 'Store List', 'link' => '/pos/stores/list']
+            ['title' => 'Store List', 'link' => '/pos/stores/list'],
+            ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
         ],
         'active' => (uri_has('/stores/', $current_uri))
     ],
@@ -233,6 +234,15 @@ $menu_items = [
             // ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
         ],
         'active' => (uri_has('/users/', $current_uri))
+    ],
+    [
+        'title' => 'Reports',
+        'icon' => 'fa-chart-pie',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Overview Report', 'link' => '/pos/reports/overview']
+        ],
+        'active' => (uri_has('/reports/', $current_uri))
     ],
     [
         'title' => 'System',

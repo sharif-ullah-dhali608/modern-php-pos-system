@@ -114,6 +114,11 @@
         padding: 0 !important;
         overflow: visible !important;
     }
+    
+    /* Dynamic Page Size */
+    /* Dynamic Page Size handled by JS printInvoice() */
+    @page { size: auto; margin: 0; }
+
     #invoiceModal .pos-modal-content {
         box-shadow: none !important;
         border: none !important;
@@ -121,6 +126,31 @@
         max-width: 100% !important;
         margin: 0 !important;
     }
+    
+    /* Thermal 58mm Specifics */
+    body.template-thermal_58mm #invoiceModal .pos-modal-content {
+        width: 58mm !important;
+        max-width: 58mm !important; 
+        font-size: 9px !important;
+        padding: 0 !important;
+    }
+    body.template-thermal_58mm #invoiceModal .pos-modal-body {
+        padding: 0 !important;
+    }
+    body.template-thermal_58mm h2 { font-size: 14px !important; }
+    body.template-thermal_58mm h3 { font-size: 11px !important; }
+    body.template-thermal_58mm table th, 
+    body.template-thermal_58mm table td {
+        padding: 2px 0 !important;
+        font-size: 9px !important;
+    }
+
+    /* Thermal 80mm Specifics */
+    body.template-thermal_80mm #invoiceModal .pos-modal-content {
+        width: 78mm !important; /* Slightly less than 80mm to be safe */
+        max-width: 80mm !important;
+    }
+
     .pos-modal-header, .pos-modal-body > div:last-child { 
         display: none !important; 
     }

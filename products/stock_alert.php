@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/date_filter_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -11,6 +12,9 @@ if(!isset($_SESSION['auth'])){
 // Fetch Filters
 $filter_store = isset($_GET['store_id']) ? intval($_GET['store_id']) : 0;
 $filter_product = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
 
 // Base path for filters to preserve other params
 function get_filter_url($params) {
@@ -82,6 +86,9 @@ if($filter_product > 0) {
     $query .= " AND p.id = $filter_product";
 }
 
+// Apply date filter
+applyDateFilter($query, 'p.created_at', $date_filter, $start_date, $end_date);
+
 $query .= " ORDER BY psm.stock ASC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
@@ -137,14 +144,9 @@ $list_config = [
             'icon' => 'fas fa-cash-register',
             'onclick' => "window.location.href='/pos/pos/'",
             'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition-all'
-        ],
-        [
-            'label' => 'Clear Filters',
-            'icon' => 'fas fa-times-circle',
-            'onclick' => "window.location.href='/pos/products/stock_alert'",
-            'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-slate-500 hover:bg-slate-600 text-white font-bold rounded-lg shadow transition-all'
         ]
     ],
+    'date_column' => 'p.created_at',
     'filters' => [
         [
             'id' => 'filter_store',
