@@ -12,6 +12,7 @@ RewriteRule ^login$ signin.php [L]
 RewriteRule ^stores/list$ stores/store_list.php [L]
 RewriteRule ^stores/add$ stores/add_store.php [L]
 RewriteRule ^stores/edit$ stores/add_store.php [L]
+RewriteRule ^stores/settings$ stores/settings.php [L]
 
 RewriteRule ^currency/list$ currency/currency_list.php [L]
 RewriteRule ^currency/add$ currency/add_currency.php [L]
@@ -140,6 +141,8 @@ RewriteRule ^installment/due_all$ installment/payment_list.php?filter=all [L]
 RewriteRule ^installment/due_expired$ installment/payment_list.php?filter=expired [L]
 RewriteRule ^installment/overview$ installment/overview.php [L]
 
+# --- Reports Routes ---
+RewriteRule ^reports/overview$ reports/report_overview.php [L,QSA]
 
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f

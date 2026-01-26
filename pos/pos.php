@@ -44,6 +44,27 @@ if(!empty($current_store['currency_id'])) {
 }
 
 // ---------------------------------
+// Fetch POS Settings
+$pos_settings = [];
+if(isset($current_store['id'])) {
+    $s_q = mysqli_query($conn, "SELECT * FROM pos_settings WHERE store_id = '{$current_store['id']}'");
+    while($row = mysqli_fetch_assoc($s_q)) {
+        $pos_settings[$row['setting_key']] = $row['setting_value'];
+    }
+}
+// --- NEW: Fetch All Store Settings for Dynamic Switching ---
+$all_store_settings = [];
+$all_settings_q = mysqli_query($conn, "SELECT * FROM pos_settings");
+while($row = mysqli_fetch_assoc($all_settings_q)) {
+    if(!isset($all_store_settings[$row['store_id']])) {
+        $all_store_settings[$row['store_id']] = [];
+    }
+    $all_store_settings[$row['store_id']][$row['setting_key']] = $row['setting_value'];
+}
+// -----------------------------------------------------------
+$show_images = isset($pos_settings['show_images']) ? $pos_settings['show_images'] : '1';
+$enable_sound = isset($pos_settings['enable_sound']) ? $pos_settings['enable_sound'] : '1';
+// ---------------------------------
 
 // Pagination settings
 $items_per_page = 20;
@@ -57,12 +78,14 @@ $total_products = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_products / $items_per_page);
 
 // Fetch products for display
+$current_store_id = $current_store['id'] ?? 1;
 $products_query = "SELECT p.*, c.name as category_name, u.unit_name,
-                   GREATEST(0, COALESCE(SUM(psm.stock), 0)) as store_stock
+                   GREATEST(0, COALESCE(SUM(psm.stock), 0)) as store_stock,
+                   COALESCE(NULLIF(psm.per_customer_limit, 0), p.per_customer_limit, 0) as effective_limit
                    FROM products p 
                    LEFT JOIN categories c ON p.category_id = c.id 
                    LEFT JOIN units u ON p.unit_id = u.id 
-                   LEFT JOIN product_store_map psm ON p.id = psm.product_id
+                   LEFT JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = '$current_store_id'
                    WHERE p.status = 1 
                    GROUP BY p.id
                    ORDER BY p.product_name ASC 
@@ -135,6 +158,28 @@ include('../includes/header.php');
         scrollbar-width: none; /* Firefox */
     }
 </style>
+<script>
+    window.posSettings = <?= json_encode($pos_settings); ?>;
+    window.stores = <?= json_encode($stores); ?>;
+    window.currencyName = "<?= $currency_name; ?>";
+    window.currencyPaisaName = "<?= $currency_code == 'BDT' ? 'Paisa' : 'Cents'; ?>";
+</script>
+
+<!-- Dynamic Print Styles (Server-Side) -->
+<style>
+@media print {
+    <?php if(isset($pos_settings['receipt_template']) && $pos_settings['receipt_template'] == 'thermal_58mm'): ?>
+        @page { size: 58mm auto; margin: 0; }
+        body { width: 58mm !important; }
+    <?php elseif(isset($pos_settings['receipt_template']) && $pos_settings['receipt_template'] == 'thermal_80mm'): ?>
+        @page { size: 80mm auto; margin: 0; }
+        body { width: 80mm !important; }
+    <?php else: ?>
+        @page { size: auto; margin: 0; }
+    <?php endif; ?>
+}
+</style>
+
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
     
@@ -174,6 +219,7 @@ include('../includes/header.php');
                     <?php endif; ?>
                 </a>
                 <a href="/pos/admin/reports.php"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="#" onclick="openModal('posSettingsModal')"><i class="fas fa-cog"></i> Settings</a>
                 <a href="#" onclick="lockScreen()"><i class="fas fa-lock"></i> Lockscreen</a>
             </div>
             
@@ -210,17 +256,71 @@ include('../includes/header.php');
                         $is_out_of_stock = $stock <= 0;
                         $is_low_stock = $stock > 0 && $stock <= $alert_qty;
                     ?>
-                        <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" data-id="<?= $product['id']; ?>" data-name="<?= htmlspecialchars($product['product_name']); ?>" data-price="<?= $product['selling_price']; ?>" data-category="<?= $product['category_id']; ?>" data-stock="<?= $stock; ?>" onclick="openProductDetails(<?= $product['id']; ?>)" style="cursor: pointer;">
+                        <div class="product-card <?= $is_out_of_stock ? 'out-of-stock-card' : '' ?>" 
+                             data-id="<?= $product['id']; ?>" 
+                             data-name="<?= htmlspecialchars($product['product_name']); ?>" 
+                             data-price="<?= $product['selling_price']; ?>" 
+                             data-category="<?= $product['category_id']; ?>" 
+                             data-stock="<?= $stock; ?>" 
+                             data-limit="<?= $product['effective_limit']; ?>" 
+                             onclick="openProductDetails(<?= $product['id']; ?>)" 
+                             style="cursor: pointer; position: relative;">
+                            
+                            <?php if($product['effective_limit'] > 0): ?>
+                                <div style="position: absolute; top: 0; left: 0; background: #f43f5e; color: white; font-size: 10px; padding: 2px 6px; border-bottom-right-radius: 8px; font-weight: bold; z-index: 5;">
+                                    Limit: <?= $product['effective_limit']; ?>
+                                </div>
+                            <?php endif; ?>
                             <?php if($is_out_of_stock): ?>
                                 <div class="stock-badge out-of-stock">Out of Stock</div>
                             <?php elseif($is_low_stock): ?>
                                 <div class="stock-badge low-stock">Low Stock</div>
                             <?php endif; ?>
-                            <?php if(!empty($product['thumbnail'])): ?>
-                                <img src="<?= $product['thumbnail']; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
-                            <?php else: ?>
-                                <img src="../assets/images/no-image.png" alt="No Image">
-                            <?php endif; ?>
+                            <?php 
+                            // Only check and render images if enabled in settings
+                            if($show_images == '1'):
+                                // Robust Image Logic (Same as get_products.php)
+                                $display_image = '';
+                                $thumbnail = $product['thumbnail'] ?? '';
+                                
+                                // Method 1: Check products.thumbnail column
+                                if (!empty($thumbnail)) {
+                                    if (strpos($thumbnail, '/pos/') === 0) {
+                                        $relative_path = '..' . $thumbnail;
+                                    } else {
+                                        $relative_path = '../' . $thumbnail;
+                                    }
+                                    if (file_exists($relative_path)) {
+                                        $display_image = $thumbnail;
+                                    }
+                                }
+                                
+                                // Method 2: Check product_images table if still empty
+                                if (empty($display_image)) {
+                                    $img_query = "SELECT image_path FROM product_images WHERE product_id = " . intval($product['id']) . " ORDER BY sort_order ASC, id ASC LIMIT 1";
+                                    $img_result_single = mysqli_query($conn, $img_query);
+                                    if ($img_result_single && mysqli_num_rows($img_result_single) > 0) {
+                                        $img_row = mysqli_fetch_assoc($img_result_single);
+                                        if (!empty($img_row['image_path'])) {
+                                            $display_image = $img_row['image_path'];
+                                        }
+                                    }
+                                }
+                                
+                                // Method 3: Check legacy 'image' column
+                                if (empty($display_image) && !empty($product['image'])) {
+                                    if (file_exists("../uploads/" . $product['image'])) {
+                                        $display_image = "/pos/uploads/" . $product['image'];
+                                    }
+                                }
+                            ?>
+
+                                <?php if(!empty($display_image)): ?>
+                                    <img src="<?= $display_image; ?>" alt="<?= htmlspecialchars($product['product_name']); ?>">
+                                <?php else: ?>
+                                    <img src="../assets/images/no-image.png" alt="No Image">
+                                <?php endif; ?>
+                            <?php endif; // End show_images check ?>
                             <div class="info">
                                 <div class="name"><?= htmlspecialchars($product['product_name']); ?></div>
                                 <div class="price"><?= $currency_symbol; ?><?= number_format($product['selling_price'], 2); ?></div>
@@ -505,6 +605,7 @@ include('../includes/header.php');
                      <div class="pd-mobile-scroll-container">
                          <div id="pd-main-image-container" style="width: 100%; aspect-ratio: 1/1; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px;">
                              <img id="pd-image" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                             <div id="pd-limit-badge" style="position: absolute; top: 0; left: 0; background: #f43f5e; color: white; font-size: 10px; padding: 4px 10px; border-bottom-right-radius: 12px; font-weight: bold; z-index: 5; display: none;">Limit: 0</div>
                              <div id="pd-stock-badge" style="position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; background: #ef4444; display: none;">Out of Stock</div>
                              
                              <!-- Gallery Controls -->
@@ -561,6 +662,10 @@ include('../includes/header.php');
                         <div>
                            <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Alert Quantity</span>
                            <span id="pd-alert-qty" style="font-size: 13px; font-weight: 600; color: #334155;">-</span>
+                       </div>
+                       <div>
+                           <span style="display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Purchase Limit</span>
+                           <span id="pd-limit" style="font-size: 13px; font-weight: 600; color: #0d9488;">-</span>
                        </div>
                     </div>
 
@@ -1279,8 +1384,120 @@ include('../includes/header.php');
 <script src="/pos/assets/js/payment_logic.js"></script>
 <script>
     const stores = <?= json_encode($stores); ?>;
+    window.storeSettingsMap = <?= json_encode($all_store_settings); ?>; // Inject All Settings
     window.currencySymbol = "<?= $currency_symbol; ?>"; // Dynamic Currency for JS
     window.currencyName = "<?= $currency_name; ?>"; // Dynamic Currency Name for JS
+    
+    // POS Settings passed to JS
+    window.enableSound = <?= $enable_sound; ?>;
+    window.showImages = <?= $show_images; ?>;
+    window.autoPrint = <?= isset($pos_settings['auto_print']) ? $pos_settings['auto_print'] : '0'; ?>;
+</script>
+<style>
+    /* Helper for toggling images via JS */
+    .product-grid.hide-images .product-card img {
+        display: none !important;
+    }
+    .product-grid.hide-images .product-card .info {
+        margin-top: 0;
+    }
+</style>
+<!-- POS Settings Modal -->
+<div class="pos-modal" id="posSettingsModal">
+    <div class="pos-modal-content" style="max-width: 500px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.1);">
+        <div class="pos-modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="color: white;"><i class="fas fa-cog"></i> POS Configuration</h3>
+            <button class="close-btn" onclick="closeModal('posSettingsModal')" style="color: white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="pos-modal-body" style="padding: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Sound Effects</strong>
+                        <span style="font-size: 11px; opacity: 0.7;">Beep on scan/click</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting_sound" <?= $enable_sound == '1' ? 'checked' : ''; ?> onchange="togglePosSetting('enable_sound', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Product Images</strong>
+                        <span style="font-size: 11px; opacity: 0.7;">Show/Hide images (Fast Mode)</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting_images" <?= $show_images == '1' ? 'checked' : ''; ?> onchange="togglePosSetting('show_images', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Auto Print</strong>
+                        <span style="font-size: 11px; opacity: 0.7;">Skip print dialog</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="setting_autoprint" <?= (isset($pos_settings['auto_print']) && $pos_settings['auto_print'] == '1') ? 'checked' : ''; ?> onchange="togglePosSetting('auto_print', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="margin-top: 10px; text-align: center;">
+                    <a href="#" onclick="openSettings(event)" style="color: #2dd4bf; font-size: 13px; text-decoration: none; font-weight: 600;">
+                        <i class="fas fa-external-link-alt"></i> Advanced Store Settings
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePosSetting(key, value) {
+        // Optimistic UI update
+        if(key === 'show_images') {
+            if(value) {
+                $('.product-card img').show();
+            } else {
+                $('.product-card img').hide();
+            }
+        }
+
+        // Get current store ID dynamically
+        const currentStoreId = document.getElementById('store_select').value;
+
+        // Save to DB
+        $.ajax({
+            url: '/pos/stores/save_store_settings.php',
+            method: 'POST',
+            data: {
+                store_id: currentStoreId,
+                settings: { [key]: value ? 1 : 0 }
+            }
+        });
+    }
+
+    function openSettings(e) {
+        e.preventDefault();
+        const currentStoreId = document.getElementById('store_select').value;
+        const url = `/pos/stores/settings.php?store_id=${currentStoreId}`;
+        window.location.href = url;
+    }
+    
+
+    // Apply on load JS side (if PHP didn't catch it for dynamic elements)
+    $(document).ready(function() {
+        <?php if($show_images == '0'): ?>
+            $('.product-card img').hide();
+        <?php endif; ?>
+    });
 </script>
 <script src="/pos/assets/js/pos.js"></script>
+
 

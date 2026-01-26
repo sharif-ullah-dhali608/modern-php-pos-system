@@ -100,27 +100,39 @@ $stock_query = "SELECT s.id as store_id, s.store_name,
                 WHERE s.status = 1
                 ORDER BY s.store_name";
 
-$stock_stmt = mysqli_prepare($conn, $stock_query);
-$opening_stock = $product['opening_stock'] ?? 0;
+// --- NEW: Fetch Effective Limit and Store-Specific Stock ---
+$limit_info = 0;
+$store_specific_stock = null;
+
+if ($store_id !== 'all' && $store_id > 0) {
+    // Store specific limit
+    $limit_q = mysqli_query($conn, "SELECT COALESCE(NULLIF(psm.per_customer_limit, 0), p.per_customer_limit, 0) as effective_limit,
+                                          COALESCE(psm.stock, 0) as store_stock
+                                   FROM products p 
+                                   LEFT JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = '$store_id'
+                                   WHERE p.id = '$product_id'");
+    if($l_row = mysqli_fetch_assoc($limit_q)) {
+        $limit_info = floatval($l_row['effective_limit']);
+        $store_specific_stock = floatval($l_row['store_stock']);
+    }
+} else {
+    // Global limit from product table
+    $limit_info = floatval($product['per_customer_limit']);
+}
+// ----------------------------------
+
+$stock_stmt = mysqli_prepare($conn, "SELECT s.id as store_id, s.store_name, 
+                       COALESCE(psm.stock, 0) as stock
+                FROM stores s
+                LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
+                WHERE s.status = 1
+                ORDER BY s.store_name");
 mysqli_stmt_bind_param($stock_stmt, 'i', $product_id);
 mysqli_stmt_execute($stock_stmt);
 $stock_result = mysqli_stmt_get_result($stock_stmt);
-
+$stock_info = [];
 while ($row = mysqli_fetch_assoc($stock_result)) {
     $stock_info[] = $row;
-}
-
-// If no stores found, use default stock from opening_stock
-if (empty($stock_info)) {
-    $stores_query = "SELECT id as store_id, store_name FROM stores WHERE status = 1";
-    $stores_result = mysqli_query($conn, $stores_query);
-    while ($store = mysqli_fetch_assoc($stores_result)) {
-        $stock_info[] = [
-            'store_id' => $store['store_id'],
-            'store_name' => $store['store_name'],
-            'stock' => $product['opening_stock'] ?? 0
-        ];
-    }
 }
 
 // Prepare response
@@ -140,7 +152,8 @@ $response = [
         'tax_name' => $product['tax_name'] ?? 'No Tax',
         'tax_rate' => floatval($product['tax_rate'] ?? 0),
         'tax_method' => $product['tax_method'] ?? 'exclusive',
-        'stock' => floatval($product['opening_stock'] ?? 0),
+        'effective_limit' => $limit_info, 
+        'stock' => $store_specific_stock !== null ? $store_specific_stock : floatval($product['opening_stock'] ?? 0),
         'alert_quantity' => floatval($product['alert_quantity'] ?? 5),
         'description' => $product['description'] ?? '',
         'expire_date' => $product['expire_date'] ?? null,
