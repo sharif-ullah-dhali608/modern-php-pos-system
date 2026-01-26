@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -297,6 +297,7 @@ function ensure_core_tables(mysqli $conn) {
         tax_method VARCHAR(20) DEFAULT 'exclusive',
         opening_stock DECIMAL(15,2) UNSIGNED DEFAULT 0.00,
         alert_quantity INT(11) DEFAULT 5,
+        per_customer_limit INT(11) DEFAULT 0,
         supplier_id INT(11) DEFAULT NULL,
         expire_date DATE DEFAULT NULL,
         description TEXT DEFAULT NULL,
@@ -425,6 +426,7 @@ function ensure_core_tables(mysqli $conn) {
         product_id INT(11) NOT NULL,
         store_id INT(11) NOT NULL,
         stock DECIMAL(15,4) UNSIGNED DEFAULT 0.0000,
+        per_customer_limit INT(11) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY product_store_unique (product_id, store_id),
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -951,5 +953,11 @@ if($res = mysqli_fetch_assoc($checkUnsignedMap)) {
 $checkLimitCol = @mysqli_query($conn, "SHOW COLUMNS FROM products LIKE 'per_customer_limit'");
 if($checkLimitCol && mysqli_num_rows($checkLimitCol) == 0) {
     @mysqli_query($conn, "ALTER TABLE products ADD COLUMN per_customer_limit INT(11) DEFAULT 0 AFTER alert_quantity");
+}
+
+// Ensure per_customer_limit column exists in product_store_map table
+$checkMapLimitCol = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'per_customer_limit'");
+if($checkMapLimitCol && mysqli_num_rows($checkMapLimitCol) == 0) {
+    @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN per_customer_limit INT(11) DEFAULT 0 AFTER stock");
 }
 ?>
