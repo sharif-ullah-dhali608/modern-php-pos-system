@@ -17,6 +17,7 @@
                     <h3 id="inv-store-address" style="margin: 5px 0 0 0; font-size: 14px;">STORE 01</h3>
                     <div id="inv-store-city">Earth</div>
                     <div id="inv-store-contact">Mobile: --, Email: --</div>
+                    <div id="inv-store-bin" style="font-size: 11px; margin-top: 2px;"></div>
                 </div>
                 
                 <div style="text-align: center; margin-bottom: 15px; line-height: 1.4;">
@@ -50,8 +51,16 @@
                         <tr><td style="text-align: right; padding: 2px;">Shipping:</td><td style="text-align: right; padding: 2px;" id="inv-shipping">0.00</td></tr>
                         <tr style="border-top: 1px solid #000; font-weight: bold;"><td style="text-align: right; padding: 5px 2px;">Grand Total:</td><td style="text-align: right; padding: 5px 2px;" id="inv-grand-total">0.00</td></tr>
                         <tr style="border-top: 1px dashed #000;"><td style="text-align: right; padding: 5px 2px;">Paid Amount:</td><td style="text-align: right; padding: 5px 2px;" id="inv-paid">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Change:</td><td style="text-align: right; padding: 2px;" id="inv-change">0.00</td></tr>
-                        <tr><td style="text-align: right; padding: 2px;">Due:</td><td style="text-align: right; padding: 2px;" id="inv-due">0.00</td></tr>
+                        
+                        <!-- Dynamic Change/Due Row -->
+                        <tr id="row-change"><td style="text-align: right; padding: 2px;" id="label-change">Change:</td><td style="text-align: right; padding: 2px;" id="inv-change">0.00</td></tr>
+                        
+                        <!-- Installment Row (Hidden by default) -->
+                        <tr id="row-installment" style="display: none;"><td style="text-align: right; padding: 2px;">Installment:</td><td style="text-align: right; padding: 2px;" id="inv-installment">0.00</td></tr>
+                        
+                        <!-- Dedicated Due Row (Hidden if using dynamic row, or kept for specific logic) -->
+                        <tr id="row-due" style="display: none;"><td style="text-align: right; padding: 2px;">Due:</td><td style="text-align: right; padding: 2px;" id="inv-due">0.00</td></tr>
+
                         <tr><td style="text-align: right; padding: 2px;">Previous Due:</td><td style="text-align: right; padding: 2px;" id="inv-prev-due">0.00</td></tr>
                         <tr style="border-top: 1px solid #000; font-weight: bold; color: #dc2626;"><td style="text-align: right; padding: 5px 2px;">Total Due:</td><td style="text-align: right; padding: 5px 2px;" id="inv-total-due">0.00</td></tr>
                     </table>
@@ -60,24 +69,55 @@
                 <div style="font-style: italic; font-size: 10px; margin-bottom: 10px;">In Text: <span id="inv-in-words">Amount in words here</span></div>
                 
                 <!-- Payment methods -->
-                <div style="margin-bottom: 10px;">
-                     <div style="font-weight: bold; border-bottom: 1px dashed #000; margin-bottom: 5px;">Payments</div>
-                     <table style="width: 100%; font-size: 10px;">
-                        <tr>
-                            <td style="text-align: left;" id="inv-payment-method">Cash</td>
-                            <td style="text-align: right;" id="inv-payment-amount">0.00</td>
-                        </tr>
+                <div style="margin-bottom: 10px; margin-top: 15px;">
+                     <div style="font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; text-align: center; text-transform: uppercase;">Payments</div>
+                     <table style="width: 100%; font-size: 10px; margin-top: 8px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px dashed #000;">
+                                <th style="text-align: left; padding: 5px 0; width: 8%; text-transform: uppercase;">SL</th>
+                                <th style="text-align: left; padding: 5px 0; width: 42%; text-transform: uppercase;">TYPE</th>
+                                <th style="text-align: left; padding: 5px 0; width: 30%; text-transform: uppercase;">METHOD</th>
+                                <th style="text-align: right; padding: 5px 0; width: 20%; text-transform: uppercase;">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-payment-list">
+                            <!-- Payment rows will be populated here dynamically -->
+                            <tr style="border-bottom: 1px dashed #ddd;">
+                                <td style="padding: 5px 0;">1</td>
+                                <td style="padding: 5px 0;">
+                                    <div style="font-weight: 600; font-size: 10px;">Full Payment</div>
+                                    <div style="font-size: 8px; color: #666;">22 Jan 2026</div>
+                                </td>
+                                <td style="padding: 5px 0;">
+                                    <div style="font-weight: 600; font-size: 10px;" id="inv-payment-method">Cash on Hand</div>
+                                </td>
+                                <td style="text-align: right; padding: 5px 0; font-weight: 600; color: #10b981; font-size: 10px;" id="inv-payment-amount">0.00</td>
+                            </tr>
+                        </tbody>
                      </table>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px; font-size: 10px;">
-                    Thank you for shopping with us!
+
+                <!-- Footer -->
+                <div style="text-align: center; margin-top: 20px;">
+                    <!-- Barcode -->
+                    <div style="margin: 10px 0; display: flex; justify-content: center; width: 100%;">
+                        <svg id="inv-barcode"></svg>
+                    </div>
+                    
+                    <!-- Thank you message -->
+                    <div style="font-size: 11px; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">
+                        Thank you for choosing us!
+                    </div>
+                    
+                    <!-- Support info -->
+                    <div style="font-size: 10px; color: #666;">
+                        For Support: <span id="inv-support-store">ALL STORES</span>
+                    </div>
+                    
+                    <!-- Developer credit -->
+                    <div style="font-size: 9px; color: #999; margin-top: 4px;">Developed by STS</div>
                 </div>
-                
-                <!-- Barcode placeholder -->
-                 <div style="margin: 10px 0; display: flex; justify-content: center; width: 100%;">
-                    <svg id="inv-barcode"></svg>
-                 </div>
             </div>
             
             <div class="no-print" style="margin-top: 20px; display: flex; flex-direction: row; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 10px;">

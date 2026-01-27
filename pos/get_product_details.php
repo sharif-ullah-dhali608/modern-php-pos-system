@@ -91,15 +91,6 @@ if (empty($images)) {
     $images = ['/pos/assets/images/no-image.png'];
 }
 
-// Get stock info per store using product_store_map table
-$stock_info = [];
-$stock_query = "SELECT s.id as store_id, s.store_name, 
-                       COALESCE(psm.stock, 0) as stock
-                FROM stores s
-                LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
-                WHERE s.status = 1
-                ORDER BY s.store_name";
-
 // --- NEW: Fetch Effective Limit and Store-Specific Stock ---
 $limit_info = 0;
 $store_specific_stock = null;
@@ -121,16 +112,36 @@ if ($store_id !== 'all' && $store_id > 0) {
 }
 // ----------------------------------
 
-$stock_stmt = mysqli_prepare($conn, "SELECT s.id as store_id, s.store_name, 
-                       COALESCE(psm.stock, 0) as stock
-                FROM stores s
-                LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
-                WHERE s.status = 1
-                ORDER BY s.store_name");
-mysqli_stmt_bind_param($stock_stmt, 'i', $product_id);
+// Get stock info per store using product_store_map table
+$stock_info = [];
+
+// Check for store search query
+$search_store = isset($_GET['search_store']) ? trim($_GET['search_store']) : '';
+
+if (!empty($search_store)) {
+    // Search Mode: Find stores matching name
+    $search_term = "%{$search_store}%";
+    $stock_stmt = mysqli_prepare($conn, "SELECT s.id as store_id, s.store_name, s.city_zip as location,
+                           COALESCE(psm.stock, 0) as stock
+                    FROM stores s
+                    LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
+                    WHERE s.status = 1 AND s.store_name LIKE ?
+                    ORDER BY s.store_name LIMIT 20");
+    mysqli_stmt_bind_param($stock_stmt, 'is', $product_id, $search_term);
+} else {
+    // Default Mode: Show first 5 stores (maybe prioritize current store?)
+    // For now simple limit 5
+    $stock_stmt = mysqli_prepare($conn, "SELECT s.id as store_id, s.store_name, s.city_zip as location,
+                           COALESCE(psm.stock, 0) as stock
+                    FROM stores s
+                    LEFT JOIN product_store_map psm ON psm.store_id = s.id AND psm.product_id = ?
+                    WHERE s.status = 1
+                    ORDER BY s.store_name LIMIT 5");
+    mysqli_stmt_bind_param($stock_stmt, 'i', $product_id);
+}
+
 mysqli_stmt_execute($stock_stmt);
 $stock_result = mysqli_stmt_get_result($stock_stmt);
-$stock_info = [];
 while ($row = mysqli_fetch_assoc($stock_result)) {
     $stock_info[] = $row;
 }

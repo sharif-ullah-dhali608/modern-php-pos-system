@@ -180,6 +180,24 @@ window.closeModal = function (modalId) {
     }
 };
 
+// Helper function to get payment method name from ID
+function getPaymentMethodName(methodId) {
+    if (!methodId) return 'Cash on Hand';
+
+    if (methodId === 'credit') return 'Pay Later';
+    if (methodId === 'opening_balance') return 'Wallet';
+    if (methodId === 'giftcard') return 'Gift Card';
+
+    // Find method element by ID
+    const methodElement = document.querySelector(`.sidebar-payment-method[data-id="${methodId}"]`);
+    if (methodElement) {
+        const nameEl = methodElement.querySelector('.pm-name');
+        if (nameEl) return nameEl.textContent;
+    }
+
+    return 'Cash on Hand';
+}
+
 // Complete Sale / Submit Payment - calls the onSubmit callback if provided
 window.completeSale = function () {
     if (onPaymentSubmit && typeof onPaymentSubmit === 'function') {
@@ -199,6 +217,7 @@ window.completeSale = function () {
             amountReceived: amountReceived,
             appliedPayments: appliedPayments,
             selectedPaymentMethod: selectedPaymentMethod,
+            selectedPaymentMethodName: getPaymentMethodName(selectedPaymentMethod),
             note: document.getElementById('payment-note')?.value || ''
         };
         onPaymentSubmit(paymentData);

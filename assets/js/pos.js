@@ -987,93 +987,103 @@ function submitPosSale(paymentData) {
 
                 // Store Info
                 const currentStore = stores.find(s => s.id == storeSelect.value) || stores[0];
-                if (currentStore) {
-                    document.getElementById('inv-store-name').textContent = currentStore.store_name;
-                    document.getElementById('inv-store-address').textContent = currentStore.address || '';
-                    document.getElementById('inv-store-city').textContent = currentStore.city_zip || '';
-                    document.getElementById('inv-store-contact').textContent = `Mobile: ${currentStore.phone || ''}, Email: ${currentStore.email || ''}`;
-                }
 
-                // Barcode
-                JsBarcode("#inv-barcode", data.invoice_id, {
-                    format: "CODE128",
-                    width: 2,
-                    height: 40,
-                    displayValue: true,
-                    fontSize: 10,
-                    margin: 0
-                });
-
+                // Prepare customer data
                 const customerNameEl = document.getElementById('selected-customer-name');
                 const customerName = customerNameEl ? customerNameEl.textContent : 'Walking Customer';
-
                 const customerPhoneEl = document.getElementById('selected-customer-phone');
                 const customerPhone = customerPhoneEl ? customerPhoneEl.textContent : '';
 
-                if (document.getElementById('inv-customer')) document.getElementById('inv-customer').textContent = customerName;
-                if (document.getElementById('inv-phone')) document.getElementById('inv-phone').textContent = customerPhone;
-                if (document.getElementById('inv-address')) document.getElementById('inv-address').textContent = '';
+                // Prepare payment methods array
+                const paymentMethods = [];
+                const paymentMethodName = paymentData.selectedPaymentMethodName || 'Cash on Hand';
 
-                // Items
-                const itemsBody = document.getElementById('inv-items');
-                itemsBody.innerHTML = '';
-                cart.forEach((item, index) => {
-                    const total = (item.price * item.qty).toFixed(2);
-                    itemsBody.innerHTML += `
-                    <tr style="border-bottom: 1px dotted #e5e7eb;">
-                        <td style="text-align: left; padding: 5px 0;">
-                            ${index + 1}. ${item.name}
-                        </td>
-                        <td style="text-align: right; padding: 5px 0;">${item.qty} ${item.unit || ''}</td>
-                        <td style="text-align: right; padding: 5px 0;">${parseFloat(item.price).toFixed(2)}</td>
-                        <td style="text-align: right; padding: 5px 0;">${total}</td>
-                    </tr>
-                `;
-                });
+                // Determine Payment Type Label
+                let paymentTypeLabel = 'Full Payment';
+                const isInstallment = window.installmentMode || false;
+                const totalPaidVal = parseFloat(paymentData.amountReceived || 0) + paymentData.appliedPayments.reduce((s, p) => s + p.amount, 0);
+                const payableVal = parseFloat(document.getElementById('payment-payable').textContent) || 0;
 
-                // Totals
-                // Use values from shared modal inputs? Or just recalculate/use what was sent?
-                // Actually payment_modal inputs are reset on close.
-                // Better to use response data or recalculate.
-                // Existing logic uses document.getElementById('payment-subtotal').textContent
-                // This might still work if modal is just hidden, not destroyed.
-                document.getElementById('inv-subtotal').textContent = document.getElementById('payment-subtotal').textContent;
-                document.getElementById('inv-discount').textContent = document.getElementById('payment-discount').textContent;
-                document.getElementById('inv-tax').textContent = document.getElementById('payment-tax').textContent;
-                document.getElementById('inv-shipping').textContent = document.getElementById('payment-shipping').textContent;
-                document.getElementById('inv-grand-total').textContent = document.getElementById('payment-payable').textContent;
-                document.getElementById('inv-paid').textContent = paymentData.amountReceived; // Use data from callback
+                if (isInstallment) {
+                    paymentTypeLabel = 'Down Payment';
+                } else if (totalPaidVal < payableVal - 0.01) {
+                    if (totalPaidVal <= 0.01) paymentTypeLabel = 'Full Due';
+                    else paymentTypeLabel = 'Partial Payment';
+                } else if (totalPaidVal > payableVal + 0.01) {
+                    // Change given, still Full Payment
+                    paymentTypeLabel = 'Full Payment';
+                }
 
-                // Calc Change
+                // Add primary payment if amount received > 0 OR if it's Full Due
+                if (paymentData.amountReceived > 0 || paymentTypeLabel === 'Full Due') {
+                    paymentMethods.push({
+                        type: paymentTypeLabel,
+                        method: paymentMethodName,
+                        amount: paymentData.amountReceived,
+                        date: new Date().toISOString()
+                    });
+                }
+
+                // Add applied payments (bKash, Nagad, Gift Card, etc.)
+                if (paymentData.appliedPayments && paymentData.appliedPayments.length > 0) {
+                    paymentData.appliedPayments.forEach(p => {
+                        paymentMethods.push({
+                            type: paymentTypeLabel, // Same type for all in this transaction
+                            method: p.label || p.type,
+                            amount: p.amount,
+                            date: new Date().toISOString()
+                        });
+                    });
+                }
+
+                // Calculate totals
                 const payable = parseFloat(document.getElementById('payment-payable').textContent) || 0;
-                const paid = parseFloat(paymentData.amountReceived) || 0;
-                // Wait, amountReceived is TOTAL paid? Or just cash input?
-                // paymentData.amountReceived is from input. 
-                // Total paid is input + applied.
-                const totalPaid = paid + paymentData.appliedPayments.reduce((s, p) => s + p.amount, 0);
-
-                // Correct logic:
-                document.getElementById('inv-paid').textContent = totalPaid.toFixed(2); // Show TOTAL paid
-
+                const totalPaid = parseFloat(paymentData.amountReceived || 0) + paymentData.appliedPayments.reduce((s, p) => s + p.amount, 0);
                 const change = Math.max(0, totalPaid - payable);
                 const due = Math.max(0, payable - totalPaid);
-
-                // Invoice in words
-                const inWords = numberToWords(payable);
-                document.getElementById('inv-in-words').textContent = inWords;
-
-                document.getElementById('inv-change').textContent = change.toFixed(2);
-                document.getElementById('inv-due').textContent = due.toFixed(2);
-
-                // Fix: Populate Previous Due and Total Due on Invoice
                 const prevDueVal = parseFloat(document.getElementById('payment-previous-due').textContent) || 0;
-                document.getElementById('inv-prev-due').textContent = prevDueVal.toFixed(2);
-
-                // data.new_balance is the current_due after this sale
                 const totalDueVal = data.new_balance !== undefined ? parseFloat(data.new_balance) : (due + prevDueVal);
-                document.getElementById('inv-total-due').textContent = totalDueVal.toFixed(2);
 
-                openModal('invoiceModal');
+                // Open invoice modal using the proper function
+                window.openInvoiceModal({
+                    invoiceId: data.invoice_id,
+                    store: {
+                        name: currentStore.store_name,
+                        address: currentStore.address || '',
+                        city: currentStore.city_zip || '',
+                        phone: currentStore.phone || '',
+                        email: currentStore.email || '',
+                        vat_number: currentStore.vat_number || currentStore.bin_number || ''
+                    },
+                    customer: {
+                        name: customerName,
+                        phone: customerPhone
+                    },
+                    items: cart.map((item, index) => ({
+                        name: item.name,
+                        qty: item.qty,
+                        price: item.price,
+                        unit: item.unit || ''
+                    })),
+                    totals: {
+                        subtotal: parseFloat(document.getElementById('payment-subtotal').textContent) || 0,
+                        discount: parseFloat(document.getElementById('payment-discount').textContent) || 0,
+                        tax: parseFloat(document.getElementById('payment-tax').textContent) || 0,
+                        shipping: parseFloat(document.getElementById('payment-shipping').textContent) || 0,
+                        grandTotal: payable,
+                        paid: totalPaid,
+                        due: due,
+                        previousDue: prevDueVal,
+                        totalDue: totalDueVal,
+                        // Installment info
+                        isInstallment: isInstallment,
+                        installmentCount: isInstallment ? document.getElementById('inst-count').value : 0,
+                        installmentDuration: isInstallment ? document.getElementById('inst-duration').value : 0,
+                        installmentInterval: isInstallment ? document.getElementById('inst-interval').value : 0
+                    },
+                    payments: paymentMethods,
+                    paymentMethod: paymentMethodName
+                });
 
                 // Reload-less UI Sync
                 const resetPOS = () => {
@@ -2657,42 +2667,109 @@ window.openProductDetails = function (productId) {
 
                 if (stockList) {
                     stockList.innerHTML = '';
-                    if (p.stock_by_store) {
-                        p.stock_by_store.forEach(store => {
-                            const sQty = parseFloat(store.stock);
-                            const row = document.createElement('div');
-                            const isCurrent = selectedStoreId && store.store_id == selectedStoreId;
 
-                            row.className = 'pd-mobile-row';
-                            row.style.display = 'flex';
-                            row.style.justifyContent = 'space-between';
-                            row.style.padding = '10px 12px';
-                            row.style.fontSize = '12px';
-                            row.style.borderBottom = '1px dashed #f1f5f9';
-                            row.style.alignItems = 'center';
-                            row.style.borderRadius = '8px';
+                    // Container for list items (so we can update just this part on search)
+                    const listContainer = document.createElement('div');
+                    listContainer.id = 'pd-stock-items-container';
+                    stockList.appendChild(listContainer);
 
-                            if (isCurrent) {
-                                row.style.background = '#f0fdfa';
-                                row.style.border = '1px solid #ccfbf1';
+                    // Function to render items
+                    const renderStockItems = (items) => {
+                        listContainer.innerHTML = '';
+                        if (items && items.length > 0) {
+                            items.forEach(store => {
+                                const sQty = parseFloat(store.stock);
+                                const row = document.createElement('div');
+                                const isCurrent = selectedStoreId && store.store_id == selectedStoreId;
+
+                                row.className = 'pd-mobile-row';
+                                row.style.display = 'flex';
+                                row.style.justifyContent = 'space-between';
+                                row.style.padding = '10px 12px';
+                                row.style.fontSize = '12px';
+                                row.style.borderBottom = '1px dashed #f1f5f9';
+                                row.style.alignItems = 'center';
+                                row.style.borderRadius = '8px';
+
+                                if (isCurrent) {
+                                    row.style.background = '#f0fdfa';
+                                    row.style.border = '1px solid #ccfbf1';
+                                }
+
+                                const isLow = sQty <= p.alert_quantity;
+                                const isOut = sQty <= 0;
+                                const color = isOut ? '#ef4444' : (isLow ? '#f59e0b' : '#10b981');
+
+                                row.innerHTML = `
+                                    <span style="color: ${isCurrent ? '#0d9488' : '#64748b'}; font-weight: ${isCurrent ? '700' : '500'};">
+                                        ${store.store_name} ${isCurrent ? ' <span style="font-size: 9px; opacity: 0.7;">(Current Store)</span>' : ''}
+                                    </span>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-weight: 700; color: ${color}; font-size: 14px;">${sQty}</span>
+                                        ${store.location ? `<span style="font-weight: 600; color: #475569; font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-map-marker-alt" style="font-size: 10px; margin-right: 3px;"></i>${store.location}</span>` : ''}
+                                    </div>
+                                `;
+                                listContainer.appendChild(row);
+                            });
+                        } else {
+                            listContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #94a3b8; font-size: 12px;">No stores found</div>';
+                        }
+                    };
+
+                    // Initial Render
+                    renderStockItems(p.stock_by_store);
+
+                    // Add Search Input
+                    const searchContainer = document.createElement('div');
+                    searchContainer.style.marginTop = '10px';
+                    searchContainer.style.padding = '0 5px';
+                    searchContainer.innerHTML = `
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;"></i>
+                            <input type="text" id="pd-stock-search-input" placeholder="Search other stores..." 
+                                style="width: 100%; padding: 8px 10px 8px 30px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; outline: none; transition: border-color 0.2s;">
+                        </div>
+                    `;
+                    stockList.appendChild(searchContainer);
+
+                    // Search Logic
+                    const searchInput = searchContainer.querySelector('input');
+                    let searchTimeout;
+
+                    searchInput.addEventListener('input', function () {
+                        const term = this.value.trim();
+                        clearTimeout(searchTimeout);
+
+                        searchTimeout = setTimeout(() => {
+                            // Show loading state in list?
+                            listContainer.style.opacity = '0.5';
+
+                            let url = `get_product_details.php?id=${p.id}&store_id=${currentStoreId}`;
+                            if (term.length > 0) {
+                                url += `&search_store=${encodeURIComponent(term)}`;
                             }
 
-                            const isLow = sQty <= p.alert_quantity;
-                            const isOut = sQty <= 0;
-                            const color = isOut ? '#ef4444' : (isLow ? '#f59e0b' : '#10b981');
+                            fetch(url)
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success && data.product && data.product.stock_by_store) {
+                                        renderStockItems(data.product.stock_by_store);
+                                    }
+                                    listContainer.style.opacity = '1';
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    listContainer.style.opacity = '1';
+                                });
+                        }, 300); // 300ms debounce
+                    });
 
-                            row.innerHTML = `
-                                <span style="color: ${isCurrent ? '#0d9488' : '#64748b'}; font-weight: ${isCurrent ? '700' : '500'};">
-                                    ${store.store_name} ${isCurrent ? ' <span style="font-size: 9px; opacity: 0.7;">(Current Store)</span>' : ''}
-                                </span>
-                                <div style="display: flex; align-items: center; gap: 4px;">
-                                    <span style="font-weight: 700; color: ${color}; font-size: 14px;">${sQty}</span>
-                                    ${p.location ? `<span style="font-weight: 600; color: #475569; font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;"><i class="fas fa-map-marker-alt" style="font-size: 10px; margin-right: 3px;"></i>${p.location}</span>` : ''}
-                                </div>
-                            `;
-                            stockList.appendChild(row);
-                        });
-                    }
+                    searchInput.addEventListener('focus', function () {
+                        this.style.borderColor = '#0d9488';
+                    });
+                    searchInput.addEventListener('blur', function () {
+                        this.style.borderColor = '#e2e8f0';
+                    });
                 }
 
                 // Badge Logic for Modal Image

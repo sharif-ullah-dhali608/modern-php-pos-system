@@ -80,6 +80,16 @@ window.openInvoiceModal = function (data) {
         if (document.getElementById('inv-store-address')) document.getElementById('inv-store-address').textContent = data.store.address || '';
         if (document.getElementById('inv-store-city')) document.getElementById('inv-store-city').textContent = data.store.city || '';
         if (document.getElementById('inv-store-contact')) document.getElementById('inv-store-contact').textContent = `Mobile: ${data.store.phone || ''}, Email: ${data.store.email || ''}`;
+
+        // BIN/VAT Number
+        if (document.getElementById('inv-store-bin')) {
+            const binNumber = data.store.vat_number || data.store.bin_number || '';
+            if (binNumber) {
+                document.getElementById('inv-store-bin').textContent = `BIN: ${binNumber}`;
+            } else {
+                document.getElementById('inv-store-bin').textContent = '';
+            }
+        }
     }
 
     // Customer Info
@@ -115,7 +125,53 @@ window.openInvoiceModal = function (data) {
         if (document.getElementById('inv-shipping')) document.getElementById('inv-shipping').textContent = (data.totals.shipping || 0).toFixed(2);
         if (document.getElementById('inv-grand-total')) document.getElementById('inv-grand-total').textContent = (data.totals.grandTotal || 0).toFixed(2);
         if (document.getElementById('inv-paid')) document.getElementById('inv-paid').textContent = (data.totals.paid || 0).toFixed(2);
-        if (document.getElementById('inv-due')) document.getElementById('inv-due').textContent = (data.totals.due || 0).toFixed(2);
+
+        const due = data.totals.due || 0;
+        const change = Math.max(0, (data.totals.paid || 0) - (data.totals.grandTotal || 0)); // Re-calculate safely
+        const isInstallment = data.totals.isInstallment || false;
+
+        // Reset Rows
+        if (document.getElementById('row-change')) document.getElementById('row-change').style.display = 'table-row';
+        if (document.getElementById('row-due')) document.getElementById('row-due').style.display = 'none';
+        if (document.getElementById('row-installment')) document.getElementById('row-installment').style.display = 'none';
+
+        // 1. Installment Case
+        if (isInstallment) {
+            // Show Installment Row instead of Due
+            if (document.getElementById('row-installment')) {
+                document.getElementById('row-installment').style.display = 'table-row';
+                if (document.getElementById('inv-installment')) document.getElementById('inv-installment').textContent = due.toFixed(2);
+            }
+            // Hide standard Due row
+            if (document.getElementById('row-due')) document.getElementById('row-due').style.display = 'none';
+            // Show Change row if there is change, otherwise can hide or show 0
+            if (document.getElementById('row-change')) {
+                document.getElementById('label-change').textContent = 'Change:';
+                document.getElementById('inv-change').textContent = change.toFixed(2);
+            }
+        }
+        // 2. Regular Due Case
+        else if (due > 0.01) {
+            // Show Due Row
+            if (document.getElementById('row-due')) {
+                document.getElementById('row-due').style.display = 'table-row';
+                if (document.getElementById('inv-due')) document.getElementById('inv-due').textContent = due.toFixed(2);
+            }
+            // Hide Change row (or repurpose) - User said "jodi due hoi tahole Deu: te dekhabe"
+            // We can hide Change row to be clean, or show 0. Let's hide it to emphasize Due.
+            if (document.getElementById('row-change')) document.getElementById('row-change').style.display = 'none';
+        }
+        // 3. Paid/Change Case (No Due)
+        else {
+            // Standard Change display
+            if (document.getElementById('row-change')) {
+                document.getElementById('row-change').style.display = 'table-row';
+                document.getElementById('label-change').textContent = 'Change:';
+                document.getElementById('inv-change').textContent = change.toFixed(2);
+            }
+            if (document.getElementById('row-due')) document.getElementById('row-due').style.display = 'none';
+        }
+
         if (document.getElementById('inv-prev-due')) document.getElementById('inv-prev-due').textContent = (data.totals.previousDue || 0).toFixed(2);
         if (document.getElementById('inv-total-due')) document.getElementById('inv-total-due').textContent = (data.totals.totalDue || 0).toFixed(2);
 
@@ -125,9 +181,57 @@ window.openInvoiceModal = function (data) {
         }
     }
 
-    // Payment Method
-    if (document.getElementById('inv-payment-method')) document.getElementById('inv-payment-method').textContent = data.paymentMethod || 'Cash';
-    if (document.getElementById('inv-payment-amount')) document.getElementById('inv-payment-amount').textContent = (data.totals?.paid || 0).toFixed(2);
+    // Payment Methods - Support for multiple payments
+    const paymentListBody = document.getElementById('inv-payment-list');
+    if (paymentListBody) {
+        paymentListBody.innerHTML = ''; // Clear existing rows
+
+        // Check if we have multiple payment methods
+        if (data.payments && Array.isArray(data.payments) && data.payments.length > 0) {
+            // Multiple payments
+            data.payments.forEach((payment, index) => {
+                const paymentDate = payment.date ? new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                paymentListBody.innerHTML += `
+                    <tr style="border-bottom: 1px dashed #ddd;">
+                        <td style="padding: 5px 0;">${index + 1}</td>
+                        <td style="padding: 5px 0;">
+                            <div style="font-weight: 600; font-size: 10px;">${payment.type || 'Full Payment'}</div>
+                            <div style="font-size: 8px; color: #666;">${paymentDate}</div>
+                        </td>
+                        <td style="padding: 5px 0;">
+                            <div style="font-weight: 600; font-size: 10px;">${payment.method || 'Cash on Hand'}</div>
+                        </td>
+                        <td style="text-align: right; padding: 5px 0; font-weight: 600; color: #10b981; font-size: 10px;">${parseFloat(payment.amount || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            // Single payment (backward compatibility)
+            const paymentMethod = data.paymentMethod || 'Cash on Hand';
+            const paymentAmount = data.totals?.paid || 0;
+            const paymentDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            paymentListBody.innerHTML = `
+                <tr style="border-bottom: 1px dashed #ddd;">
+                    <td style="padding: 5px 0;">1</td>
+                    <td style="padding: 5px 0;">
+                        <div style="font-weight: 600; font-size: 10px;">Full Payment</div>
+                        <div style="font-size: 8px; color: #666;">${paymentDate}</div>
+                    </td>
+                    <td style="padding: 5px 0;">
+                        <div style="font-weight: 600; font-size: 10px;">${paymentMethod}</div>
+                    </td>
+                    <td style="text-align: right; padding: 5px 0; font-weight: 600; color: #10b981; font-size: 10px;">${parseFloat(paymentAmount).toFixed(2)}</td>
+                </tr>
+            `;
+        }
+    }
+
+    // Update support store name in footer
+    if (document.getElementById('inv-support-store') && data.store) {
+        document.getElementById('inv-support-store').textContent = data.store.name || 'ALL STORES';
+    }
 
     // Barcode
     if (typeof JsBarcode !== 'undefined' && data.invoiceId) {
@@ -159,16 +263,9 @@ window.openInvoiceModal = function (data) {
         //     window.printInvoice();
         // }, 500);
 
-        // Add Enter key listener for printing
-        const handleEnterPrint = function (e) {
-            if (e.key === 'Enter' && modal.classList.contains('active')) {
-                e.preventDefault();
-                window.printInvoice();
-            }
-        };
-        document.removeEventListener('keydown', window._invoiceEnterHandler); // Remove old if exists
-        window._invoiceEnterHandler = handleEnterPrint;
-        document.addEventListener('keydown', window._invoiceEnterHandler);
+        // Enter key listener for printing is handled globally in pos.js
+        // Removing local listener here to prevent double print dialogs
+        // document.addEventListener('keydown', window._invoiceEnterHandler); // legacy
     }
 };
 
