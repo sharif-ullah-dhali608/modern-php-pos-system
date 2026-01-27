@@ -323,14 +323,14 @@ $payments_result = mysqli_query($conn, $payments_query);
 
     <!-- Payments -->
     <div class="mb-3">
-        <h4 class="font-bold border-bottom-dashed mb-1 pb-1">Payments</h4>
-        <table>
+        <h4 class="font-bold border-top-dashed border-bottom-dashed mb-1 pb-1 pt-1 text-center" style="text-transform: uppercase;">Payments</h4>
+        <table style="margin-top: 8px;">
             <thead>
                <tr>
-                   <th style="width: 10%">SL</th>
-                   <th style="width: 40%">Type</th>
-                   <th style="width: 25%">Method</th>
-                   <th class="text-right" style="width: 25%">Amount</th>
+                   <th style="width: 8%; padding: 6px 0;">SL</th>
+                   <th style="width: 42%; padding: 6px 0;">TYPE</th>
+                   <th style="width: 30%; padding: 6px 0;">METHOD</th>
+                   <th class="text-right" style="width: 20%; padding: 6px 0;">AMOUNT</th>
                </tr> 
             </thead>
             <tbody>
@@ -351,7 +351,7 @@ $payments_result = mysqli_query($conn, $payments_query);
                     while($pay = mysqli_fetch_assoc($payments_result)): 
                         $amount = floatval($pay['amount']);
                         $is_valid_row = false;
-                        $display_type = "Regular Payment";
+                        $display_type = "Full Payment";
 
                         if ($is_installment) {
                             // 1. Check if it fits Down Payment Budget
@@ -379,16 +379,16 @@ $payments_result = mysqli_query($conn, $payments_query);
                         if ($is_valid_row):
                             $method_name = $pay['pmethod_name'] ?? 'Cash on Hand';
                 ?>
-                <tr>
-                    <td><?= $p_sl++; ?></td>
-                    <td>
-                        <div style="font-weight: 600;"><?= $display_type; ?></div>
-                        <div class="text-[9px] text-gray-500"><?= date('d M Y', strtotime($pay['created_at'])); ?></div>
+                <tr style="border-bottom: 1px dashed #ddd;">
+                    <td style="padding: 6px 0;"><?= $p_sl++; ?></td>
+                    <td style="padding: 6px 0;">
+                        <div style="font-weight: 600; font-size: 11px;"><?= $display_type; ?></div>
+                        <div style="font-size: 9px; color: #666;"><?= date('d M Y', strtotime($pay['created_at'])); ?></div>
                     </td>
-                    <td>
-                        <div style="font-weight: 600;"><?= htmlspecialchars($method_name); ?></div>
+                    <td style="padding: 6px 0;">
+                        <div style="font-weight: 600; font-size: 11px;"><?= htmlspecialchars($method_name); ?></div>
                     </td>
-                    <td class="text-right" style="font-weight: 600; color: #10b981;"><?= number_format($amount, 2); ?></td>
+                    <td class="text-right" style="padding: 6px 0; font-weight: 600; color: #10b981; font-size: 11px;"><?= number_format($amount, 2); ?></td>
                 </tr>
                 <?php 
                         endif;
@@ -396,7 +396,7 @@ $payments_result = mysqli_query($conn, $payments_query);
                 else:
                 ?>
                 <tr>
-                    <td colspan="4" class="text-center text-gray-500 italic">No payments found</td>
+                    <td colspan="4" class="text-center text-gray-500 italic" style="padding: 10px 0;">No payments found</td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -404,15 +404,17 @@ $payments_result = mysqli_query($conn, $payments_query);
     </div>
 
     <!-- Footer -->
-    <div class="text-center mt-4">
-        <div class="flex justify-center">
+    <div class="text-center mt-4" style="margin-top: 20px;">
+        <div class="flex justify-center" style="margin-bottom: 8px;">
             <svg id="barcode-modal"></svg>
         </div>
-        <div class="text-[9px] text-gray-500 mt-1">
-            Thank you for choosing us!<br>
-            For Support: <?= htmlspecialchars($invoice['store_name'] ?? ''); ?>
+        <div style="font-size: 11px; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">
+            Thank you for choosing us!
         </div>
-        <div class="text-[8px] text-gray-400 mt-1">Developed by STS</div>
+        <div style="font-size: 10px; color: #666;">
+            For Support: <?= htmlspecialchars($invoice['store_name'] ?? 'Sadia Takmin Store'); ?>
+        </div>
+        <div style="font-size: 9px; color: #999; margin-top: 4px;">Developed by STS</div>
     </div>
 
     <!-- Action Buttons (Screen Only) -->

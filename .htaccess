@@ -143,6 +143,24 @@ RewriteRule ^installment/overview$ installment/overview.php [L]
 
 # --- Reports Routes ---
 RewriteRule ^reports/overview$ reports/report_overview.php [L,QSA]
+RewriteRule ^reports/collection$ reports/collection_report.php [L,QSA]
+RewriteRule ^reports/due-collection$ reports/due_collection_report.php [L,QSA]
+RewriteRule ^reports/due-paid$ reports/due_paid_report.php [L,QSA]
+RewriteRule ^reports/sell$ reports/sell_report.php [L,QSA]
+RewriteRule ^reports/purchase$ reports/purchase_report.php [L,QSA]
+RewriteRule ^reports/sell-payment$ reports/sell_payment_report.php [L,QSA]
+RewriteRule ^reports/purchase-payment$ reports/purchase_payment_report.php [L,QSA]
+RewriteRule ^reports/sell-tax$ reports/sell_tax_report.php [L,QSA]
+RewriteRule ^reports/purchase-tax$ reports/purchase_tax_report.php [L,QSA]
+RewriteRule ^reports/tax-overview$ reports/tax_overview_report.php [L,QSA]
+RewriteRule ^reports/stock$ reports/stock_report.php [L,QSA]
+RewriteRule ^reports/bank-transaction$ reports/bank_transaction_report.php [L,QSA]
+RewriteRule ^reports/balance-sheet$ reports/balance_sheet.php [L,QSA]
+RewriteRule ^reports/income-monthwise$ reports/income_monthwise_report.php [L,QSA]
+RewriteRule ^reports/expense-monthwise$ reports/expense_monthwise_report.php [L,QSA]
+RewriteRule ^reports/income-vs-expense$ reports/income_vs_expense_report.php [L,QSA]
+RewriteRule ^reports/profit-loss$ reports/profit_loss_report.php [L,QSA]
+RewriteRule ^reports/cashbook$ reports/cashbook_report.php [L,QSA]
 
 # Default route
 RewriteCond %{REQUEST_FILENAME} !-f

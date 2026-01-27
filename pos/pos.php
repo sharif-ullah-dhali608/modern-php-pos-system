@@ -218,7 +218,7 @@ include('../includes/header.php');
                         <span class="stock-alert-badge"><?= $alert_count; ?></span>
                     <?php endif; ?>
                 </a>
-                <a href="/pos/admin/reports.php"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="#" onclick="toggleReportsPanel(event)"><i class="fas fa-file"></i> Reports</a>
                 <a href="#" onclick="openModal('posSettingsModal')"><i class="fas fa-cog"></i> Settings</a>
                 <a href="#" onclick="lockScreen()"><i class="fas fa-lock"></i> Lockscreen</a>
             </div>
@@ -1498,6 +1498,191 @@ include('../includes/header.php');
         <?php endif; ?>
     });
 </script>
+
+<!-- Reports Slide-out Panel -->
+<style>
+    .reports-panel-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .reports-panel-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    .reports-panel {
+        position: fixed;
+        right: -400px;
+        top: 0;
+        width: 100%;
+        max-width: 400px;
+        height: 100vh;
+        background: white;
+        z-index: 10001;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+    }
+    .reports-panel.active {
+        right: 0;
+    }
+    .reports-panel-header {
+        padding: 24px;
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        color: white;
+    }
+    .reports-panel-search {
+        margin-top: 15px;
+        position: relative;
+    }
+    .reports-panel-search input {
+        width: 100%;
+        padding: 10px 15px 10px 40px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        font-size: 14px;
+        outline: none;
+        backdrop-filter: blur(5px);
+        transition: all 0.2s;
+    }
+    .reports-panel-search input::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .reports-panel-search i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 14px;
+    }
+    .reports-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+    .report-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 14px 18px;
+        border-radius: 12px;
+        color: #334155;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        transition: all 0.2s;
+        margin-bottom: 8px;
+        border: 1px solid transparent;
+        background: #f8fafc;
+    }
+    .report-item:hover {
+        background: #f0fdfa;
+        color: #0d9488;
+        border-color: #ccfbf1;
+        transform: translateX(-5px);
+    }
+    .report-item i {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border-radius: 10px;
+        color: #0d9488;
+        font-size: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .report-item:hover i {
+        background: #0d9488;
+        color: white;
+    }
+</style>
+
+<div class="reports-panel-overlay" id="reportsOverlay" onclick="closeReportsPanel()"></div>
+<div class="reports-panel" id="reportsPanel">
+    <div class="reports-panel-header">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-extrabold tracking-tight">System Reports</h3>
+            <button onclick="closeReportsPanel()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="reports-panel-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="reportSearch" placeholder="Search reports..." onkeyup="filterReports(this)">
+        </div>
+    </div>
+    <div class="reports-list" id="reportsScrollList">
+        <?php
+        $panel_reports = [
+            ['title' => 'Overview Report', 'link' => '/pos/reports/overview', 'icon' => 'fa-eye'],
+            ['title' => 'Collection Report', 'link' => '/pos/reports/collection', 'icon' => 'fa-file-invoice-dollar'],
+            ['title' => 'Due Collection Report', 'link' => '/pos/reports/due-collection', 'icon' => 'fa-hand-holding-usd'],
+            ['title' => 'Supplier Due Paid Report', 'link' => '/pos/reports/due-paid', 'icon' => 'fa-truck-loading'],
+            ['title' => 'Sell Report', 'link' => '/pos/reports/sell', 'icon' => 'fa-cash-register'],
+            ['title' => 'Purchase Report', 'link' => '/pos/reports/purchase', 'icon' => 'fa-shopping-bag'],
+            ['title' => 'Sell Payment Report', 'link' => '/pos/reports/sell-payment', 'icon' => 'fa-money-check-alt'],
+            ['title' => 'Purchase Payment Report', 'link' => '/pos/reports/purchase-payment', 'icon' => 'fa-file-alt'],
+            ['title' => 'Sell Tax Report', 'link' => '/pos/reports/sell-tax', 'icon' => 'fa-percent'],
+            ['title' => 'Purchase Tax Report', 'link' => '/pos/reports/purchase-tax', 'icon' => 'fa-file-invoice'],
+            ['title' => 'Tax Overview Report', 'link' => '/pos/reports/tax-overview', 'icon' => 'fa-calculator'],
+            ['title' => 'Stock Report', 'link' => '/pos/reports/stock', 'icon' => 'fa-warehouse'],
+            ['title' => 'Bank Transaction', 'link' => '/pos/reports/bank-transaction', 'icon' => 'fa-university'],
+            ['title' => 'Balance Sheet', 'link' => '/pos/reports/balance-sheet', 'icon' => 'fa-balance-scale'],
+            ['title' => 'Income Monthwise Report', 'link' => '/pos/reports/income-monthwise', 'icon' => 'fa-calendar-alt'],
+            ['title' => 'Expense Monthwise Report', 'link' => '/pos/reports/expense-monthwise', 'icon' => 'fa-calendar-minus'],
+            ['title' => 'Income vs Expense Report', 'link' => '/pos/reports/income-vs-expense', 'icon' => 'fa-chart-bar'],
+            ['title' => 'Profit vs Loss Report', 'link' => '/pos/reports/profit-loss', 'icon' => 'fa-chart-line'],
+            ['title' => 'Cashbook', 'link' => '/pos/reports/cashbook', 'icon' => 'fa-book'],
+        ];
+
+        foreach($panel_reports as $rpt): ?>
+            <a href="<?= $rpt['link']; ?>" class="report-item">
+                <i class="fas <?= $rpt['icon']; ?>"></i>
+                <span><?= $rpt['title']; ?></span>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<script>
+    function toggleReportsPanel(e) {
+        if(e) e.preventDefault();
+        const panel = document.getElementById('reportsPanel');
+        const overlay = document.getElementById('reportsOverlay');
+        panel.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('reportSearch').focus(), 400);
+    }
+
+    function closeReportsPanel() {
+        const panel = document.getElementById('reportsPanel');
+        const overlay = document.getElementById('reportsOverlay');
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function filterReports(input) {
+        const term = input.value.toLowerCase();
+        const items = document.querySelectorAll('.report-item');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if(text.includes(term)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
 <script src="/pos/assets/js/pos.js"></script>
-
-

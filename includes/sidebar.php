@@ -240,7 +240,18 @@ $menu_items = [
         'icon' => 'fa-chart-pie',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Overview Report', 'link' => '/pos/reports/overview']
+            ['title' => 'Overview Report', 'link' => '/pos/reports/overview'],
+            ['title' => 'Collection Report', 'link' => '/pos/reports/collection'],
+            ['title' => 'Due Collection Rpt', 'link' => '/pos/reports/due-collection'],
+            ['title' => 'Due Paid Rpt', 'link' => '/pos/reports/due-paid'],
+            ['title' => 'Sell Report', 'link' => '/pos/reports/sell'],
+            ['title' => 'Purchase Report', 'link' => '/pos/reports/purchase'],
+            ['title' => 'Sell Payment Report', 'link' => '/pos/reports/sell-payment'],
+            ['title' => 'Pur. Payment Rpt.', 'link' => '/pos/reports/purchase-payment'],
+            ['title' => 'Sell Tax Report', 'link' => '/pos/reports/sell-tax'],
+            ['title' => 'Purchase Tax Report', 'link' => '/pos/reports/purchase-tax'],
+            ['title' => 'Tax Overview Rpt.', 'link' => '/pos/reports/tax-overview'],
+            ['title' => 'Stock Report', 'link' => '/pos/reports/stock'],
         ],
         'active' => (uri_has('/reports/', $current_uri))
     ],
