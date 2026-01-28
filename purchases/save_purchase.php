@@ -1160,6 +1160,11 @@ if(isset($_POST['save_purchase_btn']))
             
           
             mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock + $qty WHERE id = $product_id");
+            
+            // Also update per-store stock for reports
+            mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) 
+                                 VALUES ('$store_id', '$product_id', '$qty') 
+                                 ON DUPLICATE KEY UPDATE stock = stock + $qty");
         }
 
         // 3. Payment Logs
@@ -1191,10 +1196,11 @@ if(isset($_POST['delete_purchase_btn']))
 {
     $purchase_id = (int)$_POST['purchase_id'];
     
-    // Get invoice_id first
-    $query = mysqli_query($conn, "SELECT invoice_id FROM purchase_info WHERE info_id = $purchase_id LIMIT 1");
+    // Get invoice_id and store_id first
+    $query = mysqli_query($conn, "SELECT invoice_id, store_id FROM purchase_info WHERE info_id = $purchase_id LIMIT 1");
     if($data = mysqli_fetch_assoc($query)) {
         $invoice_id = $data['invoice_id'];
+        $store_id = $data['store_id'];
         
         // Get items to reverse stock
         $items_query = mysqli_query($conn, "SELECT item_id, item_quantity, return_quantity FROM purchase_item WHERE invoice_id = '$invoice_id'");
@@ -1209,6 +1215,11 @@ if(isset($_POST['delete_purchase_btn']))
                 
                 if($qty > 0) {
                     mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock - $qty WHERE id = $product_id");
+                    
+                    // Also reverse per-store stock
+                    if($store_id > 0) {
+                        mysqli_query($conn, "UPDATE product_store_map SET stock = stock - $qty WHERE product_id = $product_id AND store_id = $store_id");
+                    }
                 }
             }
             

@@ -150,9 +150,54 @@ if(isset($_POST['save_product_btn'])) {
         }
 
         if(!empty($store_ids)){
-            foreach($store_ids as $store_id) {
+            $first_store_id = (int)$store_ids[0];
+            foreach($store_ids as $index => $store_id) {
                 $store_id = (int)$store_id;
-                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id) VALUES ('$store_id', '$product_id')");
+                $initial_stock = 0;
+                
+                // Assign opening stock to the first store
+                if($index === 0 && (float)$opening_stock > 0) {
+                    $initial_stock = (float)$opening_stock;
+                }
+                
+                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) VALUES ('$store_id', '$product_id', '$initial_stock')");
+            }
+
+            // --- AUTO-GENERATE PURCHASE ENTRY IF OPENING STOCK > 0 ---
+            if((float)$opening_stock > 0) {
+                $total_amount = (float)$purchase_price * (float)$opening_stock;
+                $user_id = $_SESSION['auth_user']['user_id'] ?? $_SESSION['auth_user']['id'] ?? 1;
+                $invoice_id = 'OP-' . strtoupper(substr(md5(time() . $product_id), 0, 7));
+                $purchase_date = date('Y-m-d');
+                
+                // Get a supplier (Default to 1 or any available)
+                $sup_q = mysqli_query($conn, "SELECT id FROM suppliers LIMIT 1");
+                $sup_data = mysqli_fetch_assoc($sup_q);
+                $supplier_id = $sup_data['id'] ?? 1;
+
+                // 1. Insert into purchase_info
+                $insert_info = "INSERT INTO purchase_info (invoice_id, store_id, sup_id, total_item, total_sell, purchase_note, payment_status, created_by, purchase_date) 
+                                VALUES ('$invoice_id', '$first_store_id', '$supplier_id', '$opening_stock', '$total_amount', 'Opening Stock Entry', 'paid', '$user_id', '$purchase_date')";
+                mysqli_query($conn, $insert_info);
+
+                // 2. Insert into purchase_item
+                mysqli_query($conn, "INSERT INTO purchase_item (
+                    invoice_id, store_id, item_id, category_id, brand_id, item_name, 
+                    item_purchase_price, item_selling_price, item_quantity, item_total
+                ) VALUES (
+                    '$invoice_id', '$first_store_id', '$product_id', '$category_id', 
+                    $brand_id, '".mysqli_real_escape_string($conn, $product_name)."', 
+                    '$purchase_price', '$selling_price', '$opening_stock', '$total_amount'
+                )");
+
+                // 3. Insert into purchase_logs (Marked as Paid)
+                $pay_ref = 'PAY-' . strtoupper(substr(md5(microtime()), 0, 6));
+                $pm_q = mysqli_query($conn, "SELECT id FROM payment_methods WHERE status = 1 ORDER BY sort_order ASC LIMIT 1");
+                $pm_data = mysqli_fetch_assoc($pm_q);
+                $pm_id = $pm_data['id'] ?? 1;
+
+                mysqli_query($conn, "INSERT INTO purchase_logs (sup_id, reference_no, ref_invoice_id, type, pmethod_id, description, amount, store_id, created_by) 
+                                     VALUES ('$supplier_id', '$pay_ref', '$invoice_id', 'purchase', '$pm_id', 'Initial stock payment', '$total_amount', '$first_store_id', '$user_id')");
             }
         }
         $_SESSION['message'] = "Product created successfully!";
@@ -296,12 +341,19 @@ if(isset($_POST['update_product_btn'])) {
               WHERE id='$product_id'";
     
     if(mysqli_query($conn, $query)) {
-        // Store Mapping
+        // Store Mapping (Preserving Stock)
+        $existing_stores_q = mysqli_query($conn, "SELECT store_id, stock FROM product_store_map WHERE product_id='$product_id'");
+        $existing_stocks = [];
+        while($es = mysqli_fetch_assoc($existing_stores_q)) {
+            $existing_stocks[$es['store_id']] = $es['stock'];
+        }
+
         mysqli_query($conn, "DELETE FROM product_store_map WHERE product_id='$product_id'");
         if(!empty($store_ids)){
             foreach($store_ids as $store_id) {
                 $store_id = (int)$store_id;
-                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id) VALUES ('$store_id', '$product_id')");
+                $stock_to_keep = $existing_stocks[$store_id] ?? 0;
+                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) VALUES ('$store_id', '$product_id', '$stock_to_keep')");
             }
         }
 

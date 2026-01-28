@@ -61,6 +61,13 @@ while($row = mysqli_fetch_assoc($all_settings_q)) {
     }
     $all_store_settings[$row['store_id']][$row['setting_key']] = $row['setting_value'];
 }
+
+// --- NEW: Fetch All Active Printer Profiles ---
+$printer_profiles = [];
+$printers_q = mysqli_query($conn, "SELECT printer_id, profile FROM printers WHERE status = 1");
+while($p = mysqli_fetch_assoc($printers_q)) {
+    $printer_profiles[$p['printer_id']] = $p['profile'];
+}
 // -----------------------------------------------------------
 $show_images = isset($pos_settings['show_images']) ? $pos_settings['show_images'] : '1';
 $enable_sound = isset($pos_settings['enable_sound']) ? $pos_settings['enable_sound'] : '1';
@@ -1385,6 +1392,7 @@ include('../includes/header.php');
 <script>
     const stores = <?= json_encode($stores); ?>;
     window.storeSettingsMap = <?= json_encode($all_store_settings); ?>; // Inject All Settings
+    window.printerProfiles = <?= json_encode($printer_profiles); ?>; // Inject Hardware Profiles
     window.currencySymbol = "<?= $currency_symbol; ?>"; // Dynamic Currency for JS
     window.currencyName = "<?= $currency_name; ?>"; // Dynamic Currency Name for JS
     

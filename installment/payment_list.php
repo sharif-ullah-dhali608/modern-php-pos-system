@@ -322,7 +322,11 @@ document.addEventListener('keydown', function(e) {
         const invoiceModal = document.getElementById('invoiceViewModal');
         if (invoiceModal && invoiceModal.classList.contains('active')) {
             e.preventDefault();
-            window.print();
+            if (typeof printInvoiceReceipt === 'function') {
+                printInvoiceReceipt();
+            } else {
+                window.print();
+            }
             return;
         }
 

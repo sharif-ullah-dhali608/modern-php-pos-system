@@ -419,7 +419,7 @@ $payments_result = mysqli_query($conn, $payments_query);
 
     <!-- Action Buttons (Screen Only) -->
     <div class="no-print mt-6" style="display: flex; gap: 10px; margin-top: 25px;">
-        <button onclick="window.print()" class="action-btn btn-print-custom">
+        <button onclick="printInvoiceReceipt()" class="action-btn btn-print-custom">
             <i class="fas fa-print" style="margin-right: 6px;"></i> Print
         </button>
         <!--
@@ -427,7 +427,7 @@ $payments_result = mysqli_query($conn, $payments_query);
             <i class="fas fa-envelope" style="margin-right: 6px;"></i> Email
         </button>
         -->
-        <a href="javascript:void(0)" onclick="if(typeof closeInvoiceModal === 'function') { closeInvoiceModal(); } else { const m = document.getElementById('invoiceViewModal'); if(m) { m.remove(); } else { window.history.back(); } }" class="action-btn btn-close-custom">
+        <a href="javascript:void(0)" onclick="if(typeof closeInvoiceModal === 'function') { closeInvoiceModal(); } else { const m = document.getElementById('invoiceViewModal'); if(m) { m.remove(); } else if(m = document.getElementById('paymentModal')) { m.style.display='none'; } else { window.history.back(); } }" class="action-btn btn-close-custom">
             <i class="fas fa-times" style="margin-right: 6px;"></i> Close
         </a>
     </div>

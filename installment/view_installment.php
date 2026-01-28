@@ -512,7 +512,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
         </div>
 
         <div class="action-buttons">
-            <button onclick="window.print()" class="btn btn-print">
+            <button onclick="printInstallment()" class="btn btn-print">
                 <i class="fas fa-print"></i> Print
             </button>
             <button class="btn btn-email">
@@ -537,6 +537,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
         window.currencySymbol = "<?= $installment['currency_symbol'] ?? '৳'; ?>";
         window.currencyName = "<?= $installment['currency_full_name'] ?? 'Taka'; ?>";
     </script>
+    <script src="/pos/assets/js/invoice_modal.js"></script>
     <script src="/pos/assets/js/payment_logic.js"></script>
     <script>
         // CRITICAL: Hide payment modal immediately on load
@@ -567,22 +568,94 @@ $page_title = "Installment - " . $installment['invoice_id'];
                 const paymentModal = document.getElementById('paymentModal');
                 const isPaymentModalActive = paymentModal && (paymentModal.classList.contains('active') || paymentModal.style.display !== 'none');
                 
+                const invoiceViewModal = document.getElementById('invoiceViewModal');
+                const isInvoiceViewModalActive = invoiceViewModal && (invoiceViewModal.classList.contains('active') || invoiceViewModal.style.display !== 'none');
+
                 if (isPaymentModalActive) {
                     // If payment modal is open, Enter should submit the payment (Checkout)
                     e.preventDefault();
-                    
-                    // Trigger the checkout button click
                     const checkoutBtn = document.querySelector('.complete-btn');
                     if (checkoutBtn && !checkoutBtn.disabled) {
                         checkoutBtn.click();
                     }
-                } else {
-                    // Only print if payment modal is NOT open
+                } else if (isInvoiceViewModalActive) {
+                    // If invoice view modal is open, trigger its print
                     e.preventDefault();
-                    window.print();
+                    if (typeof printInvoiceReceipt === 'function') {
+                        printInvoiceReceipt();
+                    } else {
+                        window.print();
+                    }
+                } else {
+                    // Default installment print
+                    e.preventDefault();
+                    printInstallment();
                 }
             }
         });
+
+        function printInstallment() {
+            const printWindow = window.open('', '_blank', 'width=800,height=900');
+            if (!printWindow) {
+                alert('Please allow popups to print.');
+                return;
+            }
+
+            const bodyContent = document.querySelector('.invoice-body').innerHTML;
+            const companyName = "<?= htmlspecialchars($installment['store_name']); ?>";
+            const invoiceId = "<?= htmlspecialchars($installment['invoice_id']); ?>";
+
+            // Extract styles from current page
+            const styles = Array.from(document.querySelectorAll('style')).map(s => s.innerHTML).join('\n');
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Installment - ${invoiceId}</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        ${styles}
+                        @page { size: A4; margin: 15mm; }
+                        body { 
+                            width: 100%; margin: 0; padding: 0; 
+                            background: #fff !important; 
+                            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                            display: flex; justify-content: center;
+                            -webkit-print-color-adjust: exact;
+                        }
+                        .invoice-body { 
+                            width: 180mm; 
+                            padding: 10mm; 
+                            box-sizing: border-box; 
+                            border: 1px solid #eee;
+                            display: block !important;
+                        }
+                        .invoice-container { box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
+                    </style>
+                </head>
+                <body>
+                    <div class="invoice-body">
+                        ${bodyContent}
+                    </div>
+                    <` + `script>
+                        window.onload = function() {
+                            setTimeout(() => {
+                                window.print();
+                                window.close();
+                            }, 300);
+                        };
+                    <` + `/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            // Automatically redirect after a short delay on the original page
+            setTimeout(() => {
+                window.location.href = '/pos/installment/list';
+            }, 1000);
+        }
 
         // Redirect to list after print dialog closes
         window.onafterprint = function() {

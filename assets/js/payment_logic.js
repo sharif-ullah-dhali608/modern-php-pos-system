@@ -200,6 +200,7 @@ function getPaymentMethodName(methodId) {
 
 // Complete Sale / Submit Payment - calls the onSubmit callback if provided
 window.completeSale = function () {
+    console.log('completeSale called. onPaymentSubmit is:', typeof onPaymentSubmit);
     if (onPaymentSubmit && typeof onPaymentSubmit === 'function') {
         // The big box now shows TOTAL PAID (Manual + Applied)
         let totalPaidInBox = parseFloat(document.getElementById('amount-received')?.value) || 0;

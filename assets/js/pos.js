@@ -980,10 +980,15 @@ function submitPosSale(paymentData) {
                     }
                 }
 
-                // Populate Invoice
-                document.getElementById('inv-id').textContent = data.invoice_id;
-                document.getElementById('inv-modal-id').textContent = data.invoice_id;
-                document.getElementById('inv-date').textContent = new Date().toLocaleString();
+                // Populate Invoice (Safeguarded)
+                const invIdEl = document.getElementById('inv-id');
+                if (invIdEl) invIdEl.textContent = data.invoice_id;
+
+                const invModalIdEl = document.getElementById('inv-modal-id');
+                if (invModalIdEl) invModalIdEl.textContent = data.invoice_id;
+
+                const invDateEl = document.getElementById('inv-date');
+                if (invDateEl) invDateEl.textContent = new Date().toLocaleString();
 
                 // Store Info
                 const currentStore = stores.find(s => s.id == storeSelect.value) || stores[0];
@@ -1045,45 +1050,54 @@ function submitPosSale(paymentData) {
                 const totalDueVal = data.new_balance !== undefined ? parseFloat(data.new_balance) : (due + prevDueVal);
 
                 // Open invoice modal using the proper function
-                window.openInvoiceModal({
-                    invoiceId: data.invoice_id,
-                    store: {
-                        name: currentStore.store_name,
-                        address: currentStore.address || '',
-                        city: currentStore.city_zip || '',
-                        phone: currentStore.phone || '',
-                        email: currentStore.email || '',
-                        vat_number: currentStore.vat_number || currentStore.bin_number || ''
-                    },
-                    customer: {
-                        name: customerName,
-                        phone: customerPhone
-                    },
-                    items: cart.map((item, index) => ({
-                        name: item.name,
-                        qty: item.qty,
-                        price: item.price,
-                        unit: item.unit || ''
-                    })),
-                    totals: {
-                        subtotal: parseFloat(document.getElementById('payment-subtotal').textContent) || 0,
-                        discount: parseFloat(document.getElementById('payment-discount').textContent) || 0,
-                        tax: parseFloat(document.getElementById('payment-tax').textContent) || 0,
-                        shipping: parseFloat(document.getElementById('payment-shipping').textContent) || 0,
-                        grandTotal: payable,
-                        paid: totalPaid,
-                        due: due,
-                        previousDue: prevDueVal,
-                        totalDue: totalDueVal,
-                        // Installment info
-                        isInstallment: isInstallment,
-                        installmentCount: isInstallment ? document.getElementById('inst-count').value : 0,
-                        installmentDuration: isInstallment ? document.getElementById('inst-duration').value : 0,
-                        installmentInterval: isInstallment ? document.getElementById('inst-interval').value : 0
-                    },
-                    payments: paymentMethods,
-                    paymentMethod: paymentMethodName
-                });
+                try {
+                    window.openInvoiceModal({
+                        invoiceId: data.invoice_id,
+                        store: {
+                            name: currentStore.store_name,
+                            address: currentStore.address || '',
+                            city: currentStore.city_zip || '',
+                            phone: currentStore.phone || '',
+                            email: currentStore.email || '',
+                            vat_number: currentStore.vat_number || currentStore.bin_number || ''
+                        },
+                        customer: {
+                            name: customerName,
+                            phone: customerPhone
+                        },
+                        items: cart.map((item, index) => ({
+                            name: item.name,
+                            qty: item.qty,
+                            price: item.price,
+                            unit: item.unit || ''
+                        })),
+                        totals: {
+                            subtotal: parseFloat(document.getElementById('payment-subtotal').textContent) || 0,
+                            discount: parseFloat(document.getElementById('payment-discount').textContent) || 0,
+                            tax: parseFloat(document.getElementById('payment-tax').textContent) || 0,
+                            shipping: parseFloat(document.getElementById('payment-shipping').textContent) || 0,
+                            grandTotal: payable,
+                            paid: totalPaid,
+                            due: due,
+                            previousDue: prevDueVal,
+                            totalDue: totalDueVal,
+                            // Installment info
+                            isInstallment: isInstallment,
+                            installmentCount: isInstallment ? document.getElementById('inst-count').value : 0,
+                            installmentDuration: isInstallment ? document.getElementById('inst-duration').value : 0,
+                            installmentInterval: isInstallment ? document.getElementById('inst-interval').value : 0
+                        },
+                        payments: paymentMethods,
+                        paymentMethod: paymentMethodName
+                    });
+                } catch (e) {
+                    console.error('Invoice Modal Error:', e);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invoice Display Error',
+                        text: 'Sale was saved, but receipt could not be displayed: ' + e.message
+                    });
+                }
 
                 // Reload-less UI Sync
                 const resetPOS = () => {
@@ -1156,7 +1170,12 @@ function submitPosSale(paymentData) {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error in submitPosSale:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Error',
+                text: 'See console for details. ' + error.message
+            });
             if (btn) {
                 btn.innerHTML = originalText;
                 btn.disabled = false;

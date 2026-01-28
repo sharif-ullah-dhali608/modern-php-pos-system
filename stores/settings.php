@@ -265,13 +265,41 @@ if(mysqli_num_rows($check_col) == 0) {
                                     <p class="text-xs text-slate-400 mt-2 ml-1">Type to search. Limited view enabled for cleaner UI.</p>
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-600 mb-2">Receipt Template</label>
-                                    <select id="receipt_template_select" name="settings[receipt_template]" class="glass-input cursor-pointer appearance-none">
-                                        <option value="thermal_80mm" <?= get_setting('receipt_template', $settings) == 'thermal_80mm' ? 'selected' : ''; ?>>Thermal 80mm (Standard)</option>
-                                        <option value="thermal_58mm" <?= get_setting('receipt_template', $settings) == 'thermal_58mm' ? 'selected' : ''; ?>>Thermal 58mm (Narrow)</option>
-                                        <option value="a4" <?= get_setting('receipt_template', $settings) == 'a4' ? 'selected' : ''; ?>>A4 Invoice Format</option>
-                                    </select>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-600 mb-2">Receipt Design (Template)</label>
+                                        <select id="receipt_design_select" name="settings[receipt_template]" class="glass-input cursor-pointer appearance-none">
+                                            <option value="classic" <?= get_setting('receipt_template', $settings) == 'classic' ? 'selected' : ''; ?>>Classic Heritage (Standard)</option>
+                                            <option value="modern" <?= get_setting('receipt_template', $settings) == 'modern' ? 'selected' : ''; ?>>Modern Edge (Inter)</option>
+                                            <option value="minimal" <?= get_setting('receipt_template', $settings) == 'minimal' ? 'selected' : ''; ?>>Eco Minimal (Compact)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-600 mb-2">Receipt Printer (Hardware)</label>
+                                        <select id="receipt_printer_select" name="settings[receipt_printer]" class="glass-input cursor-pointer appearance-none">
+                                            <option value="">-- Select Local/Network Printer --</option>
+                                            <optgroup label="Mapped Printers (Recommended)">
+                                                <?php
+                                                $printers_q = "SELECT p.* FROM printers p 
+                                                              JOIN printer_store_map psm ON p.printer_id = psm.printer_id 
+                                                              WHERE p.status = 1 AND psm.store_id = '$store_id' 
+                                                              ORDER BY p.sort_order ASC";
+                                                $printers_res = mysqli_query($conn, $printers_q);
+                                                
+                                                if(mysqli_num_rows($printers_res) > 0) {
+                                                    while($p_row = mysqli_fetch_assoc($printers_res)) {
+                                                        $p_val = $p_row['printer_id'];
+                                                        $selected = get_setting('receipt_printer', $settings) == $p_val ? 'selected' : '';
+                                                        echo "<option value='$p_val' $selected>{$p_row['title']} (".ucfirst($p_row['type']).")</option>";
+                                                    }
+                                                } else {
+                                                    echo "<option disabled>No printers mapped to this store</option>";
+                                                }
+                                                ?>
+                                            </optgroup>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div class="md:col-span-2">
