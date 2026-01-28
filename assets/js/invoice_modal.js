@@ -399,8 +399,9 @@ window.printInvoice = function () {
     `;
 
     // 4. Get active template content
-    const activeTpl = document.querySelector('.receipt-template:not([style*="display: none"])');
+    const activeTpl = document.querySelector('.design-tpl:not(.hidden) .receipt-template');
     if (!activeTpl) {
+        console.error('Active template not found for printing');
         printWindow.close();
         return;
     }

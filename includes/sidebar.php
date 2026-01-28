@@ -79,6 +79,7 @@ $menu_items = [
         'submenu' => [
             ['title' => 'Add Product', 'link' => '/pos/products/add'],
             ['title' => 'Product List', 'link' => '/pos/products/list'],
+            ['title' => 'Barcode Print', 'link' => '/pos/products/barcode-print'],
             ['title' => 'Stock Alert', 'link' => '/pos/products/stock_alert', 'badge' => $alert_count]
         ],
         'active' => (uri_has('/products/', $current_uri))
@@ -273,8 +274,11 @@ $menu_items = [
         'icon' => 'fa-cog',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Settings', 'link' => '/pos/system/settings'],
-            ['title' => 'Backup', 'link' => '/pos/system/backup']
+            // ['title' => 'Settings', 'link' => '/pos/system/settings'],
+            ['title' => 'Add Printer', 'link' => '/pos/printer/add'],
+            ['title' => 'Printer List', 'link' => '/pos/printer/list'],
+            ['title' => 'Receipt Templates', 'link' => '/pos/printer/receipt_templates'],
+            // ['title' => 'Backup', 'link' => '/pos/system/backup']
         ],
         'active' => (uri_has('/system/', $current_uri))
     ]
