@@ -236,6 +236,19 @@ $menu_items = [
         'active' => (uri_has('/users/', $current_uri))
     ],
     [
+        'title' => 'Expenditure',
+        'icon' => 'fa-wallet',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Category', 'link' => '/pos/expenditure/category_add'],
+            ['title' => 'Category List', 'link' => '/pos/expenditure/category_list'],
+            ['title' => 'Add Expense', 'link' => '/pos/expenditure/expense_add'],
+            ['title' => 'Expense List', 'link' => '/pos/expenditure/expense_list'],
+            ['title' => 'Monthwise Report', 'link' => '/pos/expenditure/monthwise'],
+        ],
+        'active' => (uri_has('/expenditure/', $current_uri))
+    ],
+    [
         'title' => 'Reports',
         'icon' => 'fa-chart-pie',
         'link' => '#',
@@ -261,6 +274,9 @@ $menu_items = [
         'link' => '#',
         'submenu' => [
             ['title' => 'Settings', 'link' => '/pos/system/settings'],
+            ['title' => 'Add Printer', 'link' => '/pos/printer/add'],
+            ['title' => 'Printer List', 'link' => '/pos/printer/list'],
+            ['title' => 'Receipt Templates', 'link' => '/pos/printer/receipt_templates'],
             ['title' => 'Backup', 'link' => '/pos/system/backup']
         ],
         'active' => (uri_has('/system/', $current_uri))
