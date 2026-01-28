@@ -1,0 +1,82 @@
+/* Expense Form Premium Styling */
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.delay-1 {
+    animation-delay: 0.1s;
+}
+
+.delay-2 {
+    animation-delay: 0.2s;
+}
+
+.delay-3 {
+    animation-delay: 0.3s;
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.iti {
+    width: 100%;
+}
+
+.select2-container .select2-selection--single {
+    height: 50px;
+    border-radius: 0.75rem;
+    border-color: #cbd5e1;
+    padding-top: 10px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 12px;
+    right: 10px;
+}
+
+.error-msg-text {
+    color: #e11d48;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 4px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+}
+
+input.error-border,
+select.error-border,
+textarea.error-border,
+.select2-selection.error-border,
+.upload-box.error-border {
+    border-color: #e11d48 !important;
+    background-color: #fff1f2;
+}
+
+/* Upload box */
+.upload-box {
+    border: 2px dashed #cbd5e1;
+    transition: all 0.3s ease;
+}
+
+.upload-box:hover {
+    border-color: #0d9488;
+    background-color: #f0fdfa;
+}

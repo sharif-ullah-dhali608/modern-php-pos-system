@@ -274,9 +274,6 @@ $menu_items = [
         'link' => '#',
         'submenu' => [
             ['title' => 'Settings', 'link' => '/pos/system/settings'],
-            ['title' => 'Add Printer', 'link' => '/pos/printer/add'],
-            ['title' => 'Printer List', 'link' => '/pos/printer/list'],
-            ['title' => 'Receipt Templates', 'link' => '/pos/printer/receipt_templates'],
             ['title' => 'Backup', 'link' => '/pos/system/backup']
         ],
         'active' => (uri_has('/system/', $current_uri))

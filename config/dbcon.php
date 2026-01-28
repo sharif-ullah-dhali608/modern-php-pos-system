@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -193,35 +193,6 @@ function ensure_core_tables(mysqli $conn) {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-    // --- NEW: Printers Table ---
-    $printersSql = "CREATE TABLE IF NOT EXISTS printers (
-        printer_id INT(11) NOT NULL AUTO_INCREMENT,
-        title VARCHAR(255) NOT NULL,
-        type VARCHAR(50) DEFAULT 'network',
-        profile VARCHAR(50) DEFAULT 'thermal',
-        char_per_line INT(11) DEFAULT 200,
-        ip_address VARCHAR(50) DEFAULT NULL,
-        port VARCHAR(10) DEFAULT '9100',
-        path VARCHAR(255) DEFAULT NULL,
-        status TINYINT(1) DEFAULT 1,
-        sort_order INT(11) DEFAULT 0,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (printer_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-    // --- NEW: Printer-Store Map Table ---
-    $printerStoreMapSql = "CREATE TABLE IF NOT EXISTS printer_store_map (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        printer_id INT(11) NOT NULL,
-        store_id INT(11) NOT NULL,
-        PRIMARY KEY (id),
-        KEY printer_id (printer_id),
-        KEY store_id (store_id),
-        FOREIGN KEY (printer_id) REFERENCES printers(printer_id) ON DELETE CASCADE,
-        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // --- NEW: CUSTOMERS Table (STREAMLINED) ---
@@ -657,61 +628,7 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
-// --- NEW: Expense Category Table ---
-    $expenseCategorySql = "CREATE TABLE IF NOT EXISTS expense_category (
-        category_id INT(11) NOT NULL AUTO_INCREMENT,
-        category_name VARCHAR(255) NOT NULL,
-        category_slug VARCHAR(255) NOT NULL UNIQUE,
-        parent_id INT(11) DEFAULT 0,
-        category_details TEXT DEFAULT NULL,
-        sell_return TINYINT(1) DEFAULT 0,
-        sell_delete TINYINT(1) DEFAULT 0,
-        loan_delete TINYINT(1) DEFAULT 0,
-        loan_payment TINYINT(1) DEFAULT 0,
-        giftcard_sell_delete TINYINT(1) DEFAULT 0,
-        topup_delete TINYINT(1) DEFAULT 0,
-        product_purchase TINYINT(1) DEFAULT 0,
-        stock_transfer TINYINT(1) DEFAULT 0,
-        due_paid TINYINT(1) DEFAULT 0,
-        status TINYINT(1) DEFAULT 1,
-        is_hide TINYINT(1) DEFAULT 0,
-        sort_order INT(11) DEFAULT 0,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (category_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
-    // --- NEW: Expenses Table ---
-    $expensesSql = "CREATE TABLE IF NOT EXISTS expenses (
-        id INT(11) NOT NULL AUTO_INCREMENT,
-        store_id INT(11) NOT NULL,
-        reference_no VARCHAR(50) DEFAULT NULL,
-        category_id INT(11) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
-        returnable TINYINT(1) DEFAULT 0,
-        note TEXT DEFAULT NULL,
-        attachment VARCHAR(255) DEFAULT NULL,
-        status TINYINT(1) DEFAULT 1,
-        created_by INT(11) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES expense_category(category_id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-
-
-
-
-
-
-
-
-    
-    
-    
     // Pivot tables (must run after core tables are created)
 
 
@@ -918,11 +835,7 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $categorySql);
     mysqli_query($conn, $suppliersSql);
     mysqli_query($conn, $customersSql);
-    mysqli_query($conn, $printersSql);
-    mysqli_query($conn, $expenseCategorySql);
-    mysqli_query($conn, $expensesSql);
     mysqli_query($conn, $holdingPriceSql);
-
 
     // Level 2: Tables referencing Level 1
     mysqli_query($conn, $storesSql);
@@ -958,7 +871,6 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $productStoreSql);
     mysqli_query($conn, $quotationItemsSql);
     mysqli_query($conn, $customerStoreMapSql);
-    mysqli_query($conn, $printerStoreMapSql);
     mysqli_query($conn, $userStoreMapSql);
 
     // Ensure is_installment column exists in sell_logs table
