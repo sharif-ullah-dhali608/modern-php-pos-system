@@ -35,9 +35,18 @@ $templates = [
 ];
 ?>
 
-<div class="container-fluid px-6 py-8">
-    <div class="flex items-center justify-between mb-10">
-        <div>
+<div class="app-wrapper">
+    <?php include('../includes/sidebar.php'); ?>
+
+    <main id="main-content" class="lg:ml-64 flex flex-col h-screen">
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
+        </div>
+        
+        <div class="content-scroll-area custom-scroll">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-10">
+                    <div>
             <h1 class="text-3xl font-black text-slate-800 tracking-tight">Receipt Design Studio</h1>
             <p class="text-slate-500 font-medium">Choose a visual identity for your customer invoices.</p>
         </div>
@@ -87,6 +96,10 @@ $templates = [
         </div>
         <?php endforeach; ?>
     </div>
+            </div> <!-- Close p-6 -->
+            <?php include('../includes/footer.php'); ?>
+        </div> <!-- Close content-scroll-area -->
+    </main>
 </div>
 
 <style>
@@ -94,5 +107,3 @@ $templates = [
 .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
 .receipt-template { max-width: 100% !important; }
 </style>
-
-<?php include('../includes/footer.php'); ?>

@@ -3,11 +3,13 @@
     
     <!-- Header -->
     <div style="text-align: center; margin-bottom: 10px;">
-        <img src="/pos/assets/images/logo-fav.png" class="inv-logo" style="max-height: 40px; display: block; margin: 0 auto 5px;">
-        <h2 class="inv-store-name" style="margin: 0; font-weight: bold; font-size: 16px; color: #000; text-transform: uppercase;">Modern POS</h2>
-        <div class="inv-store-address" style="font-size: 11px; margin-top: 2px;">STORE ADDRESS</div>
-        <div class="inv-store-contact" style="font-size: 11px; margin-top: 2px;">Mobile: --, Email: --</div>
-        <div class="inv-store-bin" style="font-size: 11px; margin-top: 2px; font-weight: bold;"></div>
+        <img src="<?= htmlspecialchars($current_store['logo'] ?? '/pos/assets/images/logo-fav.png'); ?>" class="inv-logo" style="max-height: 40px; display: block; margin: 0 auto 5px;">
+        <h2 class="inv-store-name" style="margin: 0; font-weight: bold; font-size: 16px; color: #000; text-transform: uppercase;"><?= htmlspecialchars($current_store['store_name'] ?? 'Modern POS'); ?></h2>
+        <div class="inv-store-address" style="font-size: 11px; margin-top: 2px;"><?= htmlspecialchars($current_store['address'] ?? 'STORE ADDRESS'); ?></div>
+        <div class="inv-store-contact" style="font-size: 11px; margin-top: 2px;">Mobile: <?= htmlspecialchars($current_store['phone'] ?? '--'); ?>, Email: <?= htmlspecialchars($current_store['email'] ?? '--'); ?></div>
+        <div class="inv-store-bin" style="font-size: 11px; margin-top: 2px; font-weight: bold;">
+             <?php if(!empty($current_store['vat_number'])): ?>BIN: <?= htmlspecialchars($current_store['vat_number']); ?><?php endif; ?>
+        </div>
     </div>
 
     <!-- Invoice Details -->

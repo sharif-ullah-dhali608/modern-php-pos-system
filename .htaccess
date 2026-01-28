@@ -79,6 +79,7 @@ RewriteRule ^products/save$ products/save_product.php [L]
 RewriteRule ^products/edit/([0-9]+)$ products/add_product.php?id=$1 [L]
 RewriteRule ^products/stock_alert$ products/stock_alert.php [L]
 RewriteRule ^products/stock-alert$ products/stock_alert.php [L]
+RewriteRule ^products/barcode-print$ products/barcode_print.php [L]
 
 # --- Purchases Routes (ADDED) ---
 RewriteRule ^purchases/list$ purchases/purchase_list.php [L]
