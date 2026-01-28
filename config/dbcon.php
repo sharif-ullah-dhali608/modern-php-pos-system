@@ -820,6 +820,43 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
         UNIQUE KEY idx_unique_hold_price_ref (ref_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // Stock Transfers Table
+    $transfersSql = "CREATE TABLE IF NOT EXISTS transfers (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        ref_no VARCHAR(100) DEFAULT NULL,
+        invoice_id VARCHAR(100) DEFAULT NULL,
+        ref_invoice_id VARCHAR(100) DEFAULT NULL,
+        from_store_id INT(11) NOT NULL,
+        to_store_id INT(11) NOT NULL,
+        note TEXT DEFAULT NULL,
+        total_item INT(11) DEFAULT 0,
+        total_quantity DECIMAL(15,4) DEFAULT 0.0000,
+        created_by INT(11) NOT NULL,
+        received_by INT(11) DEFAULT NULL,
+        cancelled_by INT(11) DEFAULT NULL,
+        status ENUM('Sent', 'Received', 'Cancelled') DEFAULT 'Sent',
+        attachment VARCHAR(500) DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (from_store_id) REFERENCES stores(id),
+        FOREIGN KEY (to_store_id) REFERENCES stores(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // Transfer Items Table
+    $transferItemsSql = "CREATE TABLE IF NOT EXISTS transfer_items (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        transfer_id INT(11) NOT NULL,
+        product_id INT(11) NOT NULL,
+        product_name VARCHAR(255) DEFAULT NULL,
+        quantity DECIMAL(15,4) NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY (transfer_id) REFERENCES transfers(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 
 
     // --- 3. Execute Queries in Dependency Order ---
@@ -859,6 +896,8 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $giftcardTopupsSql);
     mysqli_query($conn, $productImagesSql);
     mysqli_query($conn, $posSettingsSql);
+    mysqli_query($conn, $transfersSql);
+    mysqli_query($conn, $transferItemsSql);
 
     // Level 4: Pivot / Map Tables
     mysqli_query($conn, $storeCurrencySql);
