@@ -143,6 +143,16 @@ RewriteRule ^installment/due_all$ installment/payment_list.php?filter=all [L]
 RewriteRule ^installment/due_expired$ installment/payment_list.php?filter=expired [L]
 RewriteRule ^installment/overview$ installment/overview.php [L]
 
+# --- Stock Transfer Routes (ADDED) ---
+RewriteRule ^transfer/stock_transfer$ transfer/stock_transfer.php [L]
+RewriteRule ^transfer/transfer_list$ transfer/transfer_list.php [L]
+RewriteRule ^transfer/receive_list$ transfer/receive_list.php [L]
+RewriteRule ^transfer/save$ transfer/save_transfer.php [L]
+RewriteRule ^transfer/receive$ transfer/receive_transfer.php [L]
+RewriteRule ^transfer/search_stock$ transfer/search_stock_transfer.php [L]
+RewriteRule ^transfer/get_transfer_details$ transfer/get_transfer_details.php [L]
+RewriteRule ^transfer/cancel_transfer$ transfer/cancel_transfer.php [L]
+
 # --- Printer Routes ---
 RewriteRule ^printer/list$ printer/printer_list.php [L]
 RewriteRule ^printer/add$ printer/add_printer.php [L]

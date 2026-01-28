@@ -108,6 +108,17 @@ $menu_items = [
         ],
         'active' => (uri_has('/purchases/', $current_uri))
     ],
+    [
+        'title' => 'Transfer',
+        'icon' => 'fa-exchange-alt',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Add Transfer', 'link' => '/pos/transfer/stock_transfer'],
+            ['title' => 'Transfer List', 'link' => '/pos/transfer/transfer_list'],
+            ['title' => 'Receive List', 'link' => '/pos/transfer/receive_list'],
+        ],
+        'active' => (uri_has('/transfer/', $current_uri))
+    ],
     // [
     //     'title' => 'Invoice',
     //     'icon' => 'fa-file-invoice-dollar',
