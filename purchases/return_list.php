@@ -333,7 +333,7 @@ function printPurchase() {
     var content = document.getElementById('viewModalContent').innerHTML;
     var mywindow = window.open('', 'PRINT', 'height=800,width=1000');
     mywindow.document.write('<html><head><title>Return_' + invoiceId + '</title>');
-    mywindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+    mywindow.document.write('<link rel="stylesheet" href="/pos/assets/css/output.css">');
     mywindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>');
     mywindow.document.write('</head><body class="p-4">');
     mywindow.document.write(content);
