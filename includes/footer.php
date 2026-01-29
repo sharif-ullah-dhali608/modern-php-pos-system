@@ -63,7 +63,7 @@
     unset($_SESSION['msg_type']); 
 endif; ?>
   
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>

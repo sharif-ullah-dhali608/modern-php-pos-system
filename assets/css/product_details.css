@@ -1,0 +1,122 @@
+.pd-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .pd-grid-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    #productDetailsModal .pos-modal-content {
+        height: 95vh;
+        max-height: 95vh;
+    }
+}
+
+/* Mobile Layout Override */
+@media (max-width: 480px) {
+    .pd-gallery-wrapper {
+        position: static !important;
+        top: auto !important;
+    }
+
+    .pd-mobile-scroll-container {
+        display: block !important;
+        overflow: visible !important;
+        padding: 0;
+        margin: 0;
+    }
+
+    #pd-main-image-container {
+        width: 100% !important;
+        flex: none !important;
+        height: auto !important;
+        aspect-ratio: 1/1;
+        margin-bottom: 15px !important;
+    }
+
+    /* Gallery Grid 4 Cols */
+    #pd-gallery {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 10px !important;
+        overflow: visible !important;
+        white-space: normal !important;
+        padding-bottom: 0 !important;
+        justify-content: start !important;
+    }
+
+    #pd-gallery img {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 1/1;
+        flex: none !important;
+        margin: 0 !important;
+    }
+
+    #pd-gallery button {
+        display: none !important;
+    }
+
+    /* Force rows on mobile */
+    .pd-mobile-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* Header specific */
+    .pd-header-mobile.pd-mobile-row {
+        justify-content: space-between !important;
+    }
+
+    /* Extra Info: strict 2 Cols */
+    .pd-extra-info-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        font-size: 10px !important;
+    }
+
+    /* Cart Actions: Stacked 100% width */
+    .pd-cart-actions.pd-mobile-row {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 10px !important;
+        margin-bottom: 25px !important;
+    }
+
+    .pd-cart-actions>div,
+    .pd-cart-actions>button {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .pd-cart-actions>div {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px !important;
+    }
+
+    /* Stock Info: Flex Row */
+    .pd-stock-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-bottom: 1px dashed #f1f5f9;
+        padding: 10px 0;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .pd-stock-row>* {
+        display: block !important;
+        width: auto !important;
+    }
+}
