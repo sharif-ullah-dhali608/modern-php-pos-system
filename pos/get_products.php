@@ -2,7 +2,7 @@
 include '../config/dbcon.php';
 
 $page = isset($_REQUEST['page']) ? (int)$_REQUEST['page'] : 1;
-$items_per_page = 100;
+$items_per_page = 20;
 $offset = ($page - 1) * $items_per_page;
 $store_id = isset($_REQUEST['store_id']) ? (int)$_REQUEST['store_id'] : 0;
 $category_id = isset($_REQUEST['category_id']) ? (int)$_REQUEST['category_id'] : 0;

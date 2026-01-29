@@ -345,6 +345,34 @@ function ensure_core_tables(mysqli $conn) {
         CONSTRAINT payment_store_store_fk FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+    // --- NEW: Printers Table ---
+    $printersSql = "CREATE TABLE IF NOT EXISTS printers (
+        printer_id INT(11) NOT NULL AUTO_INCREMENT,
+        title VARCHAR(255) NOT NULL,
+        type VARCHAR(50) DEFAULT 'network',
+        profile VARCHAR(50) DEFAULT 'thermal',
+        char_per_line INT(11) DEFAULT 200,
+        ip_address VARCHAR(255) DEFAULT NULL,
+        port VARCHAR(20) DEFAULT '9100',
+        path VARCHAR(500) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (printer_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Printer-Store Mapping Table ---
+    $printerStoreMapSql = "CREATE TABLE IF NOT EXISTS printer_store_map (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        printer_id INT(11) NOT NULL,
+        store_id INT(11) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY printer_store_unique (printer_id, store_id),
+        FOREIGN KEY (printer_id) REFERENCES printers(printer_id) ON DELETE CASCADE,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
 
 
 // Brand-Store Pivot
@@ -873,6 +901,8 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $suppliersSql);
     mysqli_query($conn, $customersSql);
     mysqli_query($conn, $holdingPriceSql);
+    mysqli_query($conn, $printersSql);
+    mysqli_query($conn, $printerStoreMapSql);
 
     // Level 2: Tables referencing Level 1
     mysqli_query($conn, $storesSql);

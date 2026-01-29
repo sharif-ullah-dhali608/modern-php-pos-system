@@ -64,9 +64,14 @@ while($row = mysqli_fetch_assoc($all_settings_q)) {
 
 // --- NEW: Fetch All Active Printer Profiles ---
 $printer_profiles = [];
-$printers_q = mysqli_query($conn, "SELECT printer_id, profile FROM printers WHERE status = 1");
-while($p = mysqli_fetch_assoc($printers_q)) {
-    $printer_profiles[$p['printer_id']] = $p['profile'];
+$checkTable = mysqli_query($conn, "SHOW TABLES LIKE 'printers'");
+if (mysqli_num_rows($checkTable) > 0) {
+    $printers_q = mysqli_query($conn, "SELECT printer_id, profile FROM printers WHERE status = 1");
+    if ($printers_q) {
+        while($p = mysqli_fetch_assoc($printers_q)) {
+            $printer_profiles[$p['printer_id']] = $p['profile'];
+        }
+    }
 }
 // -----------------------------------------------------------
 $show_images = isset($pos_settings['show_images']) ? $pos_settings['show_images'] : '1';
@@ -137,34 +142,12 @@ $page_title = "POS - Velocity POS";
 include('../includes/header.php');
 ?>
 <link rel="stylesheet" href="/pos/assets/css/pos.css">
-<style>
-    /* Completely hide sidebar on POS page */
-#sidebar {
-    display: none !important;
-}
-
-#sidebar-toggle-container {
-    display: none !important;
-}
-
-#main-content {
-    margin-left: 0 !important;
-    width: 100% !important;
-}
-
-.app-wrapper {
-    display: block !important;
-}
-
-    /* Invisible Scrollbar but scrollable */
-    .invisible-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .invisible-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
-    }
-</style>
+<link rel="stylesheet" href="/pos/assets/css/pos_layout.css">
+<link rel="stylesheet" href="/pos/assets/css/product_details.css">
+<link rel="stylesheet" href="/pos/assets/css/keyboard_shortcuts.css">
+<link rel="stylesheet" href="/pos/assets/css/reports_panel.css">
+<link rel="stylesheet" href="/pos/assets/css/walking_customer.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
 <script>
     window.posSettings = <?= json_encode($pos_settings); ?>;
     window.stores = <?= json_encode($stores); ?>;
@@ -227,6 +210,7 @@ include('../includes/header.php');
                 </a>
                 <a href="#" onclick="toggleReportsPanel(event)"><i class="fas fa-file"></i> Reports</a>
                 <a href="#" onclick="openModal('posSettingsModal')"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" onclick="openModal('keyboardShortcutsModal')"><i class="fas fa-keyboard"></i> Shortcuts</a>
                 <a href="#" onclick="lockScreen()"><i class="fas fa-lock"></i> Lockscreen</a>
             </div>
             
@@ -470,125 +454,6 @@ include('../includes/header.php');
 
 
 <!-- Product Details Modal (Unique Design) -->
-<style>
-    .pd-grid-layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
-        align-items: start;
-    }
-    @media (max-width: 768px) {
-        .pd-grid-layout {
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        #productDetailsModal .pos-modal-content {
-            height: 95vh;
-            max-height: 95vh;
-        }
-
-            /* Mobile Layout Override: Strict Grid (No Scroll) */
-            @media (max-width: 480px) {
-                .pd-gallery-wrapper {
-                    position: static !important;
-                    top: auto !important;
-                }
-
-                .pd-mobile-scroll-container {
-                    display: block !important;
-                    overflow: visible !important;
-                    padding: 0;
-                    margin: 0;
-                }
-                
-                #pd-main-image-container {
-                    width: 100% !important;
-                    flex: none !important;
-                    height: auto !important;
-                    aspect-ratio: 1/1;
-                    margin-bottom: 15px !important;
-                }
-                
-                /* Gallery Grid 4 Cols */
-                #pd-gallery {
-                    display: grid !important;
-                    grid-template-columns: repeat(4, 1fr) !important;
-                    gap: 10px !important;
-                    overflow: visible !important;
-                    white-space: normal !important;
-                    padding-bottom: 0 !important;
-                    justify-content: start !important;
-                }
-                
-                #pd-gallery img {
-                    width: 100% !important;
-                    height: auto !important;
-                    aspect-ratio: 1/1;
-                    flex: none !important;
-                    margin: 0 !important;
-                }
-                
-                #pd-gallery button { display: none !important; }
-
-            /* --- NEW MOBILE LAYOUT OVERRIDES --- */
-            /* Force rows on mobile (overrides pos.css global stacking) */
-            .pd-mobile-row {
-                flex-direction: row !important;
-                align-items: center !important;
-                gap: 10px !important;
-                flex-wrap: nowrap !important;
-            }
-
-            /* Header specific: ensure justification works */
-            .pd-header-mobile.pd-mobile-row {
-                justify-content: space-between !important;
-            }
-
-            /* Extra Info: strict 2 Cols (Match Image) */
-            .pd-extra-info-grid {
-                grid-template-columns: 1fr 1fr !important;
-                gap: 10px !important;
-                font-size: 10px !important;
-            }
-            
-            /* Cart Actions: Stacked 100% width */
-            .pd-cart-actions.pd-mobile-row {
-                flex-direction: column !important;
-                width: 100%;
-                gap: 10px !important;
-                margin-bottom: 25px !important;
-            }
-            .pd-cart-actions > div, 
-            .pd-cart-actions > button {
-                width: 100% !important;
-                justify-content: center;
-            }
-            .pd-cart-actions > div {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: space-between !important; 
-                padding: 10px !important;
-            }
-
-            /* Stock Info: Flex Row (Name Left, Qty/Loc Right) */
-            .pd-stock-row {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                border-bottom: 1px dashed #f1f5f9;
-                padding: 10px 0;
-                width: 100%;
-                gap: 10px;
-            }
-            /* Reset Grid Children Styles */
-            .pd-stock-row > * {
-                display: block !important; 
-                width: auto !important;
-            }
-        }
-    }
-</style>
 <div class="pos-modal" id="productDetailsModal" style="display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.7); padding: 10px;">
     <div class="pos-modal-content" style="width: 95%; max-width: 900px; max-height: 90vh; border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5); display: flex; flex-direction: column; background: #fff; margin: auto;">
         
@@ -827,28 +692,78 @@ include('../includes/header.php');
 
 <!-- Walking Customer Edit Modal -->
 <div class="pos-modal" id="walkingCustomerModal">
-    <div class="pos-modal-content" style="max-width: 450px;">
+    <div class="pos-modal-content">
         <div class="pos-modal-header">
-            <h3><i class="fas fa-pen"></i> Walking Customer (<span id="walking-display-phone">0170000000000</span>)</h3>
-            <button class="close-btn" onclick="closeModal('walkingCustomerModal')" style="display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-times" style="font-size: 16px;"></i>
+            <h3>
+                <i class="fas fa-edit"></i> 
+                Walking Customer <span>( <span id="walking-display-phone">0170000000000</span> )</span>
+            </h3>
+            <button class="close-btn" onclick="closeModal('walkingCustomerModal')">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="pos-modal-body">
             <div class="payment-input-group">
-                <input type="text" id="walking-mobile-input" placeholder="Mobile Number..." style="text-align: left;">
+                <label>Phone Number *</label>
+                <div class="relative">
+                    <input type="tel" id="walking-mobile-input" placeholder="017...">
+                </div>
+                <div class="flex justify-between items-center mt-1">
+                    <span id="walking-valid-msg"><i class="fas fa-check-circle"></i> Valid Format</span>
+                    <span id="walking-error-msg"></span>
+                </div>
             </div>
-            <div style="display: flex; gap: 12px;">
-                <button type="button" onclick="closeModal('walkingCustomerModal')" style="flex: 1; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+            <div class="walking-modal-footer">
+                <button type="button" class="walking-btn-cancel" onclick="closeModal('walkingCustomerModal')">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" onclick="saveWalkingCustomer()" style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    <i class="fas fa-check"></i> Ok
+                <button type="button" class="walking-btn-save" onclick="saveWalkingCustomer()">
+                    <i class="fas fa-check"></i> Save Changes
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div class="pos-modal" id="keyboardShortcutsModal" style="display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);">
+    <div class="pos-modal-content" style="max-width: 600px; border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <div class="pos-modal-header" style="background: #10b981; padding: 20px; border: none;">
+            <h3 style="color: white; font-weight: 800; display: flex; align-items: center; gap: 10px; margin: 0;">
+                <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+            </h3>
+            <button class="close-btn" onclick="closeModal('keyboardShortcutsModal')" style="background: rgba(255,255,255,0.2); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="pos-modal-body" style="padding: 0; background: white; max-height: 70vh; display: flex; flex-direction: column;">
+            <div style="padding: 24px; overflow-y: auto; flex: 1;" class="no-scrollbar">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                    <thead>
+                        <tr style="text-align: left; color: #64748b; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                            <th style="padding: 0 16px 8px;">Shortcut</th>
+                            <th style="padding: 0 16px 8px;">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shortcuts-body">
+                        <!-- Shortcuts will be injected here for OS-specific keys -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="background: #f8fafc; padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: #475569; font-size: 12px; font-weight: 600;">
+                    <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-family: monospace;">Alt</span> Windows / Linux
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; color: #475569; font-size: 12px; font-weight: 600;">
+                    <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-family: monospace;">⌥ Option</span> macOS
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 <!-- Add Customer Modal -->
 <div class="pos-modal" id="addCustomerModal">
@@ -1466,153 +1381,10 @@ include('../includes/header.php');
     </div>
 </div>
 
-<script>
-    function togglePosSetting(key, value) {
-        // Optimistic UI update
-        if(key === 'show_images') {
-            if(value) {
-                $('.product-card img').show();
-            } else {
-                $('.product-card img').hide();
-            }
-        }
 
-        // Get current store ID dynamically
-        const currentStoreId = document.getElementById('store_select').value;
 
-        // Save to DB
-        $.ajax({
-            url: '/pos/stores/save_store_settings.php',
-            method: 'POST',
-            data: {
-                store_id: currentStoreId,
-                settings: { [key]: value ? 1 : 0 }
-            }
-        });
-    }
 
-    function openSettings(e) {
-        e.preventDefault();
-        const currentStoreId = document.getElementById('store_select').value;
-        const url = `/pos/stores/settings.php?store_id=${currentStoreId}`;
-        window.location.href = url;
-    }
-    
 
-    // Apply on load JS side (if PHP didn't catch it for dynamic elements)
-    $(document).ready(function() {
-        <?php if($show_images == '0'): ?>
-            $('.product-card img').hide();
-        <?php endif; ?>
-    });
-</script>
-
-<!-- Reports Slide-out Panel -->
-<style>
-    .reports-panel-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(4px);
-        z-index: 10000;
-        display: none;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .reports-panel-overlay.active {
-        display: block;
-        opacity: 1;
-    }
-    .reports-panel {
-        position: fixed;
-        right: -400px;
-        top: 0;
-        width: 100%;
-        max-width: 400px;
-        height: 100vh;
-        background: white;
-        z-index: 10001;
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
-        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-    }
-    .reports-panel.active {
-        right: 0;
-    }
-    .reports-panel-header {
-        padding: 24px;
-        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-        color: white;
-    }
-    .reports-panel-search {
-        margin-top: 15px;
-        position: relative;
-    }
-    .reports-panel-search input {
-        width: 100%;
-        padding: 10px 15px 10px 40px;
-        border-radius: 12px;
-        border: none;
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-        font-size: 14px;
-        outline: none;
-        backdrop-filter: blur(5px);
-        transition: all 0.2s;
-    }
-    .reports-panel-search input::placeholder { color: rgba(255, 255, 255, 0.6); }
-    .reports-panel-search i {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 14px;
-    }
-    .reports-list {
-        flex: 1;
-        overflow-y: auto;
-        padding: 15px;
-    }
-    .report-item {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 14px 18px;
-        border-radius: 12px;
-        color: #334155;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
-        transition: all 0.2s;
-        margin-bottom: 8px;
-        border: 1px solid transparent;
-        background: #f8fafc;
-    }
-    .report-item:hover {
-        background: #f0fdfa;
-        color: #0d9488;
-        border-color: #ccfbf1;
-        transform: translateX(-5px);
-    }
-    .report-item i {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        border-radius: 10px;
-        color: #0d9488;
-        font-size: 14px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .report-item:hover i {
-        background: #0d9488;
-        color: white;
-    }
-</style>
 
 <div class="reports-panel-overlay" id="reportsOverlay" onclick="closeReportsPanel()"></div>
 <div class="reports-panel" id="reportsPanel">
@@ -1661,36 +1433,17 @@ include('../includes/header.php');
     </div>
 </div>
 
-<script>
-    function toggleReportsPanel(e) {
-        if(e) e.preventDefault();
-        const panel = document.getElementById('reportsPanel');
-        const overlay = document.getElementById('reportsOverlay');
-        panel.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => document.getElementById('reportSearch').focus(), 400);
-    }
-
-    function closeReportsPanel() {
-        const panel = document.getElementById('reportsPanel');
-        const overlay = document.getElementById('reportsOverlay');
-        panel.classList.remove('active');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    function filterReports(input) {
-        const term = input.value.toLowerCase();
-        const items = document.querySelectorAll('.report-item');
-        items.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            if(text.includes(term)) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"></script>
+<script src="/pos/assets/js/pos_settings.js"></script>
+<script src="/pos/assets/js/reports_panel.js"></script>
+<script src="/pos/assets/js/keyboard_shortcuts.js"></script>
 <script src="/pos/assets/js/pos.js"></script>
+<script>
+    // Apply on load JS side (if PHP didn't catch it for dynamic elements)
+    $(document).ready(function() {
+        <?php if($show_images == '0'): ?>
+            $('.product-card img').hide();
+        <?php endif; ?>
+    });
+</script>

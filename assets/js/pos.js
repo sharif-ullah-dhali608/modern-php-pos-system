@@ -18,94 +18,116 @@
         toggleIcon.classList.add('rotate-180');
     }
 })();
+let walkingIti;
+
+console.log("POS: Core logic file loaded.");
 
 // Global keydown listener for POS shortcuts
 document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-        const paymentModal = document.getElementById('paymentModal');
-        const invoiceModal = document.getElementById('invoiceModal');
-        const customerSelectModal = document.getElementById('customerSelectModal');
+    try {
+        const code = e.code;
+        console.log("POS: Key pressed:", e.key, "Code:", code, "Alt:", e.altKey, "Ctrl:", e.ctrlKey, "Shift:", e.shiftKey);
 
-        // If searching product, let it handle its own logic (usually barcode scan or search trigger)
-        if (document.activeElement.id === 'product_search') return;
+        if (code === 'Enter' || code === 'NumpadEnter') {
+            const paymentModal = document.getElementById('paymentModal');
+            const invoiceModal = document.getElementById('invoiceModal');
+            const customerSelectModal = document.getElementById('customerSelectModal');
 
-        // If editing quantity, do not open payment modal
-        if (document.activeElement.classList.contains('qty-input')) return;
+            // If searching product, let it handle its own logic (usually barcode scan or search trigger)
+            if (document.activeElement.id === 'product_search') return;
 
-        // Check for specific modals explicitly
-        if (document.getElementById('invoiceModal').classList.contains('active')) {
-            e.preventDefault();
-            if (window.printInvoice) window.printInvoice();
-            return;
-        }
+            // If editing quantity, do not open payment modal
+            if (document.activeElement.classList.contains('qty-input')) return;
 
-        const holdModal = document.getElementById('holdModal');
-        if (holdModal && (holdModal.classList.contains('active') || holdModal.style.display === 'flex')) {
-            console.log('Hold Modal Enter Key Triggered');
-            e.preventDefault();
-            e.stopImmediatePropagation(); // Ensure no other listeners handle this
-            holdOrder();
-            return;
-        }
+            // Check for specific modals explicitly
+            if (document.getElementById('invoiceModal').classList.contains('active')) {
+                e.preventDefault();
+                if (window.printInvoice) window.printInvoice();
+                return;
+            }
 
-        const heldOrdersModal = document.getElementById('heldOrdersModal');
-        if (heldOrdersModal && (heldOrdersModal.classList.contains('active') || heldOrdersModal.style.display === 'flex')) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            const resumeBtn = document.getElementById('btn-resume-held');
-            if (resumeBtn) resumeBtn.click();
-            return;
-        }
+            const holdModal = document.getElementById('holdModal');
+            if (holdModal && (holdModal.classList.contains('active') || holdModal.style.display === 'flex')) {
+                console.log('POS: Hold Modal Enter Key Triggered');
+                e.preventDefault();
+                e.stopImmediatePropagation(); // Ensure no other listeners handle this
+                holdOrder();
+                return;
+            }
 
-        if (document.getElementById('paymentModal').classList.contains('active')) {
-            e.preventDefault();
-            if (window.completeSale) window.completeSale();
-            return;
-        }
+            const heldOrdersModal = document.getElementById('heldOrdersModal');
+            if (heldOrdersModal && (heldOrdersModal.classList.contains('active') || heldOrdersModal.style.display === 'flex')) {
+                console.log('POS: Held Orders Modal Enter Triggered');
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                const resumeBtn = document.getElementById('btn-resume-held');
+                if (resumeBtn) resumeBtn.click();
+                return;
+            }
 
-        // Generic check for other modals (like customer select) - simply block "Pay Now"
-        if (document.querySelector('.pos-modal.active')) {
-            return;
-        }
+            if (document.getElementById('paymentModal').classList.contains('active')) {
+                console.log('POS: Payment Modal Enter Triggered');
+                e.preventDefault();
+                if (window.completeSale) window.completeSale();
+                return;
+            }
 
-        // Default: Pay Now if cart has items and NO modal is open
-        if (cart.length > 0) {
-            e.preventDefault();
+            const walkingModal = document.getElementById('walkingCustomerModal');
+            if (walkingModal && (walkingModal.classList.contains('active') || walkingModal.style.display === 'flex')) {
+                console.log('POS: Walking Customer Modal Enter Triggered');
+                e.preventDefault();
+                if (window.saveWalkingCustomer) window.saveWalkingCustomer();
+                return;
+            }
 
-            // FIRST: Validate actual stock in cart (most important check)
-            let hasStockIssue = false;
-            for (const item of cart) {
-                if (item.qty > item.stock) {
-                    showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
-                    window.lastStockErrorTime = Date.now();
-                    hasStockIssue = true;
-                    break;
+            // Generic check for other modals (like customer select) - simply block "Pay Now"
+            if (document.querySelector('.pos-modal.active')) {
+                return;
+            }
+
+            // Default: Pay Now if cart has items and NO modal is open
+            if (cart.length > 0) {
+                console.log('POS: Default Enter Key -> Opening Payment Modal');
+                e.preventDefault();
+
+                // FIRST: Validate actual stock in cart (most important check)
+                let hasStockIssue = false;
+                for (const item of cart) {
+                    if (item.qty > item.stock) {
+                        showToast(`Stock Low - ${item.name}: Only ${item.stock} available. Please adjust quantity.`, 'error');
+                        window.lastStockErrorTime = Date.now();
+                        hasStockIssue = true;
+                        break;
+                    }
                 }
-            }
 
-            // If stock issue found, stop immediately - do NOT open modal
-            if (hasStockIssue) {
-                return;
-            }
+                // If stock issue found, stop immediately - do NOT open modal
+                if (hasStockIssue) {
+                    return;
+                }
 
-            // SECOND: Check if a stock error just occurred (within last 1.5 seconds)
-            const timeSinceLastError = Date.now() - (window.lastStockErrorTime || 0);
-            if (timeSinceLastError < 1500) {
-                showToast('Please adjust quantity before proceeding to payment', 'warning');
-                return;
-            }
+                // SECOND: Check if a stock error just occurred (within last 1.5 seconds)
+                const timeSinceLastError = Date.now() - (window.lastStockErrorTime || 0);
+                if (timeSinceLastError < 1500) {
+                    showToast('Please adjust quantity before proceeding to payment', 'warning');
+                    return;
+                }
 
-            // All validations passed - safe to open modal
-            prepareAndOpenPaymentModal();
+                // All validations passed - safe to open modal
+                prepareAndOpenPaymentModal();
+            }
         }
-    }
 
-    // Escape key to close any active modal
-    if (e.key === 'Escape') {
-        const activeModal = document.querySelector('.pos-modal.active');
-        if (activeModal) {
-            closeModal(activeModal.id);
+        // Escape key to close any active modal
+        if (code === 'Escape') {
+            const activeModal = document.querySelector('.pos-modal.active');
+            if (activeModal) {
+                console.log("POS: Closing modal via Escape:", activeModal.id);
+                closeModal(activeModal.id);
+            }
         }
+    } catch (err) {
+        console.error("POS: Error in core keydown handler:", err);
     }
 });
 
@@ -128,15 +150,27 @@ function openModal(id) {
 
     if (id === 'paymentModal') {
         updatePaymentSummary();
-    }
-    if (id === 'customerSelectModal') {
+        // Focus paid amount field
+        setTimeout(() => {
+            const paidInput = document.getElementById('paid_amount');
+            if (paidInput) { paidInput.focus(); paidInput.select(); }
+        }, 300);
+    } else if (id === 'customerSelectModal') {
         const searchInput = document.getElementById('customer-search-input');
         if (searchInput) {
             searchInput.value = '';
-            // Trigger input event to reset the list filtered state
             searchInput.dispatchEvent(new Event('input'));
             setTimeout(() => searchInput.focus(), 100);
         }
+    } else {
+        // Generic focus for other modals (Walking Customer, Add Customer, etc.)
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstInput) {
+                firstInput.focus();
+                if (typeof firstInput.select === 'function') firstInput.select();
+            }
+        }, 300);
     }
 }
 
@@ -1591,14 +1625,100 @@ function selectCustomer(id, name, phone, balance = 0, giftcardBalance = 0, openi
 // Open Walking Customer Edit Modal
 function openWalkingCustomerModal() {
     const currentPhone = document.getElementById('selected-customer-phone').textContent;
-    document.getElementById('walking-mobile-input').value = currentPhone;
-    document.getElementById('walking-display-phone').textContent = currentPhone;
+    const input = document.getElementById('walking-mobile-input');
+
+    // Open modal FIRST so library can calculate dimensions
     openModal('walkingCustomerModal');
+
+    // Validation UI Elements
+    const errorMsg = document.querySelector("#walking-error-msg");
+    const validMsg = document.querySelector("#walking-valid-msg");
+
+    const reset = () => {
+        input.style.borderColor = "#e2e8f0";
+        if (errorMsg) { errorMsg.innerHTML = ""; errorMsg.style.display = "none"; }
+        if (validMsg) validMsg.style.display = "none";
+    };
+
+    // Initialize intlTelInput if not already done
+    if (!walkingIti && typeof window.intlTelInput !== 'undefined') {
+        setTimeout(() => {
+            walkingIti = window.intlTelInput(input, {
+                initialCountry: "bd",
+                separateDialCode: true,
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+            });
+
+            input.addEventListener('blur', () => {
+                if (input.value.trim()) {
+                    if (walkingIti.isValidNumber()) {
+                        if (validMsg) { validMsg.style.display = "block"; }
+                        input.style.borderColor = "#10b981";
+                    } else {
+                        input.style.borderColor = "#ef4444";
+                        const errorCode = walkingIti.getValidationError();
+                        const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
+                        if (errorMsg) {
+                            errorMsg.innerHTML = errorMap[errorCode] || "Invalid number";
+                            errorMsg.style.display = "block";
+                        }
+                    }
+                }
+            });
+
+            // Set number after init
+            if (walkingIti) walkingIti.setNumber(currentPhone);
+        }, 100);
+    } else if (walkingIti) {
+        walkingIti.setNumber(currentPhone);
+    } else {
+        input.value = currentPhone;
+    }
+
+    // Always ensure reset is attached and triggered on input
+    input.removeEventListener('input', reset); // Prevent double attachments
+    input.addEventListener('input', reset);
+    reset(); // Initial reset
+
+    document.getElementById('walking-display-phone').textContent = currentPhone;
 }
 
 // Save Walking Customer
 function saveWalkingCustomer() {
-    const mobile = document.getElementById('walking-mobile-input').value.trim();
+    let mobile = "";
+    const input = document.getElementById('walking-mobile-input');
+    const errorMsg = document.querySelector("#walking-error-msg");
+    const validMsg = document.querySelector("#walking-valid-msg");
+
+    if (walkingIti) {
+        if (walkingIti.isValidNumber()) {
+            mobile = walkingIti.getNumber();
+        } else if (input.value.trim() === "") {
+            input.style.borderColor = "#ef4444";
+            errorMsg.innerHTML = "Phone number is required";
+            errorMsg.style.display = "block";
+            validMsg.style.display = "none";
+            return;
+        } else {
+            input.style.borderColor = "#ef4444";
+            const errorCode = walkingIti.getValidationError();
+            const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
+            errorMsg.innerHTML = errorMap[errorCode] || "Invalid number";
+            errorMsg.style.display = "block";
+            validMsg.style.display = "none";
+            return;
+        }
+    } else {
+        mobile = input.value.trim();
+        if (!mobile) {
+            input.style.borderColor = "#ef4444";
+            if (errorMsg) {
+                errorMsg.innerHTML = "Required";
+                errorMsg.style.display = "block";
+            }
+            return;
+        }
+    }
     if (mobile) {
         document.getElementById('selected-customer-name').textContent = 'Walking Customer';
         document.getElementById('selected-customer-phone').textContent = mobile;
@@ -2555,6 +2675,8 @@ function updateLightboxCaption() {
     if (titleEl) titleEl.textContent = currentProductName || 'Product Image';
     if (counterEl) counterEl.textContent = `${currentGalleryIndex + 1} of ${currentGalleryImages.length}`;
 }
+
+
 
 // Lightbox Logic
 window.openLightbox = function () {

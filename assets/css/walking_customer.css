@@ -1,0 +1,172 @@
+/* Walking Customer Modal Styles */
+.iti {
+    width: 100%;
+    display: block;
+}
+
+.iti__flag {
+    background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags.png");
+}
+
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    .iti__flag {
+        background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags@2x.png");
+    }
+}
+
+.iti__selected-flag {
+    background: #f8fafc;
+    border-radius: 12px 0 0 12px;
+    border-right: 1px solid #e2e8f0;
+    padding: 0 15px;
+    height: 100%;
+}
+
+.iti--separate-dial-code .iti__selected-flag {
+    background: #f1f5f9;
+}
+
+#walking-mobile-input {
+    padding-left: 110px !important;
+    border: 2px solid #e2e8f0 !important;
+    height: 50px !important;
+    border-radius: 12px !important;
+    font-size: 16px !important;
+    font-weight: 600;
+    color: #1e293b;
+    transition: all 0.3s;
+}
+
+#walking-mobile-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+    outline: none;
+}
+
+.iti__country-list {
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    z-index: 9999;
+}
+
+/* Modal UI Refinements */
+#walkingCustomerModal .pos-modal-content {
+    max-width: 450px !important;
+}
+
+#walkingCustomerModal .pos-modal-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 18px 24px !important;
+    border-bottom: none;
+}
+
+#walkingCustomerModal .pos-modal-header h3 {
+    color: white !important;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+#walkingCustomerModal .pos-modal-header h3 span {
+    font-weight: 400;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+#walkingCustomerModal .close-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: white !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#walkingCustomerModal .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+#walkingCustomerModal label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+#walking-valid-msg {
+    display: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: #10b981;
+}
+
+#walking-error-msg {
+    display: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #fee2e2;
+}
+
+.walking-modal-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.walking-btn-cancel {
+    flex: 1;
+    padding: 14px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.walking-btn-cancel:hover {
+    background: #e2e8f0;
+}
+
+.walking-btn-save {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.walking-btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+}
