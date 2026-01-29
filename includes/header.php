@@ -30,8 +30,7 @@ $global_name = $header_curr['currency_name'] ?: 'Taka';
     <link rel="icon" type="image/x-icon" href="/pos/assets/images/logo.png" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/pos/assets/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 

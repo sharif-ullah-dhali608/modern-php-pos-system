@@ -73,7 +73,7 @@ $payments_query = "SELECT sl.*, pm.name as pmethod_name, pm.id as method_id
 $payments_result = mysqli_query($conn, $payments_query);
 ?>
 <!-- Styles from invoice_view.php -->
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/pos/assets/css/output.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
