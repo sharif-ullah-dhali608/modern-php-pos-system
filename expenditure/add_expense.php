@@ -7,239 +7,259 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-$mode = "create";
+// Initialize Variables
+$mode = "add";
+$expense_id = "";
+$store_id = "";
+$reference_no = 'EXP-' . time() . rand(100,999);
+$category_id = "";
+$title = "";
+$amount = ""; 
+$returnable = "0"; 
+$note = "";
+$attachment = "";
+$selected_stores = []; // For store component
+
+$page_title = "Add Expense";
 $btn_text = "Save Expense";
-$page_title = "New Expense";
+$btn_name = "save_expense_btn";
 
-$d = [
-    'id' => '',
-    'store_id' => '',
-    'reference_no' => 'EXP-' . time(),
-    'category_id' => '',
-    'title' => '',
-    'amount' => '',
-    'returnable' => '0',
-    'note' => '',
-    'attachment' => '',
-    'status' => '1'
-];
-
+// Check for Edit Mode
 if(isset($_GET['id'])) {
     $mode = "edit";
-    $btn_text = "Update Expense";
+    $expense_id = mysqli_real_escape_string($conn, $_GET['id']);
     $page_title = "Edit Expense";
-    $id = mysqli_real_escape_string($conn, $_GET['id']);
+    $btn_text = "Update Expense";
+    $btn_name = "update_expense_btn";
     
-    $res = mysqli_query($conn, "SELECT * FROM expenses WHERE id='$id' LIMIT 1");
-    if($row = mysqli_fetch_assoc($res)){
-        $d = array_merge($d, $row);
+    // Fetch Expense Details
+    $query = "SELECT * FROM expenses WHERE id='$expense_id' LIMIT 1";
+    $query_run = mysqli_query($conn, $query);
+    
+    if(mysqli_num_rows($query_run) > 0) {
+        $row = mysqli_fetch_assoc($query_run);
+        $store_id = $row['store_id']; // Primary store
+        $selected_stores[] = $row['store_id']; // For component
+        $reference_no = $row['reference_no'];
+        $category_id = $row['category_id'];
+        $title = $row['title'];
+        $amount = $row['amount'];
+        $returnable = $row['returnable'];
+        $note = $row['note']; // Using 'note' based on DB fix
+        $attachment = $row['attachment'];
+    } else {
+        $_SESSION['status_code'] = "error";
+        header("Location: /pos/expenditure/expense_list");
+        exit(0);
     }
 }
 
-// Fetch Categories & Stores (Joined with Currency)
+// Fetch Categories for Dropdown
 $categories = mysqli_query($conn, "SELECT category_id, category_name FROM expense_category WHERE status='1' ORDER BY category_name ASC");
 
-// Fetch active stores with Currency Symbol
-$stores_query = "SELECT s.id, s.store_name, c.symbol_left, c.symbol_right 
-                 FROM stores s 
-                 LEFT JOIN currencies c ON s.currency_id = c.id 
-                 WHERE s.status=1 ORDER BY s.store_name ASC";
-$stores_result = mysqli_query($conn, $stores_query);
+// Fetch All Stores for Component (Required by store_select_component.php)
 $all_stores = [];
-$store_currencies = []; // Map store_id => symbol
-
-while($store = mysqli_fetch_assoc($stores_result)) { 
-    $all_stores[] = $store; 
-    // Determine symbol
-    $sym = $store['symbol_left'] ?: $store['symbol_right'];
-    $store_currencies[$store['id']] = $sym ?: '৳'; // Default fallback
-}
-
-// For Edit Mode: Pre-select store
-$selected_stores = [];
-if($mode == 'edit' && !empty($d['store_id'])) {
-    $selected_stores[] = $d['store_id']; 
+$stores_q = "SELECT id, store_name FROM stores WHERE status=1";
+$stores_run = mysqli_query($conn, $stores_q);
+if($stores_run) {
+    while($s = mysqli_fetch_assoc($stores_run)) {
+        $all_stores[] = $s;
+    }
 }
 
 include('../includes/header.php');
 ?>
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="/pos/assets/css/expenditureCss/add_expenseCss.css">
-
-<style>
-/* Additional Styles for File Preview */
-.file-preview-card {
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-.file-preview-card:hover .remove-file-btn {
-    opacity: 1;
-}
-.remove-file-btn {
-    opacity: 0;
-    transition: opacity 0.2s;
-    background: rgba(239, 68, 68, 0.9);
-    color: white;
-}
-</style>
-
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
     
-    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
-        <div class="navbar-fixed-top"><?php include('../includes/navbar.php'); ?></div> 
+    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300 bg-slate-50">
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
+        </div>
         
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
-            <div class="p-6">
-                <div class="mb-8 slide-in">
-                    <div class="flex items-center gap-4 mb-4">
-                        <a href="/pos/expenditure/expense_list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+            <div class="p-4 md:p-6 max-w-[1600px] mx-auto">
+                <!-- Header -->
+                <div class="mb-6 slide-in flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <a href="/pos/expenditure/expense_list" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-200 shadow-sm transition-all">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                         <div>
-                            <h1 class="text-3xl font-bold text-slate-800 mb-2"><?= $page_title; ?></h1>
-                            <div class="flex items-center gap-2 text-sm text-slate-500">
-                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                                <span>Track and manage your business expenditures</span>
-                            </div>
+                            <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><?= $page_title; ?></h1>
+                            <p class="text-slate-500 text-sm mt-1">Manage your business expenditures</p>
                         </div>
                     </div>
                 </div>
 
-                <form action="/pos/expenditure/save_expense" method="POST" enctype="multipart/form-data" id="expenseForm" novalidate autocomplete="off">
+                <form action="/pos/expenditure/save_expense" method="POST" enctype="multipart/form-data" class="slide-in delay-100" id="expenseForm" novalidate>
                     <?php if($mode == 'edit'): ?>
-                        <input type="hidden" name="expense_id" value="<?= $d['id'] ?>">
-                        <input type="hidden" name="old_attachment" value="<?= $d['attachment'] ?>">
+                        <input type="hidden" name="expense_id" value="<?= $expense_id ?>">
+                        <input type="hidden" name="old_attachment" value="<?= $attachment ?>">
                         <input type="hidden" name="update_expense_btn" value="true">
                     <?php else: ?>
                         <input type="hidden" name="save_expense_btn" value="true">
                     <?php endif; ?>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <div class="lg:col-span-8 space-y-6">
-                            <div class="glass-card rounded-2xl p-8 shadow-xl border border-slate-200 slide-in delay-1 bg-white">
-                                <h2 class="text-lg font-bold text-slate-800 mb-8 flex items-center gap-3">
-                                    <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 text-white flex items-center justify-center text-lg shadow-lg shadow-rose-200"><i class="fas fa-file-invoice-dollar"></i></span>
-                                    Expense Details
-                                </h2>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="md:col-span-2 relative w-full group">
-                                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Expense Title *</label>
-                                        <input type="text" name="title" id="title" value="<?= htmlspecialchars($d['title']); ?>" 
-                                            class="peer block py-4 px-5 w-full text-sm text-slate-800 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-semibold" placeholder="What was this expense for?">
-                                        <div class="error-msg-text" id="error-title"><i class="fas fa-exclamation-circle"></i> Title is required</div>
-                                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                        
+                        <!-- Column 1: Expense Data -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden h-full min-h-[500px]">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                <i class="fas fa-file-invoice-dollar text-teal-600"></i> Expense Data
+                            </h3>
+                            
+                            <div class="space-y-5">
+                                <!-- Title -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        Expense Title <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="title" id="title" value="<?= htmlspecialchars($title); ?>" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all placeholder-slate-400" placeholder="e.g. Office Rent">
+                                    <span class="error-msg text-xs text-red-500 mt-1 hidden">Title is required.</span>
+                                </div>
 
-                                    <div class="relative w-full group">
-                                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Category *</label>
-                                        <select name="category_id" id="category_id" class="select2">
-                                            <option value="">-- Select Category --</option>
-                                            <?php while($cat = mysqli_fetch_assoc($categories)): ?>
-                                                <option value="<?= $cat['category_id'] ?>" <?= $d['category_id']==$cat['category_id']?'selected':'' ?>><?= $cat['category_name'] ?></option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                        <div class="error-msg-text" id="error-category_id"><i class="fas fa-exclamation-circle"></i> Category is required</div>
-                                    </div>
-
-                                    <div class="relative w-full group">
-                                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Amount *</label>
-                                        <div class="relative">
-                                            <span id="currency-display" class="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-slate-400">/=</span>
-                                            <input type="number" name="amount" id="amount" value="<?= htmlspecialchars($d['amount']); ?>" step="0.01"
-                                                class="peer block py-4 pl-12 pr-5 w-full text-sm text-slate-800 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-bold" placeholder="0.00">
+                                <!-- Category (Custom Dropdown) -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        Category <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative group w-full bg-white border border-teal-500 rounded-lg transition-all" id="category_selector_container">
+                                        <div class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 outline-none cursor-pointer" onclick="toggleCategoryDropdown()">
+                                            <input type="text" id="category_search_input" 
+                                                   class="w-full bg-transparent border-none outline-none font-bold text-slate-600 placeholder-slate-400 cursor-pointer"
+                                                   placeholder="-- Select Category --"
+                                                   readonly
+                                                   value="<?= $category_id ? '' : '' ?>">
+                                            <div class="pl-2 text-slate-400"><i class="fas fa-chevron-down text-xs"></i></div>
                                         </div>
-                                        <div class="error-msg-text" id="error-amount"><i class="fas fa-exclamation-circle"></i> Valid amount is required</div>
+                                        <input type="hidden" name="category_id" id="category_id" value="<?= $category_id ?>">
+                                        
+                                        <!-- Dropdown List -->
+                                        <div id="category_dropdown" class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg hidden shadow-xl z-[50] overflow-hidden p-2">
+                                            <div class="mb-2">
+                                                <input type="text" id="cat_filter" class="w-full bg-white border-2 border-blue-600 rounded-md px-3 py-2 text-slate-700 text-sm font-bold focus:outline-none placeholder-slate-500" placeholder="Search..." onkeyup="filterCategories()">
+                                            </div>
+                                            <div id="category_list" class="max-h-48 overflow-y-auto custom-scroll space-y-1">
+                                                <!-- Options populated here -->
+                                                <?php 
+                                                // Reset pointer for reuse
+                                                mysqli_data_seek($categories, 0);
+                                                $cat_name_selected = "";
+                                                while($cat = mysqli_fetch_assoc($categories)): 
+                                                    if($cat['category_id'] == $category_id) $cat_name_selected = $cat['category_name'];
+                                                ?>
+                                                    <div class="cat-option px-3 py-2 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors rounded-md text-sm font-bold flex items-center justify-between text-teal-300" 
+                                                         onclick="selectCategory('<?= $cat['category_id'] ?>', '<?= htmlspecialchars($cat['category_name']) ?>')">
+                                                        <span><?= htmlspecialchars($cat['category_name']) ?></span>
+                                                        <?php if($cat['category_id'] == $category_id): ?>
+                                                            <i class="fas fa-check text-xs"></i>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endwhile; ?>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <span class="error-msg text-xs text-red-500 mt-1 hidden" id="cat_error">Category is required.</span>
+                                </div>
 
-                                    <div class="md:col-span-2 relative w-full group">
-                                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Note / Description</label>
-                                        <textarea name="note" rows="3" 
-                                            class="peer block py-4 px-5 w-full text-sm text-slate-800 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all resize-none" 
-                                            placeholder="Additional details..."><?= htmlspecialchars($d['note']); ?></textarea>
+                                <!-- Amount -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        Amount <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" name="amount" id="amount" value="<?= htmlspecialchars($amount); ?>" step="0.01" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="0.00">
+                                    <span class="error-msg text-xs text-red-500 mt-1 hidden">Valid Amount is required.</span>
+                                </div>
+
+                                <!-- Reference No (Barcod Style) -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Reference No <span class="text-red-500">*</span></label>
+                                    <div class="flex">
+                                        <div class="relative w-full">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-barcode text-slate-400"></i>
+                                            </div>
+                                            <input type="text" name="reference_no" id="reference_no" value="<?= htmlspecialchars($reference_no); ?>" class="w-full pl-10 bg-slate-50 border border-slate-300 rounded-l-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none font-mono uppercase" placeholder="Generate or Enter Reference" <?= $mode == 'edit' ? 'readonly' : '' ?>>
+                                        </div>
+                                        <?php if($mode != 'edit'): ?>
+                                        <button type="button" onclick="generateReference()" class="bg-teal-800 hover:bg-teal-600 text-white px-4 py-3 rounded-r-lg font-medium transition-colors" title="Generate New">
+                                            <i class="fas fa-random"></i>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
+                                    <p class="text-[10px] text-slate-400 mt-1 pl-1">Click icon to auto-generate</p>
+                                </div>
+
+                                <!-- Note -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Note / Description</label>
+                                    <textarea name="note" id="note" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"><?= htmlspecialchars($note); ?></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="lg:col-span-4 space-y-6">
-                            <div class="glass-card rounded-2xl p-6 shadow-xl border border-slate-200 slide-in delay-2 bg-white">
-                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Organizational Info</h3>
-                                
-                                <div class="space-y-6">
-                                    <div class="relative w-full group">
-                                        <!-- Reusable Store Selection Component -->
-                                        <?php 
-                                            $store_label = "Expense Available In"; 
-                                            $search_placeholder = "Search branches...";
-                                            include('../includes/store_select_component.php'); 
-                                        ?>
-                                        <div class="error-msg-text" id="error-store_id"><i class="fas fa-exclamation-circle"></i> Please select at least one store</div>
-                                    </div>
+                        <!-- Column 2: Store Mapping (Height matched) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden h-full min-h-[500px] flex flex-col">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2 shrink-0">
+                                <i class="fas fa-store text-teal-600"></i> Store Mapping <span class="text-red-500">*</span>
+                            </h3>
+                            
+                            <div class="flex-1 flex flex-col">
+                                <?php
+                                $store_label = "Available In Stores";
+                                $search_placeholder = "Filter stores...";
+                                $store_list_class = "flex-1 overflow-y-auto min-h-[300px]"; 
+                                include('../includes/store_select_component.php');
+                                ?>
+                                <span class="error-msg text-xs text-red-500 mt-1 hidden" id="store_error">Please select at least one store.</span>
+                            </div>
+                        </div>
 
-                                    <div class="relative w-full group">
-                                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">Reference No</label>
-                                        <div class="relative flex items-center">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                                <i class="fas fa-barcode"></i>
-                                            </div>
-                                            <input type="text" name="reference_no" id="reference_no" value="<?= htmlspecialchars($d['reference_no']); ?>" 
-                                                class="peer block w-full pl-10 pr-12 py-3 text-sm text-slate-600 bg-slate-50 rounded-l-xl border border-slate-200 border-r-0 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all font-mono tracking-wider placeholder-slate-400" 
-                                                <?= $mode == 'edit' ? 'readonly style="background-color: #f1f5f9; cursor: not-allowed;"' : 'placeholder="SCAN OR ENTER CODE"' ?>>
-                                            
-                                            <?php if($mode != 'edit'): ?>
-                                                <button type="button" onclick="generateReference()" class="h-[46px] w-12 bg-teal-700 hover:bg-teal-800 text-white rounded-r-xl flex items-center justify-center transition-colors shadow-sm" title="Generate New Reference">
-                                                    <i class="fas fa-random"></i>
-                                                </button>
-                                            <?php else: ?>
-                                                <div class="h-[46px] w-12 bg-slate-200 text-slate-400 rounded-r-xl flex items-center justify-center border border-slate-200 border-l-0">
-                                                    <i class="fas fa-lock"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if($mode != 'edit'): ?>
-                                            <p class="text-[10px] text-slate-400 mt-1 cursor-pointer hover:text-teal-600 transition-colors" onclick="generateReference()">Click icon to auto-generate</p>
-                                        <?php endif; ?>
+                        <!-- Column 3: Status & Configurations -->
+                        <div class="space-y-6">
+                            <!-- Returnable Status (Redesigned) -->
+                            <div id="returnable-card" class="rounded-xl shadow-sm border p-6 relative overflow-hidden transition-all duration-300 <?= $returnable=='1' ? 'bg-teal-900 border-teal-800' : 'bg-white border-slate-200' ?>">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-bold mb-1 content-label <?= $returnable=='1' ? 'text-white' : 'text-slate-800' ?>">Returnable?</h3>
+                                        <p class="text-[11px] font-bold uppercase tracking-widest status-text <?= $returnable=='1' ? 'text-teal-300' : 'text-slate-400' ?>">
+                                            <?= $returnable=='1' ? 'Result: REFUNDABLE AMOUNT' : 'Result: NON-REFUNDABLE' ?>
+                                        </p>
                                     </div>
-
-                                    <!-- Returnable Toggle Design -->
-                                    <div class="relative w-full group">
-                                        <div class="glass-card rounded-xl p-4 border border-slate-200 bg-slate-50 flex items-center justify-between transition-colors duration-300" id="returnable-card">
-                                            <div>
-                                                <label class="block text-sm font-bold text-slate-800 mb-1">Returnable?</label>
-                                                <p class="text-[10px] uppercase tracking-wider font-semibold text-slate-500" id="returnable-status-text">Is this amount refundable later?</p>
-                                            </div>
-                                            
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="returnable" id="returnable-toggle" value="1" class="sr-only peer" <?= $d['returnable'] == '1' ? 'checked' : ''; ?> onchange="toggleReturnableStyle()">
-                                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-800"></div>
-                                            </label>
-                                        </div>
-                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="returnable" id="returnable-toggle" value="1" class="sr-only peer" <?= $returnable == '1' ? 'checked' : ''; ?> onchange="toggleReturnableStyle()">
+                                        <div class="w-12 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-500"></div>
+                                    </label>
                                 </div>
                             </div>
 
-                            <div class="glass-card rounded-2xl p-6 shadow-xl border border-slate-200 slide-in delay-3 bg-white">
-                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Attachments</h3>
-                                <div class="upload-box relative rounded-xl p-8 text-center cursor-pointer group border-2 border-dashed border-slate-200 hover:border-teal-400 transition-colors" id="drop-zone">
+                            <!-- Attachments (Moved Here) -->
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden h-fit">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                    <i class="fas fa-paperclip text-blue-600"></i> Attachments
+                                </h3>
+                                
+                                <div class="upload-box relative rounded-xl p-6 text-center cursor-pointer group border-2 border-dashed border-slate-200 hover:border-teal-400 transition-colors bg-slate-50/50" id="drop-zone">
                                     <input type="file" name="attachment[]" id="docs_upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple onchange="handleFileSelect(this)">
-                                    <div id="upload-placeholder-icon" class="text-slate-300 group-hover:scale-110 transition-transform mb-2">
-                                        <i class="fas fa-cloud-upload-alt text-4xl group-hover:text-teal-500"></i>
+                                    <div class="mb-2">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-slate-300 group-hover:text-teal-500 transition-colors"></i>
                                     </div>
-                                    <p class="text-xs font-bold text-slate-500 group-hover:text-teal-600">Click to upload Receipt (PDF/Image)</p>
-                                    <p class="mt-1 text-[9px] text-slate-400">Supports multiple files</p>
+                                    <p class="text-xs font-bold text-slate-500 group-hover:text-teal-600">Upload Receipt</p>
                                 </div>
                                 
                                 <!-- Preview Container -->
                                 <div id="preview_container" class="mt-4 space-y-2">
-                                    <?php if(!empty($d['attachment'])): 
-                                        $existing_files = explode(',', $d['attachment']); // Assuming comma separated
+                                    <?php if(!empty($attachment)): 
+                                        $existing_files = explode(',', $attachment);
                                         foreach($existing_files as $att): 
                                             if(empty($att)) continue;
                                     ?>
-                                        <div class="file-preview-card p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-3">
+                                        <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-3">
                                             <div class="w-8 h-8 rounded bg-slate-200 flex items-center justify-center text-slate-500 shrink-0">
                                                 <i class="fas fa-file"></i>
                                             </div>
@@ -252,242 +272,234 @@ include('../includes/header.php');
                                 </div>
                             </div>
 
-                            <div class="slide-in delay-3 pt-2">
-                                <button type="submit" 
-                                    class="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-700 hover:to-teal-900 text-white font-bold text-lg shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-3 transform hover:-translate-y-0.5 group">
-                                    <i class="fas fa-paper-plane group-hover:rotate-12 transition-transform"></i>
-                                    <span><?= $btn_text; ?></span>
+                            <!-- Actions -->
+                            <div class="pt-4">
+                                <button type="submit" name="<?= $btn_name; ?>" class="w-full py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30 flex items-center justify-center text-lg mb-3">
+                                    <i class="fas fa-save mr-2"></i> <?= $btn_text; ?>
                                 </button>
+                                <a href="/pos/expenditure/expense_list" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center">
+                                    <i class="fas fa-times mr-2"></i> Cancel
+                                </a>
                             </div>
                         </div>
+
                     </div>
                 </form>
             </div>
+            
+            <?php include('../includes/footer.php'); ?>
         </div>
     </main>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="/pos/assets/js/expenditureJs/add_expenseJs.js"></script>
-
 <script>
-// Currency Data from PHP
-const STORE_CURRENCIES = <?= json_encode($store_currencies); ?>;
+// PHP provided selected value if editing
+const initialCatName = "<?= htmlspecialchars($cat_name_selected) ?>";
+if(initialCatName) {
+    document.getElementById('category_search_input').value = initialCatName;
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Currency Logic
-    const storeCheckboxes = document.querySelectorAll('.store-checkbox');
-    const currencyDisplay = document.getElementById('currency-display');
-    const selectAllBtn = document.getElementById('selectAllStores');
-
-    function updateCurrency() {
-        const checkedStores = Array.from(storeCheckboxes).filter(cb => cb.checked);
-        
-        if (checkedStores.length === 0) {
-            currencyDisplay.innerText = '/='; // Default when nothing selected
-        } else if (checkedStores.length === 1) {
-            const sid = checkedStores[0].value;
-            currencyDisplay.innerText = STORE_CURRENCIES[sid] || '৳';
-        } else {
-            // Multiple stores selected
-            currencyDisplay.innerText = '/='; 
-        }
+// Category Dropdown Logic
+function toggleCategoryDropdown() {
+    const dropdown = document.getElementById('category_dropdown');
+    dropdown.classList.toggle('hidden');
+    if(!dropdown.classList.contains('hidden')) {
+        document.getElementById('cat_filter').focus();
     }
+}
 
-    storeCheckboxes.forEach(cb => cb.addEventListener('change', updateCurrency));
-    if(selectAllBtn) selectAllBtn.addEventListener('change', updateCurrency);
-    
-    // Initial check
-    updateCurrency();
+function selectCategory(id, name) {
+    document.getElementById('category_id').value = id;
+    document.getElementById('category_search_input').value = name;
+    document.getElementById('category_dropdown').classList.add('hidden');
+    // Validation cleanup
+    const container = document.getElementById('category_selector_container');
+    const error = document.getElementById('cat_error');
+    container.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+    error.classList.add('hidden');
+}
+
+function filterCategories() {
+    const input = document.getElementById('cat_filter').value.toLowerCase();
+    const options = document.querySelectorAll('.cat-option');
+    options.forEach(opt => {
+        const text = opt.innerText.toLowerCase();
+        opt.style.display = text.includes(input) ? 'flex' : 'none';
+    });
+}
+
+// Close Dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const container = document.getElementById('category_selector_container');
+    const dropdown = document.getElementById('category_dropdown');
+    if (!container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
 });
 
-// 2. File Upload Logic (DataTransfer for Delete)
+// Returnable Style Logic
+function toggleReturnableStyle() {
+    const toggle = document.getElementById('returnable-toggle');
+    const card = document.getElementById('returnable-card');
+    const label = card.querySelector('.content-label');
+    const statusText = card.querySelector('.status-text');
+    
+    if(toggle.checked) {
+        // Active State (Dark Green)
+        card.classList.remove('bg-white', 'border-slate-200');
+        card.classList.add('bg-teal-900', 'border-teal-800');
+        
+        label.classList.remove('text-slate-800');
+        label.classList.add('text-white');
+        
+        statusText.classList.remove('text-slate-400');
+        statusText.classList.add('text-teal-300');
+        statusText.innerText = 'Result: REFUNDABLE AMOUNT';
+    } else {
+        // Inactive State (White)
+        card.classList.remove('bg-teal-900', 'border-teal-800');
+        card.classList.add('bg-white', 'border-slate-200');
+        
+        label.classList.remove('text-white');
+        label.classList.add('text-slate-800');
+        
+        statusText.classList.remove('text-teal-300');
+        statusText.classList.add('text-slate-400');
+        statusText.innerText = 'Result: NON-REFUNDABLE';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate Reference Script
+    window.generateReference = function() {
+        const timestamp = Math.floor(Date.now() / 1000); 
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        document.getElementById('reference_no').value = 'EXP-' + timestamp + random;
+    };
+
+    // Form Validation (Matches bank_add.php style)
+    const form = document.getElementById('expenseForm');
+    const requiredIds = ['title', 'amount']; // Note: category is custom handled
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        let firstError = null;
+
+        // Reset errors
+        document.querySelectorAll('.error-msg').forEach(el => el.classList.add('hidden'));
+
+        // Check Text Inputs
+        requiredIds.forEach(id => {
+            const input = document.getElementById(id);
+            if(!input.value.trim()) {
+                const errorSpan = input.parentNode.querySelector('.error-msg');
+                if(errorSpan) {
+                    errorSpan.classList.remove('hidden');
+                    isValid = false;
+                    if(!firstError) firstError = input;
+                }
+            }
+        });
+
+        // Check Category (Custom)
+        const catId = document.getElementById('category_id').value;
+        if(!catId) {
+             document.getElementById('cat_error').classList.remove('hidden');
+             const catContainer = document.getElementById('category_selector_container');
+             catContainer.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+             isValid = false;
+             if(!firstError) firstError = catContainer;
+        }
+
+        // Check Stores Checkboxes
+        const checkboxes = document.querySelectorAll('input[name="stores[]"]');
+        const checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+        if(!checkedOne) {
+            document.getElementById('store_error').classList.remove('hidden');
+            isValid = false;
+            // Scroll to store section if it's the first error
+            const storeSection = document.getElementById('store_error').closest('.bg-white');
+             if(!firstError && storeSection) firstError = storeSection;
+        }
+
+        if(!isValid) {
+            e.preventDefault();
+            if(firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if(firstError.focus) firstError.focus();
+            }
+        }
+    });
+
+    // Clear error on input
+    requiredIds.forEach(id => {
+        const input = document.getElementById(id);
+        input.addEventListener('input', function() {
+            if(this.value.trim()) {
+                const errorSpan = this.parentNode.querySelector('.error-msg');
+                if(errorSpan) errorSpan.classList.add('hidden');
+            }
+        });
+    });
+    
+    // Clear store error on checkbox change
+    const checkboxes = document.querySelectorAll('input[name="stores[]"]');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+            if(checkedOne) {
+                document.getElementById('store_error').classList.add('hidden');
+            }
+        });
+    });
+});
+
+// File Upload Logic (Simplified matching bank_add doesn't explicitly have it but add request did)
 const dt = new DataTransfer();
 const fileInput = document.getElementById('docs_upload');
 const previewContainer = document.getElementById('preview_container');
 
 function handleFileSelect(input) {
     if (!input.files.length) return;
-
     for (let i = 0; i < input.files.length; i++) {
         const file = input.files[i];
-        // Add to DataTransfer
         dt.items.add(file);
-        
-        // Create Preview
-        createPreview(file, dt.items.length - 1);
+        createPreview(file);
     }
-    
-    // Update input files
     input.files = dt.files;
 }
 
-function createPreview(file, index) {
-    const isImage = file.type.startsWith('image/');
-    const reader = new FileReader();
-
+function createPreview(file) {
     const div = document.createElement('div');
-    div.className = 'file-preview-card p-2 rounded-lg bg-white border border-slate-200 flex items-center gap-3 shadow-sm mb-2';
-    div.dataset.name = file.name; // Use name as ID for removal matching if needed, or just reliable index is hard
-
-    // Icon/Image
-    const iconDiv = document.createElement('div');
-    iconDiv.className = 'w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden shrink-0 relative';
+    div.className = 'p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-3 mb-2';
     
-    if (isImage) {
-        const img = document.createElement('img');
-        img.className = 'w-full h-full object-cover';
-        reader.onload = (e) => { img.src = e.target.result; };
-        reader.readAsDataURL(file);
-        iconDiv.appendChild(img);
-    } else {
-        iconDiv.innerHTML = '<i class="fas fa-file-pdf text-red-500"></i>';
-    }
-
-    // Info
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'flex-1 min-w-0';
-    infoDiv.innerHTML = `
-        <p class="text-[11px] font-bold text-slate-700 truncate">${file.name}</p>
-        <p class="text-[9px] text-slate-400 uppercase">${(file.size/1024).toFixed(1)} KB</p>
+    div.innerHTML = `
+        <div class="w-8 h-8 rounded bg-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+            <i class="fas fa-file"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-[10px] font-bold text-slate-700 truncate">${file.name}</p>
+            <p class="text-[9px] text-slate-400">${(file.size/1024).toFixed(1)} KB</p>
+        </div>
+        <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeFile('${file.name}', this)">
+            <i class="fas fa-times"></i>
+        </button>
     `;
-
-    // Delete Button
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'remove-file-btn w-6 h-6 rounded-full flex items-center justify-center text-xs absolute right-2 top-1/2 -translate-y-1/2';
-    delBtn.innerHTML = '<i class="fas fa-times"></i>';
-    delBtn.onclick = function() {
-        removeFile(file.name, div);
-    };
-
-    div.appendChild(iconDiv);
-    div.appendChild(infoDiv);
-    div.appendChild(delBtn);
     previewContainer.appendChild(div);
 }
 
-function removeFile(fileName, element) {
-    // Create new DataTransfer
+function removeFile(fileName, btn) {
     const newDt = new DataTransfer();
-    
-    // Copy all files EXCEPT the one to remove
     for (let i = 0; i < dt.items.length; i++) {
         if (fileInput.files[i].name !== fileName) {
             newDt.items.add(fileInput.files[i]);
         }
     }
-    
-    // Update Global dt and input
     dt.items.clear();
     for (let i = 0; i < newDt.items.length; i++) {
         dt.items.add(newDt.items[i].getAsFile());
     }
     fileInput.files = dt.files;
-    
-    // Remove UI
-    element.remove();
+    btn.closest('div').remove();
 }
-
-// 3. Generate Reference
-function generateReference() {
-    const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    document.getElementById('reference_no').value = 'EXP-' + timestamp + random;
-}
-
-// 4. Returnable Toggle Style
-function toggleReturnableStyle() {
-    const toggle = document.getElementById('returnable-toggle');
-    const card = document.getElementById('returnable-card');
-    const text = document.getElementById('returnable-status-text');
-    const label = card.querySelector('label');
-
-    if(toggle.checked) {
-        // Active State (Dark Green) - Remove glass-card to force solid color
-        card.className = "rounded-xl p-4 border border-teal-900 bg-teal-900 flex items-center justify-between transition-colors duration-300 shadow-lg";
-        label.className = "block text-sm font-bold text-white mb-1";
-        text.className = "text-[10px] uppercase tracking-wider font-semibold text-teal-200";
-        text.innerText = "REFUNDABLE AMOUNT";
-    } else {
-        // Inactive State (Default)
-        card.className = "glass-card rounded-xl p-4 border border-slate-200 bg-slate-50 flex items-center justify-between transition-colors duration-300";
-        label.className = "block text-sm font-bold text-slate-800 mb-1";
-        text.className = "text-[10px] uppercase tracking-wider font-semibold text-slate-500";
-        text.innerText = "NON-REFUNDABLE";
-    }
-}
-
-// Initial Call
-toggleReturnableStyle();
-
-// Initialize Select2 with Custom Styling and Limit
-$(document).ready(function() {
-    $('.select2').select2({
-        width: '100%',
-        minimumResultsForSearch: 0 // Always show search
-    });
-});
 </script>
-
-<style>
-/* Select2 Customization for Teal Theme */
-.select2-container--default .select2-selection--single {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem; /* rounded-xl */
-    height: 54px;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s;
-}
-.select2-container--default .select2-selection--single:hover {
-    border-color: #0d9488; /* teal-600 */
-}
-.select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
-}
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 0.875rem;
-    padding-left: 1.25rem;
-}
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 52px;
-    right: 15px;
-}
-.select2-dropdown {
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    z-index: 9999;
-}
-.select2-search--dropdown .select2-search__field {
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    padding: 8px 12px;
-    outline: none;
-}
-.select2-search--dropdown .select2-search__field:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
-}
-.select2-results__options {
-    max-height: 200px; /* Approx 5 items (40px each) */
-    overflow-y: auto;
-}
-.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-    background-color: #f0fdfa; /* teal-50 */
-    color: #0f766e; /* teal-700 */
-    font-weight: 600;
-}
-.select2-container--default .select2-results__option--selected {
-    background-color: #ccfbf1; /* teal-100 */
-    color: #115e59;
-}
-</style>

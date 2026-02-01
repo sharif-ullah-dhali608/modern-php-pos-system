@@ -271,6 +271,17 @@ $menu_items = [
         'active' => (uri_has('/Accounting/', $current_uri))
     ],
     [
+        'title' => 'Loan',
+        'icon' => 'fa-hand-holding-usd',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Take Loan', 'link' => '/pos/loan/add'],
+            ['title' => 'Loan List', 'link' => '/pos/loan/list'],
+            ['title' => 'Loan Summary', 'link' => '/pos/loan/summary'],
+        ],
+        'active' => (uri_has('/loan/', $current_uri))
+    ],
+    [
         'title' => 'Expenditure',
         'icon' => 'fa-wallet',
         'link' => '#',
@@ -582,11 +593,45 @@ $menu_items = [
             if (overlay) overlay.classList.remove('active');
             document.body.style.overflow = ''; // Restore scroll
         }
+
+        /**
+         * INITIALIZE SUBMENU STATE FROM LOCALSTORAGE
+         */
+        initializeSubmenuState();
     });
 
     /**
-     * TOGGLE MOBILE SIDEBAR
+     * INITIALIZE SUBMENU STATE
      */
+    function initializeSubmenuState() {
+        const openSubmenu = localStorage.getItem('openSubmenu');
+        if (openSubmenu) {
+            // Find the menu item with matching title
+            const menuLinks = document.querySelectorAll('.menu-group > a');
+            menuLinks.forEach(link => {
+                const titleElement = link.querySelector('.link-text');
+                if (titleElement && titleElement.textContent.trim() === openSubmenu) {
+                    const submenu = link.nextElementSibling;
+                    const chevron = link.querySelector('.fa-chevron-right');
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.remove('hidden');
+                        if (chevron) chevron.classList.add('rotate-90');
+                        
+                        // Scroll to show the active submenu item
+                        setTimeout(() => {
+                            const activeSubmenuItem = submenu.querySelector('a.text-teal-400, a.font-bold');
+                            if (activeSubmenuItem) {
+                                activeSubmenuItem.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'center' 
+                                });
+                            }
+                        }, 100);
+                    }
+                }
+            });
+        }
+    }
     function toggleSidebarMobile() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
@@ -598,15 +643,37 @@ $menu_items = [
     }
 
     /**
-     * SUBMENU HANDLER
+     * SUBMENU HANDLER WITH LOCALSTORAGE PERSISTENCE
      */
     function toggleSubmenu(element) {
         const sidebar = document.getElementById('sidebar');
         if (sidebar.classList.contains('collapsed') && window.innerWidth >= 1024) return;
         
         const submenu = element.nextElementSibling;
-        if (submenu) submenu.classList.toggle('hidden');
         const chevron = element.querySelector('.fa-chevron-right');
+        const menuTitle = element.querySelector('.link-text').textContent.trim();
+        
+        if (submenu) {
+            const isHidden = submenu.classList.contains('hidden');
+            submenu.classList.toggle('hidden');
+            
+            // Save state to localStorage
+            if (isHidden) {
+                // Opening submenu - close all other submenus first
+                document.querySelectorAll('.submenu').forEach(sm => {
+                    if (sm !== submenu && !sm.classList.contains('hidden')) {
+                        sm.classList.add('hidden');
+                        const otherChevron = sm.previousElementSibling?.querySelector('.fa-chevron-right');
+                        if (otherChevron) otherChevron.classList.remove('rotate-90');
+                    }
+                });
+                localStorage.setItem('openSubmenu', menuTitle);
+            } else {
+                // Closing submenu
+                localStorage.removeItem('openSubmenu');
+            }
+        }
+        
         if (chevron) chevron.classList.toggle('rotate-90');
     }
 </script>

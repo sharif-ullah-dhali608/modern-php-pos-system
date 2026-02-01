@@ -126,15 +126,31 @@ $grand_total = 0;
 
 if ($is_custom_range) {
     /**
-     * CUSTOM RANGE VIEW: Rows = Specific Dates in Range
+     * CUSTOM RANGE VIEW OPTIMIZATION
      */
     $start = new DateTime($start_date);
     $end = new DateTime($end_date);
-    $end->modify('+1 day'); // Include end date
+    $end->modify('+1 day');
     $period = new DatePeriod($start, new DateInterval('P1D'), $end);
     
     $totals_line = array_fill_keys(array_column($sources, 'source_id'), 0);
+    $data_map = []; // [date][source_id] => total
+
+    // 1. Fetch Incomes (Optimized GROUP BY)
+    $q = "SELECT DATE(info.created_at) as log_date, info.source_id, SUM(price.amount) as total 
+          FROM bank_transaction_info info 
+          JOIN bank_transaction_price price ON info.info_id = price.info_id
+          WHERE info.transaction_type='deposit' 
+            AND info.created_at >= '$start_date 00:00:00' 
+            AND info.created_at <= '$end_date 23:59:59' 
+            $where_store 
+          GROUP BY DATE(info.created_at), info.source_id";
+    $r = mysqli_query($conn, $q);
+    while($row = mysqli_fetch_assoc($r)) {
+        $data_map[$row['log_date']][$row['source_id']] = (float)$row['total'];
+    }
     
+    // 2. Build Report
     foreach($period as $dt) {
         $curr_date = $dt->format('Y-m-d');
         $display_date = $dt->format('d M');
@@ -144,15 +160,7 @@ if ($is_custom_range) {
         
         foreach($sources as $src) {
             $sid = $src['source_id'];
-            $q = "SELECT SUM(price.amount) as total 
-                  FROM bank_transaction_info info 
-                  JOIN bank_transaction_price price ON info.info_id = price.info_id
-                  WHERE info.transaction_type='deposit' 
-                    AND info.source_id='$sid' 
-                    AND DATE(info.created_at)='$curr_date' 
-                    $where_store";
-            $r = mysqli_query($conn, $q);
-            $val = mysqli_fetch_assoc($r)['total'] ?? 0;
+            $val = $data_map[$curr_date][$sid] ?? 0;
             
             $row['cells'][$sid] = $val;
             $totals_line[$sid] += $val;
@@ -165,28 +173,32 @@ if ($is_custom_range) {
 
 } elseif (!$is_month_view) {
     /** 
-     * YEARLY VIEW: Rows = Sources, Cols = 12 Months
+     * YEARLY VIEW OPTIMIZATION
      */
     $totals_line = array_fill(1, 12, 0);
+    $data_map = []; // [month][source_id] => total
+    
+    // 1. Fetch Incomes
+    $q = "SELECT MONTH(info.created_at) as m, info.source_id, SUM(price.amount) as total 
+          FROM bank_transaction_info info 
+          JOIN bank_transaction_price price ON info.info_id = price.info_id
+          WHERE info.transaction_type='deposit' 
+            AND YEAR(info.created_at)='$year' 
+            $where_store 
+          GROUP BY MONTH(info.created_at), info.source_id";
+    $r = mysqli_query($conn, $q);
+    while($row = mysqli_fetch_assoc($r)) {
+        $data_map[$row['m']][$row['source_id']] = (float)$row['total'];
+    }
+
+    // 2. Build Report
     foreach($sources as $src) {
         $sid = $src['source_id'];
         $row = ['id' => $sid, 'name' => $src['source_name'], 'cells' => []];
         $src_year_total = 0;
         
         for($m = 1; $m <= 12; $m++) {
-            // Sum deposits for this source in this month
-            // Note: $src_query already filtered by YEAR. But here we query specifically by MONTH.
-            // We can reuse the YEAR constraint from global context or repeat it.
-            $q = "SELECT SUM(price.amount) as total 
-                  FROM bank_transaction_info info 
-                  JOIN bank_transaction_price price ON info.info_id = price.info_id
-                  WHERE info.transaction_type='deposit' 
-                    AND info.source_id='$sid' 
-                    AND YEAR(info.created_at)='$year' 
-                    AND MONTH(info.created_at)='$m' 
-                    $where_store";
-            $r = mysqli_query($conn, $q);
-            $val = mysqli_fetch_assoc($r)['total'] ?? 0;
+            $val = $data_map[$m][$sid] ?? 0;
             
             $row['cells'][$m] = $val;
             $totals_line[$m] += $val;
@@ -198,28 +210,33 @@ if ($is_custom_range) {
     }
 } else {
     /**
-     * MONTHLY VIEW: Rows = Days (1-31), Cols = Sources
+     * MONTHLY VIEW OPTIMIZATION
      */
     $days_in_month = cal_days_in_month(CAL_GREGORIAN, $month, $year);
     $totals_line = array_fill_keys(array_column($sources, 'source_id'), 0);
+    $data_map = []; // [day][source_id] => total
     
+    // 1. Fetch Incomes
+    $q = "SELECT DAY(info.created_at) as d, info.source_id, SUM(price.amount) as total 
+          FROM bank_transaction_info info 
+          JOIN bank_transaction_price price ON info.info_id = price.info_id
+          WHERE info.transaction_type='deposit' 
+            AND YEAR(info.created_at)='$year' AND MONTH(info.created_at)='$month' 
+            $where_store 
+          GROUP BY DAY(info.created_at), info.source_id";
+    $r = mysqli_query($conn, $q);
+    while($row = mysqli_fetch_assoc($r)) {
+        $data_map[$row['d']][$row['source_id']] = (float)$row['total'];
+    }
+
+    // 2. Build Report
     for($d = 1; $d <= $days_in_month; $d++) {
         $row = ['day' => $d, 'cells' => []];
         $day_total = 0;
         
         foreach($sources as $src) {
             $sid = $src['source_id'];
-            $q = "SELECT SUM(price.amount) as total 
-                  FROM bank_transaction_info info 
-                  JOIN bank_transaction_price price ON info.info_id = price.info_id
-                  WHERE info.transaction_type='deposit' 
-                    AND info.source_id='$sid' 
-                    AND YEAR(info.created_at)='$year' 
-                    AND MONTH(info.created_at)='$month' 
-                    AND DAY(info.created_at)='$d' 
-                    $where_store";
-            $r = mysqli_query($conn, $q);
-            $val = mysqli_fetch_assoc($r)['total'] ?? 0;
+            $val = $data_map[$d][$sid] ?? 0;
             
             $row['cells'][$sid] = $val;
             $totals_line[$sid] += $val;
@@ -269,7 +286,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
         .glass-card table thead tr th:last-child { background-color: #020617 !important; }
     </style>
     <div class="mb-8 header-controls no-print">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="flex flex-col justify-between gap-6">
             <div class="space-y-2">
                 <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                     <a href="javascript:void(0)" onclick="loadReport('/pos/accounting/income-monthwise/<?= $year ?>')" class="hover:text-teal-600 transition-colors">Income</a>
@@ -286,7 +303,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                 </p>
             </div>
             
-            <div class="controls-wrapper relative z-50">
+            <div class="controls-wrapper relative z-50 flex justify-center">
                 <div class="flex items-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/50 shadow-sm">
                     <div class="flex flex-nowrap items-center bg-slate-100 rounded-xl p-1 gap-2">
                         <button onclick="navigateReport('prev')" class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:text-teal-600 transition-all text-slate-500"><i class="fas fa-chevron-left"></i></button>
@@ -493,7 +510,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
 
     <!-- Footer Summary & Analytics -->
     <div class="flex flex-col lg:flex-row gap-8 mt-10 no-print">
-        <div class="flex-1 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden">
+        <div class="flex-1 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden flex flex-col">
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h3 class="text-xl font-black text-slate-900">Income Analytics</h3>
@@ -504,7 +521,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                     <span class="text-[10px] font-black text-teal-700 uppercase">Live Data</span>
                 </div>
             </div>
-            <div class="h-64 relative"><canvas id="expenditureChart"></canvas></div>
+            <div class="flex-1 relative min-h-[256px]"><canvas id="expenditureChart" class="w-full h-full"></canvas></div>
         </div>
 
         <div class="lg:w-96 space-y-6">
@@ -592,7 +609,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                 </div>
 
                 <div class="mb-8 header-controls no-print">
-                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div class="flex flex-col justify-between gap-6">
                         <div class="space-y-2">
                             <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                                 <a href="javascript:void(0)" onclick="loadReport('/pos/accounting/income-monthwise/<?= $year ?>')" class="hover:text-teal-600 transition-colors">Income</a>
@@ -609,7 +626,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                             </p>
                         </div>
                         
-                        <div class="controls-wrapper relative z-50">
+                        <div class="controls-wrapper relative z-50 flex justify-center">
                             <div class="flex items-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/50 shadow-sm">
                                 <!-- Main Report Navigation Controls -->
                                 <div class="flex flex-nowrap items-center bg-slate-100 rounded-xl p-1 gap-2">
@@ -817,13 +834,18 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
 
                 <!-- Footer Summary (Duplicate key parts) -->
                  <div class="flex flex-col lg:flex-row gap-8 mt-10 no-print">
-                    <div class="flex-1 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden">
+                    <div class="flex-1 bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden flex flex-col">
                         <div class="flex items-center justify-between mb-8">
                             <div>
                                 <h3 class="text-xl font-black text-slate-900">Income Analytics</h3>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Visual Trends Overview</p>
+                            </div>
+                            <div class="flex items-center gap-2 bg-teal-50 px-4 py-2 rounded-xl border border-teal-100">
+                                <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                                <span class="text-[10px] font-black text-teal-700 uppercase">Live Data</span>
                             </div>
                         </div>
-                         <div class="h-64 relative"><canvas id="expenditureChartInitial"></canvas></div>
+                         <div class="flex-1 relative min-h-[256px]"><canvas id="expenditureChartInitial" class="w-full h-full"></canvas></div>
                     </div>
 
                     <div class="lg:w-96 space-y-6">
