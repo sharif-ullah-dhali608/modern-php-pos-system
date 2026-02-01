@@ -1,7 +1,8 @@
 console.log("Keyboard Shortcuts: File loaded.");
 
 const shortcuts = [
-    { keys: 'P', desc: 'Focus Product Searchbox' },
+    { keys: 'P', desc: 'Any Page to POS Page' },
+    { keys: 'X', desc: 'Focus Product Searchbox' },
     { keys: 'C', desc: 'Focus Customer Searchbox' },
     { keys: 'A', desc: 'Add New Customer' },
     { keys: 'I', desc: 'Focus Discount Field' },
@@ -137,6 +138,9 @@ document.addEventListener('keydown', function (e) {
             console.log("Keyboard Shortcuts: Executing action for logical key", logicalKey);
             switch (logicalKey) {
                 case 'P':
+                    window.location.href = '/pos/pos/';
+                    break;
+                case 'X':
                     const pSearch = document.getElementById('product_search');
                     if (pSearch) { pSearch.focus(); pSearch.select(); }
                     break;

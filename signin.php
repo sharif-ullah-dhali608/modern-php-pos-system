@@ -46,6 +46,7 @@ unset($_SESSION['captcha_error']);
     <link rel="stylesheet" href="/pos/assets/css/output.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/pos/assets/images/logo.png" />
 
     <style>
         body { font-family: 'Public Sans', sans-serif; }

@@ -248,6 +248,29 @@ $menu_items = [
         'active' => (uri_has('/users/', $current_uri))
     ],
     [
+        'title' => 'Accounting',
+        'icon' => 'fa-university',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Bank List', 'link' => '/pos/accounting/bank/list'],
+            ['title' => 'Bank Transaction', 'link' => '/pos/accounting/bank/transaction-list'],
+            ['title' => 'Bank Transfer', 'link' => '/pos/accounting/bank/transfer-list'],
+            ['title' => 'Balance Sheet', 'link' => '/pos/accounting/bank/balance-sheet'],
+            ['title' => 'Add Bank', 'link' => '/pos/accounting/bank/add'],
+            ['title' => 'Income Source List', 'link' => '/pos/accounting/income-source/list'],
+            ['title' => 'Add Income Source', 'link' => '/pos/accounting/income-source/add'],
+            ['title' => 'Deposit', 'link' => '#', 'onclick' => "openModal('depositModal'); return false;"],
+            ['title' => 'Withdraw', 'link' => '#', 'onclick' => "openModal('withdrawModal'); return false;"],
+            ['title' => 'Add Transfer', 'link' => '#', 'onclick' => "openModal('transferModal'); return false;"],
+            ['title' => 'Income Monthwise', 'link' => '/pos/accounting/income-monthwise'],
+            ['title' => 'Expense Monthwise', 'link' => '/pos/accounting/expense-monthwise'],
+            ['title' => 'Income vs Expense', 'link' => '/pos/accounting/income-vs-expense'],
+            ['title' => 'Profit vs Loss', 'link' => '/pos/accounting/profit-loss'],
+            ['title' => 'Cashbook', 'link' => '/pos/accounting/cashbook'],
+        ],
+        'active' => (uri_has('/Accounting/', $current_uri))
+    ],
+    [
         'title' => 'Expenditure',
         'icon' => 'fa-wallet',
         'link' => '#',
@@ -426,7 +449,9 @@ $menu_items = [
                 <?php if($has_submenu): ?>
                     <div class="submenu ml-4 mt-1 space-y-1 <?= $item['active'] ? '' : 'hidden'; ?>">
                         <?php foreach($item['submenu'] as $sub): ?>
-                            <a href="<?= $sub['link']; ?>" class="flex items-center justify-between px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
+                            <a href="<?= $sub['link']; ?>" 
+       <?= isset($sub['onclick']) ? 'onclick="' . $sub['onclick'] . '"' : ''; ?>
+       class="flex items-center justify-between px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
                                 <div class="flex items-center gap-3">
                                     <i class="fas fa-circle text-[4px] shrink-0"></i>
                                     <span class="link-text"><?= $sub['title']; ?></span>

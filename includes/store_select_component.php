@@ -5,6 +5,7 @@
  */
 $label = isset($store_label) ? $store_label : "Available in Stores";
 $placeholder = isset($search_placeholder) ? $search_placeholder : "Search stores...";
+$list_class = isset($store_list_class) ? $store_list_class : "max-h-64";
 ?>
 <div>
     <div class="flex items-center justify-between mb-2">
@@ -18,7 +19,7 @@ $placeholder = isset($search_placeholder) ? $search_placeholder : "Search stores
         </label>
     </div>
 
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 max-h-64 overflow-y-auto custom-scroll shadow-inner">
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 <?= $list_class; ?> overflow-y-auto custom-scroll shadow-inner">
         <div class="relative mb-4">
             <input 
                 type="text" 
