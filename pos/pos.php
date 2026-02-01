@@ -1415,13 +1415,15 @@ include('../includes/header.php');
             ['title' => 'Purchase Tax Report', 'link' => '/pos/reports/purchase-tax', 'icon' => 'fa-file-invoice'],
             ['title' => 'Tax Overview Report', 'link' => '/pos/reports/tax-overview', 'icon' => 'fa-calculator'],
             ['title' => 'Stock Report', 'link' => '/pos/reports/stock', 'icon' => 'fa-warehouse'],
-            ['title' => 'Bank Transaction', 'link' => '/pos/reports/bank-transaction', 'icon' => 'fa-university'],
-            ['title' => 'Balance Sheet', 'link' => '/pos/reports/balance-sheet', 'icon' => 'fa-balance-scale'],
-            ['title' => 'Income Monthwise Report', 'link' => '/pos/reports/income-monthwise', 'icon' => 'fa-calendar-alt'],
-            ['title' => 'Expense Monthwise Report', 'link' => '/pos/reports/expense-monthwise', 'icon' => 'fa-calendar-minus'],
+            ['title' => 'Bank Transaction', 'link' => '/pos/accounting/bank/transaction-list', 'icon' => 'fa-university'],
+            ['title' => 'Balance Sheet', 'link' => '/pos/accounting/bank/balance-sheet', 'icon' => 'fa-balance-scale'],
+            ['title' => 'Income Monthwise Report', 'link' => '/pos/accounting/income-monthwise', 'icon' => 'fa-calendar-alt'],
+            ['title' => 'Expense Monthwise Report', 'link' => '/pos/accounting/expense-monthwise', 'icon' => 'fa-calendar-minus'],
             ['title' => 'Income vs Expense Report', 'link' => '/pos/reports/income-vs-expense', 'icon' => 'fa-chart-bar'],
             ['title' => 'Profit vs Loss Report', 'link' => '/pos/reports/profit-loss', 'icon' => 'fa-chart-line'],
-            ['title' => 'Cashbook', 'link' => '/pos/reports/cashbook', 'icon' => 'fa-book'],
+            ['title' => 'Cashbook Report', 'link' => '/pos/reports/cashbook', 'icon' => 'fa-book'],
+            ['title' => 'Cashbook', 'link' => '/pos/accounting/cashbook', 'icon' => 'fa-book'],
+
         ];
 
         foreach($panel_reports as $rpt): ?>

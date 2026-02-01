@@ -287,7 +287,23 @@ function renderReusableList($config) {
                 <?php endforeach; ?>
                 
                 <?php // Filter Dropdowns
-                foreach($filters as $filter): 
+                // Determine if any filter is active for Global Reset
+                $is_any_filter_active = false;
+                if(isset($config['date_column'])) {
+                    if(isset($_GET['date_filter']) || isset($_GET['start_date']) || isset($_GET['end_date'])) $is_any_filter_active = true;
+                }
+                foreach($filters as $f) {
+                    if(isset($f['name']) && isset($_GET[$f['name']]) && $_GET[$f['name']] !== '') $is_any_filter_active = true;
+                }
+
+                if($is_any_filter_active): ?>
+                    <a href="<?= strtok($_SERVER['REQUEST_URI'], '?'); ?>" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg border border-rose-200 transition-all shadow-sm">
+                        <i class="fas fa-undo text-xs"></i>
+                        <span>Reset</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php foreach($filters as $filter): 
                     // Determine active filter label
                     $filter_button_label = $filter['label'];
                     $is_filter_active = false;
@@ -618,6 +634,21 @@ function renderReusableList($config) {
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
+                        <?php if (!empty($config['footer'])): ?>
+                            <tfoot class="bg-gray-50 border-t-2 border-slate-200 font-bold text-slate-700">
+                                <tr>
+                                    <?php foreach ($columns as $col): 
+                                        $key = $col['key'];
+                                        $align = isset($col['item_align']) && $col['item_align'] === 'right' ? 'text-right' : (isset($col['item_align']) && $col['item_align'] === 'center' ? 'text-center' : 'text-left');
+                                        $val = isset($config['footer'][$key]) ? $config['footer'][$key] : '';
+                                    ?>
+                                        <td class="p-4 text-sm <?= $align; ?>">
+                                            <?= $val; // Render HTML directly as footer is usually trusted/formatted ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </tfoot>
+                        <?php endif; ?>
                     </table>
                 </div>
 

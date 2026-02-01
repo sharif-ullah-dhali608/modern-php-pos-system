@@ -173,6 +173,28 @@ RewriteRule ^expenditure/save_expense$ expenditure/save_expense.php [L]
 RewriteRule ^expenditure/monthwise$ expenditure/expense_monthwise.php [L,QSA]
 RewriteRule ^expenditure/monthwise/([0-9]{4})$ expenditure/expense_monthwise.php?year=$1 [L,QSA]
 RewriteRule ^expenditure/monthwise/([0-9]{4})/([0-9]{2})$ expenditure/expense_monthwise.php?year=$1&month=$2 [L,QSA]
+# --- Accounting Routes (ADDED) ---
+RewriteRule ^accounting/bank/list$ Accounting/bank_list.php [L]
+RewriteRule ^accounting/bank/add$ Accounting/bank_add.php [L]
+RewriteRule ^accounting/bank/edit/([0-9]+)$ Accounting/bank_add.php?id=$1 [L]
+RewriteRule ^accounting/income-source/list$ Accounting/income_source_list.php [L]
+RewriteRule ^accounting/income-source/add/?$ Accounting/add_income_source.php [L]
+RewriteRule ^accounting/income-source/edit/([0-9]+)/?$ Accounting/add_income_source.php?id=$1 [L]
+
+# Bank Module Additional Lists
+RewriteRule ^accounting/bank/transaction-list/?$ Accounting/bank_transaction_list.php [L]
+RewriteRule ^accounting/bank/transfer-list/?$ Accounting/bank_transfer_list.php [L]
+RewriteRule ^accounting/bank/balance-sheet/?$ Accounting/bank_balance_sheet.php [L]
+RewriteRule ^accounting/expense-monthwise/?$ Accounting/expense_monthwise.php [L,QSA]
+RewriteRule ^accounting/expense-monthwise/([0-9]{4})/?$ Accounting/expense_monthwise.php?year=$1 [L,QSA]
+RewriteRule ^accounting/expense-monthwise/([0-9]{4})/([0-9]{2})/?$ Accounting/expense_monthwise.php?year=$1&month=$2 [L,QSA]
+RewriteRule ^accounting/income-monthwise/?$ Accounting/income_monthwise.php [L,QSA]
+RewriteRule ^accounting/income-monthwise/([0-9]{4})/?$ Accounting/income_monthwise.php?year=$1 [L,QSA]
+RewriteRule ^accounting/income-monthwise/([0-9]{4})/([0-9]{2})/?$ Accounting/income_monthwise.php?year=$1&month=$2 [L,QSA]
+RewriteRule ^accounting/income-vs-expense/?$ Accounting/income_vs_expense.php [L,QSA]
+RewriteRule ^accounting/profit-loss/?$ Accounting/profit_loss.php [L,QSA]
+RewriteRule ^accounting/cashbook/?$ Accounting/cashbook.php [L,QSA]
+
 # --- Reports Routes ---
 RewriteRule ^reports/overview$ reports/report_overview.php [L,QSA]
 RewriteRule ^reports/collection$ reports/collection_report.php [L,QSA]

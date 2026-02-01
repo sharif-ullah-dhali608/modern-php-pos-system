@@ -297,6 +297,12 @@ endif; ?>
     }
     
     function toggleStatus(id, currentStatus, updateUrl) {
+        // Check for custom override
+        if (typeof customToggleStatus === 'function') {
+            customToggleStatus(id, currentStatus, updateUrl);
+            return;
+        }
+
         const newStatus = currentStatus == 1 ? 0 : 1;
         const statusText = newStatus == 1 ? 'activate' : 'deactivate';
         
@@ -333,6 +339,21 @@ endif; ?>
             }
         });
     }
+
+    // --- Global POS Shortcut (Alt + P) ---
+    document.addEventListener('keydown', function(e) {
+        // Physical key 'KeyP' with Alt modifier
+        if (e.altKey && e.code === 'KeyP') {
+            // Don't redirect if we are already on the POS page
+            // On POS page, Alt+P is used for focus, so we check if the element exists or URL matches
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/pos/pos/')) {
+                e.preventDefault();
+                window.location.href = '/pos/pos/';
+            }
+        }
+    });
 </script>
-</body>
+    <?php include('bank_modals.php'); ?>
+    </body>
 </html>

@@ -327,6 +327,140 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
+        // --- NEW: Income Sources Table ---
+        $incomeSourcesSql = "CREATE TABLE IF NOT EXISTS income_sources (
+        source_id INT(11) NOT NULL AUTO_INCREMENT,
+        source_name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE, /* mapped from source_slug */
+        parent_id INT(11) DEFAULT 0,
+        source_details TEXT DEFAULT NULL,
+        
+        /* Feature Flags */
+        for_sell TINYINT(1) DEFAULT 0,
+        for_purchase_return TINYINT(1) DEFAULT 0,
+        for_due_collection TINYINT(1) DEFAULT 0,
+        for_loan TINYINT(1) DEFAULT 0,
+        for_giftcard_sell TINYINT(1) DEFAULT 0,
+        for_topup TINYINT(1) DEFAULT 0,
+        for_stock_transfer TINYINT(1) DEFAULT 0,
+        for_purchase_delete TINYINT(1) DEFAULT 0,
+        for_expense_delete TINYINT(1) DEFAULT 0,
+        profitable ENUM('yes', 'no') DEFAULT 'yes',
+        show_in_income ENUM('yes', 'no') DEFAULT 'yes',
+        
+        status TINYINT(1) DEFAULT 1,
+        is_hide TINYINT(1) DEFAULT 0,
+        sort_order INT(11) DEFAULT 0,
+        
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (source_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    mysqli_query($conn, $incomeSourcesSql);
+
+    // Seed Default Income Sources
+    $default_income_sources = [
+        ['Sell', 'credit', 'sell', 0, 'Income from Sales', 1, 0, 0, 0, 0, 0, 0, 0, 0, 'yes', 'no', 1, 1, 0],
+        ['Purchase Return', 'credit', 'purchase_return', 0, 'Income from Purchase Return', 0, 1, 0, 0, 0, 0, 0, 0, 0, 'no', 'yes', 1, 1, 0],
+        ['Due Collection', 'credit', 'due_collection', 0, 'Income from Due Collection', 0, 0, 1, 0, 0, 0, 0, 0, 0, 'yes', 'no', 1, 1, 0],
+        ['Others', 'credit', 'others', 0, 'Other Income', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'yes', 'yes', 1, 1, 0],
+        ['Loan Taken', 'credit', 'loan_taken', 0, 'Income from Loan', 0, 0, 0, 1, 0, 0, 0, 0, 0, 'no', 'yes', 1, 1, 0],
+        ['Giftcard Sell', 'credit', 'giftcard_sell', 0, 'Income from Giftcard Sell', 0, 0, 0, 0, 1, 0, 0, 0, 0, 'no', 'yes', 1, 1, 0],
+        ['Giftcard Topup', 'credit', 'giftcard_topup', 0, 'Income from Giftcard Topup', 0, 0, 0, 0, 0, 1, 0, 0, 0, 'no', 'yes', 1, 1, 0],
+        ['Stock Transfer', 'credit', 'stock_transfer', 0, 'Income from Stock Transfer', 0, 0, 0, 0, 0, 0, 1, 0, 0, 'no', 'yes', 1, 1, 0],
+        ['Purchase Delete', 'credit', 'purchase_delete', 0, 'Income from Purchase Delete', 0, 0, 0, 0, 0, 0, 0, 1, 0, 'no', 'yes', 1, 1, 0],
+        ['Expense Delete', 'credit', 'expense_delete', 0, 'Income from Expense Delete', 0, 0, 0, 0, 0, 0, 0, 0, 1, 'no', 'yes', 1, 1, 0]
+    ];
+
+    foreach($default_income_sources as $src) {
+        $check = mysqli_query($conn, "SELECT source_id FROM income_sources WHERE slug = '$src[2]'");
+        if(mysqli_num_rows($check) == 0) {
+            $sql = "INSERT INTO income_sources (source_name, slug, parent_id, source_details, for_sell, for_purchase_return, for_due_collection, for_loan, for_giftcard_sell, for_topup, for_stock_transfer, for_purchase_delete, for_expense_delete, profitable, show_in_income, status, is_hide, sort_order) 
+            VALUES ('$src[0]', '$src[2]', '$src[3]', '$src[4]', '$src[5]', '$src[6]', '$src[7]', '$src[8]', '$src[9]', '$src[10]', '$src[11]', '$src[12]', '$src[13]', '$src[14]', '$src[15]', '$src[16]', '$src[17]', '$src[18]')";
+            mysqli_query($conn, $sql);
+        }
+    }
+
+    // --- BANK MODULE TABLES ---
+
+    $bankAccountsSql = "CREATE TABLE IF NOT EXISTS bank_accounts (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        account_name VARCHAR(255) NOT NULL,
+        account_details TEXT,
+        initial_balance DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        account_no VARCHAR(100) NOT NULL,
+        contact_person VARCHAR(255) DEFAULT NULL,
+        phone_number VARCHAR(50) DEFAULT NULL,
+        opening_date DATE DEFAULT NULL,
+        url VARCHAR(255) DEFAULT NULL,
+        total_deposit DECIMAL(15,4) DEFAULT '0.0000',
+        total_withdraw DECIMAL(15,4) DEFAULT '0.0000',
+        total_transfer_from_other DECIMAL(15,4) DEFAULT '0.0000',
+        total_transfer_to_other DECIMAL(15,4) DEFAULT '0.0000',
+        status TINYINT(1) NOT NULL DEFAULT 1,
+        sort_order INT(11) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    $bankAccountStoreSql = "CREATE TABLE IF NOT EXISTS bank_account_to_store (
+        ba2s_id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        account_id INT(11) NOT NULL,
+        deposit DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        withdraw DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        transfer_from_other DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        transfer_to_other DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        status TINYINT(1) NOT NULL DEFAULT 1,
+        sort_order INT(11) NOT NULL DEFAULT 0,
+        PRIMARY KEY (ba2s_id),
+        KEY store_id (store_id),
+        KEY account_id (account_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (account_id) REFERENCES bank_accounts(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    $bankTransInfoSql = "CREATE TABLE IF NOT EXISTS bank_transaction_info (
+        info_id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        transaction_type VARCHAR(50) NOT NULL,
+        is_substract TINYINT(1) DEFAULT 0,
+        is_hide TINYINT(1) DEFAULT 0,
+        account_id INT(11) NOT NULL,
+        source_id INT(11) DEFAULT NULL,
+        exp_category_id INT(11) DEFAULT NULL,
+        ref_no VARCHAR(100) DEFAULT NULL,
+        invoice_id VARCHAR(100) DEFAULT NULL,
+        title VARCHAR(255) DEFAULT NULL,
+        details TEXT DEFAULT NULL,
+        from_account_id INT(11) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        image VARCHAR(255) DEFAULT NULL,
+        created_by INT(11) DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (info_id),
+        KEY store_id (store_id),
+        KEY account_id (account_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (account_id) REFERENCES bank_accounts(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    $bankTransPriceSql = "CREATE TABLE IF NOT EXISTS bank_transaction_price (
+        price_id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        info_id INT(11) NOT NULL,
+        ref_no VARCHAR(100) DEFAULT NULL,
+        amount DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
+        PRIMARY KEY (price_id),
+        KEY store_id (store_id),
+        KEY info_id (info_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (info_id) REFERENCES bank_transaction_info(info_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+
 
 
 
@@ -375,7 +509,7 @@ function ensure_core_tables(mysqli $conn) {
 
 
 
-// Brand-Store Pivot
+    // Brand-Store Pivot
     $brandStoreSql = "CREATE TABLE IF NOT EXISTS brand_store (
         id INT(11) NOT NULL AUTO_INCREMENT,
         brand_id INT(11) NOT NULL,
@@ -929,6 +1063,13 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $transfersSql);
     mysqli_query($conn, $transferItemsSql);
 
+    // Execute Queries for New Tables
+    mysqli_query($conn, $incomeSourcesSql);
+    mysqli_query($conn, $bankAccountsSql);
+    mysqli_query($conn, $bankAccountStoreSql);
+    mysqli_query($conn, $bankTransInfoSql);
+    mysqli_query($conn, $bankTransPriceSql);
+
     // Level 4: Pivot / Map Tables
     mysqli_query($conn, $storeCurrencySql);
     mysqli_query($conn, $paymentStoreMapSql);
@@ -951,6 +1092,8 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     if($checkTransactionId && mysqli_num_rows($checkTransactionId) == 0) {
         @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN transaction_id VARCHAR(255) DEFAULT NULL AFTER pmethod_id");
     }
+
+    
 
     // Seeding
     $qG = "INSERT IGNORE INTO user_groups (name, slug) VALUES ('Admin', 'admin')";
@@ -1016,5 +1159,45 @@ if($checkLimitCol && mysqli_num_rows($checkLimitCol) == 0) {
 $checkMapLimitCol = @mysqli_query($conn, "SHOW COLUMNS FROM product_store_map LIKE 'per_customer_limit'");
 if($checkMapLimitCol && mysqli_num_rows($checkMapLimitCol) == 0) {
     @mysqli_query($conn, "ALTER TABLE product_store_map ADD COLUMN per_customer_limit INT(11) DEFAULT 0 AFTER stock");
+}
+
+
+// Ensure new columns exist in bank_accounts table
+$cols = ['total_deposit', 'total_withdraw', 'total_transfer_from_other', 'total_transfer_to_other'];
+foreach($cols as $col) {
+    $check = @mysqli_query($conn, "SHOW COLUMNS FROM bank_accounts LIKE '$col'");
+    if($check && mysqli_num_rows($check) == 0) {
+        @mysqli_query($conn, "ALTER TABLE bank_accounts ADD COLUMN $col DECIMAL(15,4) DEFAULT '0.0000' AFTER url");
+    }
+}
+
+// Alter existing table if needed (Adding new columns to income_sources if table exists but old schema)
+// Renaming columns or adding missing ones based on new schema
+// This is a rough migration. First, check if 'source_id' exists. If 'id' exists but 'source_id' not, let's keep 'id' as primary or recreate.
+// Simplify: Just check for 'source_name'. If 'name' exists, we might need to alter it.
+// Given this is development, simplest is adding columns if missing.
+$incCols = ['source_name', 'slug', 'parent_id', 'source_details', 'for_sell', 'for_purchase_return'];
+if(isset($conn)) {
+    $checkInc = @mysqli_query($conn, "SHOW COLUMNS FROM income_sources LIKE 'source_id'");
+    if($checkInc && mysqli_num_rows($checkInc) == 0) {
+        // Table likely old schema (id, name, code_name...)
+        // Let's Drop and Recreate for Clean State since user gave completely new schema image
+        // Or we can simple ALTER. User data might be lost if we Drop.
+        // Let's try to ALTER to match new schema.
+        
+        // 1. Rename id -> source_id
+        @mysqli_query($conn, "ALTER TABLE income_sources CHANGE COLUMN id source_id INT(11) NOT NULL AUTO_INCREMENT");
+        // 2. Rename name -> source_name
+        @mysqli_query($conn, "ALTER TABLE income_sources CHANGE COLUMN name source_name VARCHAR(255) NOT NULL");
+        // 3. Rename code_name -> slug
+        @mysqli_query($conn, "ALTER TABLE income_sources CHANGE COLUMN code_name slug VARCHAR(255) NOT NULL");
+        // 4. Add other columns
+        @mysqli_query($conn, "ALTER TABLE income_sources ADD COLUMN parent_id INT(11) DEFAULT 0 AFTER slug");
+        @mysqli_query($conn, "ALTER TABLE income_sources ADD COLUMN source_details TEXT DEFAULT NULL AFTER parent_id");
+        @mysqli_query($conn, "ALTER TABLE income_sources ADD COLUMN for_sell TINYINT(1) DEFAULT 0 AFTER source_details");
+        @mysqli_query($conn, "ALTER TABLE income_sources ADD COLUMN for_purchase_return TINYINT(1) DEFAULT 0 AFTER for_sell");
+        // ... add others as needed, or just rely on CREATE IF NOT EXISTS for new setups.
+        // For now, assuming fresh start or manual fix if complex data exists.
+    }
 }
 ?>
