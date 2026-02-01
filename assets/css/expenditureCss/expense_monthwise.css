@@ -1,0 +1,30 @@
+/* Expense Monthwise Report Custom Styles */
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+}
+
+.cell-active {
+    background-color: rgba(244, 63, 94, 0.05);
+    color: #be123c;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only-header {
+        display: block !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .glass-card {
+        background: white;
+        box-shadow: none;
+    }
+}

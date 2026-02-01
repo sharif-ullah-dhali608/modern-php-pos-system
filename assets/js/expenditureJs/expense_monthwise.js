@@ -1,10 +1,9 @@
 
-// Income Monthwise Report JS
+// Expense Monthwise Report JS
 
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize Chart
-    const ctx = document.getElementById('expenditureChart'); // ID kept same as HTML/PHP logic reused
-    const ctxInitial = document.getElementById('expenditureChartInitial');
+    const ctx = document.getElementById('expenditureChart');
 
     // Initial Data
     const rawData = document.getElementById('chart-data-provider').value;
@@ -15,14 +14,14 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: chartData.labels,
             datasets: [{
-                label: 'Total Income',
+                label: 'Total Expense',
                 data: chartData.data,
-                borderColor: '#0d9488', // Teal-600
-                backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                borderColor: '#f43f5e', // Rose-500
+                backgroundColor: 'rgba(244, 63, 94, 0.1)',
                 borderWidth: 3,
                 tension: 0.4,
                 pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#0d9488',
+                pointBorderColor: '#f43f5e',
                 pointBorderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 6,
@@ -89,15 +88,12 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     if (ctx) new Chart(ctx, chartConfig);
-    if (ctxInitial) new Chart(ctxInitial, chartConfig);
 
-    // Initial Select2
-    // $('#store-select').select2({ minimumResultsForSearch: Infinity }); // Removed store-select select2
+    // Initialize Select2
     $('#month-select').select2({ minimumResultsForSearch: Infinity });
     $('#year-select').select2({ minimumResultsForSearch: Infinity });
 
-    // --- Custom Store Selector Logic ---
-    // Use delegation for inputs/dropdowns since they might be replaced by AJAX
+    // Custom Store Selector Logic
     $(document).on('focus', '#store_search_input', function () {
         $('#store_dropdown').removeClass('hidden');
     });
@@ -137,16 +133,85 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#store_search_input').val(name);
         $('#store_dropdown').addClass('hidden');
 
-        updateReport(); // Trigger report update
+        updateReport();
     });
 
     // Event Listeners
-    // $('#store-select').on('change', function () { updateReport(); }); // Managed manually
     $('#month-select').on('change', function () { updateReport(); });
     $('#year-select').on('change', function () { updateReport(); });
 });
 
-// Custom Calendar Logic
+window.resetFilters = function () {
+    const url = new URL(window.location.href);
+    url.search = '';
+    window.location.href = url.toString();
+}
+
+function updateReport() {
+    const year = $('#year-select').val();
+    const month = $('#month-select').val();
+    const store = $('#store-select').val();
+
+    let url = `/pos/expenditure/monthwise/${year}`;
+    if (month) url += `/${month}`;
+
+    if (store) url += `?store_id=${store}`;
+
+    window.location.href = url;
+}
+
+function loadReport(url) {
+    const store = $('#store-select').val();
+    if (store) {
+        if (url.includes('?')) url += `&store_id=${store}`;
+        else url += `?store_id=${store}`;
+    }
+    window.location.href = url;
+}
+
+function navigateReport(direction) {
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+    let year = parseInt(yearSelect.value);
+    let month = monthSelect.value ? parseInt(monthSelect.value) : 0;
+
+    if (direction === 'prev') {
+        if (month === 0) {
+            year--;
+        } else {
+            month--;
+            if (month === 0) {
+                month = 12;
+                year--;
+            }
+        }
+    } else {
+        if (month === 0) {
+            year++;
+        } else {
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+        }
+    }
+
+    let nextUrl = `/pos/expenditure/monthwise/${year}`;
+    if (month > 0) nextUrl += `/${String(month).padStart(2, '0')}`;
+    loadReport(nextUrl);
+}
+
+function resetReport() {
+    window.location.href = '/pos/expenditure/monthwise';
+}
+
+function openPrintTab() {
+    const url = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'print_mode=1';
+    window.open(url, '_blank');
+}
+
+// Custom Calendar Functions
 const urlParams = new URLSearchParams(window.location.search);
 let calendarCurrentDate = urlParams.has('start_date') ? new Date(urlParams.get('start_date')) : new Date();
 let calendarStartDate = urlParams.get('start_date') || null;
@@ -157,7 +222,6 @@ window.toggleCustomCalendar = function () {
     modal.toggleClass('hidden');
 
     if (!modal.hasClass('hidden')) {
-        // Initialize if first open
         renderCustomCalendar();
         populateCalYearSelect();
     }
@@ -227,27 +291,27 @@ window.renderCustomCalendar = function () {
         let cellClass = "flex items-center justify-center w-full relative h-8 ";
         let bgStyle = "";
 
-        // Selection Logic
+        // Selection Logic with rose colors
         if (calendarStartDate && calendarEndDate) {
             const start = new Date(calendarStartDate);
             const end = new Date(calendarEndDate);
 
             if (currentDate > start && currentDate < end) {
-                cellClass += "bg-teal-50";
-                btnClass += "text-teal-900 font-medium";
+                cellClass += "bg-rose-50";
+                btnClass += "text-rose-900 font-medium";
             } else if (dateStr === formatCalDate(start)) {
-                cellClass += "bg-teal-50 rounded-l-full";
-                btnClass += "bg-teal-600 text-white font-bold";
-                bgStyle = "background: linear-gradient(to right, transparent 50%, #f0fdfa 50%);";
+                cellClass += "bg-rose-50 rounded-l-full";
+                btnClass += "bg-rose-600 text-white font-bold";
+                bgStyle = "background: linear-gradient(to right, transparent 50%, #fff1f2 50%);";
             } else if (dateStr === formatCalDate(end)) {
-                cellClass += "bg-teal-50 rounded-r-full";
-                btnClass += "bg-teal-600 text-white font-bold";
-                bgStyle = "background: linear-gradient(to left, transparent 50%, #f0fdfa 50%);";
+                cellClass += "bg-rose-50 rounded-r-full";
+                btnClass += "bg-rose-600 text-white font-bold";
+                bgStyle = "background: linear-gradient(to left, transparent 50%, #fff1f2 50%);";
             } else {
                 btnClass += "hover:bg-slate-100 text-slate-700";
             }
         } else if (calendarStartDate && dateStr === formatCalDate(new Date(calendarStartDate))) {
-            btnClass += "bg-teal-600 text-white font-bold";
+            btnClass += "bg-rose-600 text-white font-bold";
         } else {
             btnClass += "hover:bg-slate-100 text-slate-700";
         }
@@ -321,79 +385,4 @@ function formatCalDate(date) {
 function formatCalDisplay(date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
-}
-
-window.resetFilters = function () {
-    const url = new URL(window.location.href);
-    url.search = '';
-    window.location.href = url.toString();
-}
-
-function updateReport() {
-    const year = $('#year-select').val();
-    const month = $('#month-select').val();
-    const store = $('#store-select').val();
-
-    let url = `/pos/accounting/income-monthwise/${year}`;
-    if (month) url += `/${month}`;
-
-    if (store) url += `?store_id=${store}`; // Append store as query param
-
-    window.location.href = url;
-}
-
-function loadReport(url) {
-    const store = $('#store-select').val();
-    if (store) {
-        // Check if query param already exists
-        if (url.includes('?')) url += `&store_id=${store}`;
-        else url += `?store_id=${store}`;
-    }
-    window.location.href = url;
-}
-
-function navigateReport(direction) {
-    const monthSelect = document.getElementById('month-select');
-    const yearSelect = document.getElementById('year-select');
-    let year = parseInt(yearSelect.value);
-    let month = monthSelect.value ? parseInt(monthSelect.value) : 0; // 0 = Yearly view
-
-    if (direction === 'prev') {
-        if (month === 0) {
-            year--;
-        } else {
-            month--;
-            if (month === 0) {
-                // If moving back from Jan, go to Yearly view of same year? Or prev year Dec?
-                // Logic: Prev month from Jan is Dec of prev year.
-                // Prev from Yearly view is Prev Year.
-                month = 12;
-                year--;
-            }
-        }
-    } else {
-        if (month === 0) {
-            year++;
-        } else {
-            month++;
-            if (month > 12) {
-                month = 1;
-                year++;
-            }
-        }
-    }
-
-    // Update Dropdowns logic not needed as we redirect
-    let nextUrl = `/pos/accounting/income-monthwise/${year}`;
-    if (month > 0) nextUrl += `/${String(month).padStart(2, '0')}`;
-    loadReport(nextUrl);
-}
-
-function resetReport() {
-    window.location.href = '/pos/accounting/income-monthwise';
-}
-
-function openPrintTab() {
-    const url = window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'print_mode=1';
-    window.open(url, '_blank');
 }

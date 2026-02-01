@@ -381,6 +381,86 @@ function ensure_core_tables(mysqli $conn) {
         }
     }
 
+    // --- NEW: Expense Category Table ---
+    $expenseCategorySql = "CREATE TABLE IF NOT EXISTS expense_category (
+        category_id INT(11) NOT NULL AUTO_INCREMENT,
+        category_name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        parent_id INT(11) DEFAULT 0,
+        category_details TEXT DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        is_hide TINYINT(1) DEFAULT 0,
+        sort_order INT(11) DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (category_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    mysqli_query($conn, $expenseCategorySql);
+
+    // Seed Default Expense Categories
+    $default_expense_categories = [
+        ['Rent', 'rent', 0, 'Office or Store Rent', 1, 0, 1],
+        ['Utilities', 'utilities', 0, 'Electricity, Water, Internet', 1, 0, 2],
+        ['Salaries', 'salaries', 0, 'Employee Salaries', 1, 0, 3],
+        ['Marketing', 'marketing', 0, 'Advertising and Promotions', 1, 0, 4],
+        ['Supplies', 'supplies', 0, 'Office Supplies', 1, 0, 5],
+        ['Maintenance', 'maintenance', 0, 'Repairs and Maintenance', 1, 0, 6],
+        ['Transportation', 'transportation', 0, 'Vehicle and Travel Expenses', 1, 0, 7],
+        ['Others', 'others', 0, 'Miscellaneous Expenses', 1, 0, 8]
+    ];
+
+    // Check if expense_category table exists before seeding
+    $table_check = @mysqli_query($conn, "SHOW TABLES LIKE 'expense_category'");
+    if($table_check && mysqli_num_rows($table_check) > 0) {
+        foreach($default_expense_categories as $cat) {
+            $check = mysqli_query($conn, "SELECT category_id FROM expense_category WHERE category_slug = '$cat[1]'");
+            if(mysqli_num_rows($check) == 0) {
+                $sql = "INSERT INTO expense_category (category_name, category_slug, parent_id, category_details, status, is_hide, sort_order) 
+                VALUES ('$cat[0]', '$cat[1]', '$cat[2]', '$cat[3]', '$cat[4]', '$cat[5]', '$cat[6]')";
+                mysqli_query($conn, $sql);
+            }
+        }
+    }
+
+    // --- NEW: Expenses Table ---
+    $expensesSql = "CREATE TABLE IF NOT EXISTS expenses (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        store_id INT(11) NOT NULL,
+        category_id INT(11) NOT NULL,
+        reference_no VARCHAR(100) DEFAULT NULL,
+        title VARCHAR(255) NOT NULL,
+        details TEXT DEFAULT NULL,
+        note TEXT DEFAULT NULL,
+        amount DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
+        returnable TINYINT(1) DEFAULT 0,
+        payment_method_id INT(11) DEFAULT NULL,
+        attachment VARCHAR(500) DEFAULT NULL,
+        created_by INT(11) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY store_id (store_id),
+        KEY category_id (category_id),
+        KEY payment_method_id (payment_method_id),
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES expense_category(category_id) ON DELETE CASCADE,
+        FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    mysqli_query($conn, $expensesSql);
+
+    // Ensure returnable column exists (Update for existing table)
+    $checkReturnable = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'returnable'");
+    if($checkReturnable && mysqli_num_rows($checkReturnable) == 0) {
+        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN returnable TINYINT(1) DEFAULT 0 AFTER amount");
+    }
+
+    // Ensure note column exists
+    $checkNote = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'note'");
+    if($checkNote && mysqli_num_rows($checkNote) == 0) {
+        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN note TEXT DEFAULT NULL AFTER details");
+    }
+
     // --- BANK MODULE TABLES ---
 
     $bankAccountsSql = "CREATE TABLE IF NOT EXISTS bank_accounts (
@@ -1021,6 +1101,45 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
 
 
 
+
+// --- NEW: Loans Table ---
+    $loansSql = "CREATE TABLE IF NOT EXISTS loans (
+        loan_id INT(11) NOT NULL AUTO_INCREMENT,
+        ref_no VARCHAR(50) DEFAULT NULL,
+        loan_from VARCHAR(100) DEFAULT 'Bank',
+        title VARCHAR(255) NOT NULL,
+        amount DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
+        interest DECIMAL(10,2) DEFAULT 0.00,
+        payable DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
+        paid DECIMAL(15,4) DEFAULT 0.0000,
+        due DECIMAL(15,4) DEFAULT 0.0000,
+        details TEXT DEFAULT NULL,
+        attachment VARCHAR(500) DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        sort_order INT(11) DEFAULT 0,
+        created_by INT(11) DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (loan_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Loan Payments Table ---
+    $loanPaymentsSql = "CREATE TABLE IF NOT EXISTS loan_payments (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        loan_id INT(11) NOT NULL,
+        ref_no VARCHAR(50) DEFAULT NULL,
+        paid DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
+        note TEXT DEFAULT NULL,
+        created_by INT(11) DEFAULT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (loan_id) REFERENCES loans(loan_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // Execute New Tables
+   
+
     // --- 3. Execute Queries in Dependency Order ---
 
     // Level 1: Independent Tables
@@ -1069,6 +1188,8 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $bankAccountStoreSql);
     mysqli_query($conn, $bankTransInfoSql);
     mysqli_query($conn, $bankTransPriceSql);
+     mysqli_query($conn, $loansSql);
+    mysqli_query($conn, $loanPaymentsSql);
 
     // Level 4: Pivot / Map Tables
     mysqli_query($conn, $storeCurrencySql);

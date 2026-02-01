@@ -195,6 +195,12 @@ RewriteRule ^accounting/income-vs-expense/?$ Accounting/income_vs_expense.php [L
 RewriteRule ^accounting/profit-loss/?$ Accounting/profit_loss.php [L,QSA]
 RewriteRule ^accounting/cashbook/?$ Accounting/cashbook.php [L,QSA]
 
+# --- Loan Routes (ADDED) ---
+RewriteRule ^loan/list$ loan/loan_list.php [L,NC]
+RewriteRule ^loan/add$ loan/add_loan.php [L,NC]
+RewriteRule ^loan/save$ loan/save_loan.php [L,NC]
+RewriteRule ^loan/summary$ loan/summary_loan.php [L,NC]
+RewriteRule ^loan/edit/([0-9]+)$ loan/add_loan.php?id=$1 [L,NC]
 # --- Reports Routes ---
 RewriteRule ^reports/overview$ reports/report_overview.php [L,QSA]
 RewriteRule ^reports/collection$ reports/collection_report.php [L,QSA]
