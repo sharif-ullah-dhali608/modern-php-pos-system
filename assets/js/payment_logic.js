@@ -75,6 +75,15 @@ window.openPaymentModal = function (config) {
     const customerName = config.customerName || 'Customer';
     const isInvoicePayment = config.isInvoicePayment || false;
 
+    // Reset Checkout Button State (Fix for sticking "Processing...")
+    const completeBtn = document.querySelector('.complete-btn');
+    if (completeBtn) {
+        completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Checkout';
+        completeBtn.disabled = false;
+        completeBtn.style.opacity = '1';
+        completeBtn.style.cursor = 'pointer';
+    }
+
     // Update modal fields
     const payableEl = document.getElementById('payment-payable');
     const totalPayableEl = document.getElementById('payment-total-payable');

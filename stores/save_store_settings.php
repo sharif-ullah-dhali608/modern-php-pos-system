@@ -35,6 +35,54 @@ if(isset($_POST['store_id'])) {
     }
     // ------------------------------------
 
+    // --- Handle Logo Upload ---
+    if(isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] == 0) {
+        $upload_dir = '../uploads/branding/';
+        if(!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+        
+        $file_ext = strtolower(pathinfo($_FILES['logo_file']['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
+        
+        if(in_array($file_ext, $allowed_exts) && $_FILES['logo_file']['size'] <= 5242880) { // Increased to 5MB
+            $new_filename = 'logo_' . $store_id . '_' . time() . '.' . $file_ext;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if(move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_path)) {
+                $logo_path = '/pos/uploads/branding/' . $new_filename;
+                $_POST['settings']['logo'] = $logo_path;
+            } else {
+                 echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded logo file. Check permissions.']);
+                 exit;
+            }
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid logo file. Max 5MB, types: png, jpg, svg, webp.']);
+            exit;
+        }
+    }
+
+    // --- Handle Favicon Upload ---
+    if(isset($_FILES['favicon_file']) && $_FILES['favicon_file']['error'] == 0) {
+        $upload_dir = '../uploads/branding/';
+        if(!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+        
+        $file_ext = strtolower(pathinfo($_FILES['favicon_file']['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['ico', 'png', 'jpg', 'jpeg'];
+        
+        if(in_array($file_ext, $allowed_exts) && $_FILES['favicon_file']['size'] <= 2097152) { // Increased to 2MB
+            $new_filename = 'favicon_' . $store_id . '_' . time() . '.' . $file_ext;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if(move_uploaded_file($_FILES['favicon_file']['tmp_name'], $upload_path)) {
+                $favicon_path = '/pos/uploads/branding/' . $new_filename;
+                $_POST['settings']['favicon'] = $favicon_path;
+            }
+        }
+    }
+
     if(isset($_POST['settings'])) {
     $store_id = intval($_POST['store_id']);
     $settings = $_POST['settings'];

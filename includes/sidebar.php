@@ -5,6 +5,9 @@ $current_uri = $_SERVER['REQUEST_URI'];
 
 // Count stock alerts
 $alert_count = 0;
+// Default Logo
+$sidebar_logo = '/pos/assets/images/logo.png';
+
 if(isset($conn)) {
     $alert_query = "SELECT COUNT(*) as alert_count 
                     FROM products p
@@ -14,6 +17,60 @@ if(isset($conn)) {
     if($alert_res) {
         $alert_data = mysqli_fetch_assoc($alert_res);
         $alert_count = (int)$alert_data['alert_count'];
+    }
+
+    // Fetch Dynamic Logo
+    $sid = 1; // Default store ID
+    
+    // 1. Try Session
+    if(isset($_SESSION['store_id'])) { $sid = $_SESSION['store_id']; }
+    
+    // 2. Prefer Local Context (e.g. inside settings.php where $store_id is defined)
+    if(isset($store_id) && is_numeric($store_id)) { 
+        $sid = $store_id; 
+    }
+    
+    // First try specific store
+    $logo_types = mysqli_query($conn, "SELECT setting_value FROM pos_settings WHERE store_id = '$sid' AND setting_key = 'logo'");
+    $found_logo = false;
+    
+    if($logo_types && mysqli_num_rows($logo_types) > 0) {
+        $l_row = mysqli_fetch_assoc($logo_types);
+        if(!empty($l_row['setting_value'])) {
+             $db_logo = $l_row['setting_value'];
+             
+             // Check if file actually exists on server
+             $server_path = $_SERVER['DOCUMENT_ROOT'] . $db_logo;
+             
+             // Also check default logo constraint
+             if(strpos($db_logo, 'logo.png') !== false || !file_exists($server_path)) {
+                 $found_logo = false; 
+             } else {
+                 $sidebar_logo = $db_logo;
+                 $found_logo = true;
+             }
+        }
+    }
+    
+    // Fallback: If no logo found (or file missing), scan for LATEST uploaded logo
+    if(!$found_logo) {
+         // Use __DIR__ for reliable path finding
+         $upload_dir = __DIR__ . '/../uploads/branding/';
+         
+         if(is_dir($upload_dir)) {
+             $files = glob($upload_dir . 'logo_*.*');
+             if($files && count($files) > 0) {
+                 // Sort by modification time, newest first
+                 usort($files, function($a, $b) {
+                     return filemtime($b) - filemtime($a);
+                 });
+                 
+                 $latest_file = $files[0];
+                 $filename = basename($latest_file);
+                 
+                 $sidebar_logo = '/pos/uploads/branding/' . $filename;
+             }
+         }
     }
 }
 
@@ -119,18 +176,6 @@ $menu_items = [
         ],
         'active' => (uri_has('/transfer/', $current_uri))
     ],
-    // [
-    //     'title' => 'Invoice',
-    //     'icon' => 'fa-file-invoice-dollar',
-    //     'link' => '#',
-    //     'submenu' => [
-    //         ['title' => 'List', 'link' => '/pos/invoice/list'],
-    //         ['title' => 'Preview', 'link' => '/pos/invoice/preview'],
-    //         ['title' => 'Edit', 'link' => '/pos/invoice/edit'],
-    //         ['title' => 'Add', 'link' => '/pos/invoice/add']
-    //     ],
-    //     'active' => (uri_has('/invoice/', $current_uri))
-    // ],
     [
         'title' => 'Stores',
         'icon' => 'fa-store',
@@ -138,7 +183,7 @@ $menu_items = [
         'submenu' => [
             ['title' => 'Add Store', 'link' => '/pos/stores/add'],
             ['title' => 'Store List', 'link' => '/pos/stores/list'],
-            ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
+            // ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
         ],
         'active' => (uri_has('/stores/', $current_uri))
     ],
@@ -418,7 +463,7 @@ $menu_items = [
 <aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-all duration-300">
     <div class="flex items-center gap-3 px-2 py-4 border-b border-white/5 relative group">
     <div class="w-14 h-14 rounded-2xl shrink-0 bg-gradient-to-br from-teal-900 via-teal-800 from-white/10 to-white/5 border border-white/20 shadow-inner flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
-        <img src="/pos/assets/images/logo.png" alt="Logo" class="w-full h-full object-contain" />
+        <img src="<?= $sidebar_logo; ?>" onerror="this.src='/pos/assets/images/logo.png'" alt="Logo" class="w-full h-full object-contain" />
     </div>
 
     <div class="logo-text-container overflow-hidden flex-1 select-none">
