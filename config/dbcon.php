@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -1102,10 +1102,10 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
 
 
 
-// --- NEW: Loans Table ---
     $loansSql = "CREATE TABLE IF NOT EXISTS loans (
         loan_id INT(11) NOT NULL AUTO_INCREMENT,
         ref_no VARCHAR(50) DEFAULT NULL,
+        loan_from_id INT(11) DEFAULT NULL,
         loan_from VARCHAR(100) DEFAULT 'Bank',
         title VARCHAR(255) NOT NULL,
         amount DECIMAL(15,4) NOT NULL DEFAULT 0.0000,
@@ -1117,10 +1117,26 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
         attachment VARCHAR(500) DEFAULT NULL,
         status TINYINT(1) DEFAULT 1,
         sort_order INT(11) DEFAULT 0,
+        deadline_date DATE DEFAULT NULL,
+        deadline_time TIME DEFAULT NULL,
         created_by INT(11) DEFAULT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (loan_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+    // --- NEW: Loan Sources Table ---
+    $loanSourcesSql = "CREATE TABLE IF NOT EXISTS loan_sources (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL,
+        type ENUM('Bank', 'Person', 'Others') DEFAULT 'Others',
+        phone VARCHAR(50) DEFAULT NULL,
+        address TEXT DEFAULT NULL,
+        details TEXT DEFAULT NULL,
+        status TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
     // --- NEW: Loan Payments Table ---
@@ -1156,6 +1172,7 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $holdingPriceSql);
     mysqli_query($conn, $printersSql);
     mysqli_query($conn, $printerStoreMapSql);
+    mysqli_query($conn, $loanSourcesSql);
 
     // Level 2: Tables referencing Level 1
     mysqli_query($conn, $storesSql);
@@ -1208,6 +1225,18 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     $checkSellLogInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'is_installment'");
     if($checkSellLogInstallment && mysqli_num_rows($checkSellLogInstallment) == 0) {
         @mysqli_query($conn, "ALTER TABLE sell_logs ADD COLUMN is_installment TINYINT(1) DEFAULT 0 AFTER type");
+    }
+
+    // Ensure loan_from_id column exists in loans table
+    $checkLoanFromId = @mysqli_query($conn, "SHOW COLUMNS FROM loans LIKE 'loan_from_id'");
+    if($checkLoanFromId && mysqli_num_rows($checkLoanFromId) == 0) {
+        @mysqli_query($conn, "ALTER TABLE loans ADD COLUMN loan_from_id INT(11) DEFAULT NULL AFTER ref_no");
+    }
+
+    // Ensure deadline_date and deadline_time exist in loans table
+    $checkDeadlineDate = @mysqli_query($conn, "SHOW COLUMNS FROM loans LIKE 'deadline_date'");
+    if($checkDeadlineDate && mysqli_num_rows($checkDeadlineDate) == 0) {
+        @mysqli_query($conn, "ALTER TABLE loans ADD COLUMN deadline_date DATE DEFAULT NULL AFTER sort_order, ADD COLUMN deadline_time TIME DEFAULT NULL AFTER deadline_date");
     }
     $checkTransactionId = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'transaction_id'");
     if($checkTransactionId && mysqli_num_rows($checkTransactionId) == 0) {
