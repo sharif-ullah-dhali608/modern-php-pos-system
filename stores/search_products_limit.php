@@ -15,10 +15,12 @@ if($store_id === 'global') {
         WHERE p.product_name LIKE '%$q%' OR p.product_code LIKE '%$q%' LIMIT 20";
 } else {
     $store_id = intval($store_id);
-    $sql = "SELECT p.id, p.product_name, p.product_code, psm.stock as store_stock, 
-            COALESCE(psm.per_customer_limit, 0) as per_customer_limit 
+    // INNER JOIN: শুধুমাত্র ঐ store-এর products দেখাবে
+    $sql = "SELECT p.id, p.product_name, p.product_code, 
+            psm.stock as store_stock, 
+            psm.per_customer_limit 
         FROM products p 
-        JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = '$store_id'
+        INNER JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = '$store_id'
         WHERE (p.product_name LIKE '%$q%' OR p.product_code LIKE '%$q%') LIMIT 20";
 }
 

@@ -160,12 +160,16 @@ $config = [
     'title' => 'Invoices List',
     'table_id' => 'invoice_table',
     'add_url' => '/pos/pos', 
-    'edit_url' => '/pos/admin/edit',
+    'edit_url' => '#', // We use custom action now
     'delete_url' => '/pos/admin/delete',
     'view_url' => '/pos/invoice/view',
     'primary_key' => 'info_id',
     'name_field' => 'invoice_id',
     'data' => $data,
+    'action_buttons' => ['view', 'custom', 'delete'], // Custom instead of edit
+    'custom_actions' => function($row) {
+         return '<button onclick="openEditInvoiceModal(\''.$row['invoice_id'].'\')" class="p-2 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit"><i class="fas fa-edit"></i></button>';
+    },
     
     // New: Extra Buttons
     // 'extra_buttons' => [
@@ -236,6 +240,7 @@ $config = [
 $payment_methods_result = mysqli_query($conn, "SELECT id, name, code FROM payment_methods WHERE status = 1 ORDER BY sort_order ASC");
 include('../includes/payment_modal.php'); 
 include('../includes/invoice_modal.php'); 
+include('../includes/invoice_edit_modal.php'); // New Edit Modal
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -247,6 +252,86 @@ let currentInvoiceId = '';
 let currentInfoId = '';
 let currentStoreId = '';
 let currentCustomerId = '';
+
+// --- Edit Invoice Modal Logic ---
+function openEditInvoiceModal(invoiceId) {
+    // Find modal
+    const modal = document.getElementById('editInvoiceModal');
+    if(!modal) return;
+    
+    // Set loading state or clear
+    document.getElementById('edit-invoice-title').textContent = `Edit Invoice > ${invoiceId}`;
+    document.getElementById('edit_invoice_id').value = invoiceId;
+    
+    // Display modal
+    modal.style.display = 'flex';
+    
+    // Fetch Data
+    fetch(`/pos/invoice/get_invoice_data.php?invoice_id=${invoiceId}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Populate Read-Only
+                document.getElementById('edit_display_customer').textContent = data.customer.name;
+                document.getElementById('edit_display_subtotal').textContent = parseFloat(data.totals.subtotal).toFixed(2);
+                document.getElementById('edit_display_discount').textContent = parseFloat(data.totals.discount).toFixed(2);
+                document.getElementById('edit_display_grand_total').textContent = parseFloat(data.totals.grandTotal).toFixed(2);
+                document.getElementById('edit_display_paid').textContent = parseFloat(data.totals.paid).toFixed(2);
+                document.getElementById('edit_display_due').textContent = parseFloat(data.totals.due).toFixed(2);
+
+                // Populate Editable
+                document.getElementById('edit_customer_mobile').value = data.edit_info.mobile;
+                document.getElementById('edit_invoice_note').value = data.edit_info.note;
+                document.getElementById('edit_status').value = (data.edit_info.status == '1' || data.edit_info.status == 'active' || data.edit_info.status === 'completed') ? '1' : '0';
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        })
+        .catch(err => console.error('Error:', err));
+}
+
+// Handle Edit Form Submit
+document.getElementById('editInvoiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const btn = document.getElementById('edit_invoice_submit_btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    btn.disabled = true;
+    
+    fetch('/pos/admin/update_invoice_info.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Invoice details have been updated.',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                closeModal('editInvoiceModal');
+                window.location.reload();
+            });
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Error', 'Failed to update invoice', 'error');
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+});
+
+
 
 function openInvoicePaymentModal(invoiceId, dueAmount, infoId, storeId, customerId) {
     currentInvoiceId = invoiceId;

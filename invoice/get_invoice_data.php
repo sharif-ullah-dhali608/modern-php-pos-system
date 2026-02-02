@@ -99,6 +99,11 @@ try {
             'name' => $invoice['customer_name'] ?? 'Walking Customer',
             'phone' => $invoice['customer_phone'] ?? ''
         ],
+        'edit_info' => [
+            'mobile' => $invoice['customer_mobile'] ?? ($invoice['customer_phone'] ?? ''),
+            'note' => $invoice['invoice_note'] ?? ($invoice['note'] ?? ''),
+            'status' => $invoice['status'] ?? 'active'
+        ],
         'items' => $items,
         'totals' => [
             'subtotal' => floatval($invoice['subtotal'] ?? 0),

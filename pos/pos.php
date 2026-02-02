@@ -196,7 +196,7 @@ include('../includes/header.php');
             <div class="nav-links">
                 <a href="/pos"><i class="fas fa-home "></i> DASHBOARD</a>
                 <a href="/pos/pos/" class="active"><i class="fas fa-cash-register"></i> POS</a>
-                <a href="#"><i class="fas fa-book"></i> CASHBOOK</a>
+                <a href="/pos/accounting/cashbook"><i class="fas fa-book"></i> CASHBOOK</a>
                 <a href="/pos/invoice/list"><i class="fas fa-file-invoice"></i> INVOICE</a>
                 <a href="#" onclick="openHeldOrdersModal()"><i class="fas fa-pause-circle"></i> HOLD ORDER</a>
                 <a href="#" onclick="openModal('addProductModal')"><i class="fas fa-plus"></i> Product</a>

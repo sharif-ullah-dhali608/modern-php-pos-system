@@ -14,6 +14,45 @@ $header_curr_q = mysqli_query($conn, "SELECT c.* FROM stores s JOIN currencies c
 $header_curr = mysqli_fetch_assoc($header_curr_q) ?: ['symbol_left' => '৳', 'currency_name' => 'Taka'];
 $global_symbol = $header_curr['symbol_left'] ?: ($header_curr['symbol_right'] ?: '৳');
 $global_name = $header_curr['currency_name'] ?: 'Taka';
+
+// --- Dynamic Favicon Logic ---
+$site_favicon = '/pos/assets/images/favicon_logo.png'; // Default
+if(isset($conn)) {
+    // 1. Determine Store ID (Session or Default)
+    $f_sid = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 1;
+    
+    // 2. Try DB
+    $fav_q = mysqli_query($conn, "SELECT setting_value FROM pos_settings WHERE store_id = '$f_sid' AND setting_key = 'favicon'");
+    $found_fav = false;
+    
+    if($fav_q && mysqli_num_rows($fav_q) > 0) {
+        $r = mysqli_fetch_assoc($fav_q);
+        if(!empty($r['setting_value'])) {
+             $db_fav = $r['setting_value'];
+             // Validate
+             if(file_exists($_SERVER['DOCUMENT_ROOT'] . $db_fav) && strpos($db_fav, 'logo.png') === false) {
+                 $site_favicon = $db_fav;
+                 $found_fav = true;
+             }
+        }
+    }
+    
+    // 3. Fallback: Scan for latest favicon in uploads/branding
+    if(!$found_fav) {
+        $fav_dir = __DIR__ . '/../uploads/branding/';
+        if(is_dir($fav_dir)) {
+            // Match favicon_ or checks for .ico too if named differently? 
+            // Usually standard uploads might be favicon_* or logo_* used as favicon.
+            // Let's assume favicon files start with favicon_ or allow logo if favicon explicit not found?
+            // Actually, usually users upload explicit favicon.
+            $files = glob($fav_dir . 'favicon_*.*');
+            if($files && count($files) > 0) {
+                usort($files, function($a, $b) { return filemtime($b) - filemtime($a); });
+                $site_favicon = '/pos/uploads/branding/' . basename($files[0]);
+            }
+        }
+    }
+}
 ?>
 <script>
     window.currencySymbol = "<?= $global_symbol; ?>";
@@ -27,7 +66,7 @@ $global_name = $header_curr['currency_name'] ?: 'Taka';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Velocity POS - Modern Point of Sale System">
     <title><?= $page_title; ?></title>
-    <link rel="icon" type="image/x-icon" href="/pos/assets/images/logo.png" />
+    <link rel="icon" type="image/x-icon" href="<?= $site_favicon; ?>" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/pos/assets/css/output.css">
