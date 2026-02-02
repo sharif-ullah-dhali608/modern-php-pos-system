@@ -1,0 +1,150 @@
+/* Loan Module Custom Styles */
+.loan-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.loan-input {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.loan-input:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.required-star {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+/* Grouped Input Fixes (Loan Source & Reference No) */
+.fused-group-input {
+    border-top-left-radius: 1rem !important;
+    border-bottom-left-radius: 1rem !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-right: none !important;
+}
+
+.fused-group-btn {
+    border-top-right-radius: 1rem !important;
+    border-bottom-right-radius: 1rem !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* Clean Select2 Redesign */
+.select2-container--default .select2-selection--single {
+    height: 52px !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    border-radius: 1rem 0 0 1rem !important;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #0d9488 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #334155 !important;
+    font-weight: 600 !important;
+    padding-left: 1rem !important;
+    font-size: 0.9rem !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 50px !important;
+    right: 8px !important;
+}
+
+.select2-dropdown {
+    border-radius: 0.75rem !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+    margin-top: 5px !important;
+}
+
+.select2-search__field {
+    border-radius: 0.375rem !important;
+    padding: 10px 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    margin: 8px !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.9rem !important;
+}
+
+.select2-search__field:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1) !important;
+}
+
+.select2-results__option {
+    padding: 10px 16px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.15s ease !important;
+}
+
+.select2-results__option--highlighted[aria-selected] {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+}
+
+.select2-results__option[aria-selected="true"] {
+    background-color: #f0fdfa !important;
+    color: #0d9488 !important;
+    font-weight: 700 !important;
+}
+
+/* Select2 Error State */
+.select2-container--default.select2-error .select2-selection--single {
+    border-color: #f43f5e !important;
+    background-color: #fff1f2 !important;
+}
+
+/* intl-tel-input overrides */
+.iti {
+    width: 100% !important;
+}
+
+.iti__flag {
+    background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags.png") !important;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    .iti__flag {
+        background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/img/flags@2x.png") !important;
+    }
+}
+
+.iti__country-list {
+    border-radius: 0.75rem !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    overflow-x: hidden !important;
+    z-index: 100 !important;
+}
+
+.iti--separate-dial-code .iti__selected-dial-code {
+    font-weight: 600 !important;
+    color: #334155 !important;
+}
