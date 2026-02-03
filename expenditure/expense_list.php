@@ -137,6 +137,7 @@ $config = [
                 <?php renderReusableList($config); ?>
             </div>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 
@@ -264,5 +265,3 @@ $(document).ready(function() {
     initSelect2();
 });
 </script>
-
-<?php include('../includes/footer.php'); ?>

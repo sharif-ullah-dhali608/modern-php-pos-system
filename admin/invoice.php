@@ -226,8 +226,8 @@ $config = [
             <div class="p-6">
                 <?php renderReusableList($config); ?>
             </div>
-            <?php include('../includes/footer.php'); ?>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 

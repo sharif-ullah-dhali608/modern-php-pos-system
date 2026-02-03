@@ -47,14 +47,17 @@ $page_title = "Printer List - Velocity POS";
 include('../includes/header.php');
 ?>
 
-<div class="app-wrapper flex flex-col h-screen overflow-hidden">
+<div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
-    <?php include('../includes/navbar.php'); ?>
-    
-    <main id="main-content" class="lg:ml-64 flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300">
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 custom-scroll">
-            <div class="max-w-7xl mx-auto">
-                <?php renderReusableList($config); ?>
+    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
+        </div>
+        <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
+            <div class="p-6">
+                <?php 
+                    renderReusableList($config); 
+                ?>
             </div>
         </div>
         <?php include('../includes/footer.php'); ?>

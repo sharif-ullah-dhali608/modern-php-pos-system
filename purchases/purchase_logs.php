@@ -162,8 +162,8 @@ include('../includes/header.php');
                 <div id="pagination_container" class="mt-6 border-t border-slate-100 pt-4 flex flex-col md:flex-row justify-between items-center gap-4">
                     </div>
             </div>
-            <?php include('../includes/footer.php'); ?>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 

@@ -128,7 +128,7 @@ include($base_path . 'includes/header.php');
                 renderReusableList($list_config); 
                 ?>
             </div>
-            <?php include($base_path . 'includes/footer.php'); ?>
         </div>
+        <?php include($base_path . 'includes/footer.php'); ?>
     </main>
 </div>
