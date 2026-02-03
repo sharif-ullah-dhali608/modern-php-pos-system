@@ -13,6 +13,7 @@ if(!isset($_SESSION['auth'])){
 // Filter parameters
 $filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
 $filter = $_GET['filter'] ?? 'list';
+$payment_status_filter = $_GET['payment_status'] ?? 'all';
 $title = "Installment Payments";
 $where = "WHERE 1=1";
 
@@ -37,6 +38,12 @@ if($filter === 'today') {
     $title = "All Due Payments";
 } else {
     $title = "Installment Payment List";
+    // Apply Manual Status Filter
+    if($payment_status_filter == 'due') {
+        $where .= " AND ip.payment_status = 'due'";
+    } elseif($payment_status_filter == 'paid') {
+        $where .= " AND ip.payment_status = 'paid'";
+    }
 }
 
 // Fetch Installment Payments
@@ -70,6 +77,9 @@ if($query_run) {
         $row['formatted_paid'] = number_format($row['paid'], 2);
         $row['formatted_due'] = number_format($due, 2);
         $row['formatted_date'] = date('d M, Y', strtotime($row['payment_date']));
+        $row['payment_status_html'] = ($row['payment_status'] == 'paid') ? 
+            '<span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 font-bold text-xs uppercase">Paid</span>' :
+            '<span class="px-2 py-1 rounded bg-orange-100 text-orange-700 font-bold text-xs uppercase">Due</span>';
         $items[] = $row;
     }
 }
@@ -104,7 +114,17 @@ $list_config = [
         return '';
     },
     'filters' => [
-        ['id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options]
+        ['name' => 'customer_id', 'id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options],
+        [
+            'name' => 'payment_status',
+            'id' => 'filter_status',
+            'label' => 'Status',
+            'options' => [
+                ['label' => 'All Status', 'url' => '?payment_status=all', 'active' => $payment_status_filter == 'all'],
+                ['label' => 'Due', 'url' => '?payment_status=due', 'active' => $payment_status_filter == 'due'],
+                ['label' => 'Paid', 'url' => '?payment_status=paid', 'active' => $payment_status_filter == 'paid'],
+            ]
+        ]
     ],
     'columns' => [
         ['key' => 'invoice_id', 'label' => 'Invoice ID', 'sortable' => true],
@@ -115,7 +135,7 @@ $list_config = [
         ['key' => 'formatted_payable', 'label' => 'Total Payable', 'sortable' => true],
         ['key' => 'formatted_paid', 'label' => 'Paid', 'sortable' => true],
         ['key' => 'formatted_due', 'label' => 'Due', 'badge_class' => 'bg-red-500/20 text-red-400', 'type' => 'badge'],
-        ['key' => 'payment_status', 'label' => 'Status', 'type' => 'badge', 'badge_class' => 'bg-orange-500/20 text-orange-400'],
+        ['key' => 'payment_status_html', 'label' => 'Status', 'type' => 'html'],
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,

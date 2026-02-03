@@ -7,15 +7,37 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-$query = "SELECT * FROM categories ORDER BY sort_order ASC, id DESC";
+$status = $_GET['status'] ?? '';
+
+// Build Query
+$where_clause = "WHERE 1=1";
+if($status !== '') {
+    $status = mysqli_real_escape_string($conn, $status);
+    $where_clause .= " AND status = '$status'";
+}
+
+$query = "SELECT * FROM categories $where_clause ORDER BY sort_order ASC, id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
+
+// Filters Configuration
+$filters = [];
+$filters[] = [
+    'id' => 'filter_status',
+    'label' => 'Status',
+    'options' => [
+        ['label' => 'All Status', 'url' => '?status=', 'active' => ($status === '')],
+        ['label' => 'Active', 'url' => '?status=1', 'active' => ($status === '1')],
+        ['label' => 'Inactive', 'url' => '?status=0', 'active' => ($status === '0')],
+    ]
+];
 
 $list_config = [
     'title' => 'Category List',
     'add_url' => '/pos/categories/add',
     'table_id' => 'categoryTable',
+    'filters' => $filters,
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
         ['key' => 'name', 'label' => 'Category Name', 'sortable' => true],

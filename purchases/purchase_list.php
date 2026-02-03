@@ -11,6 +11,17 @@ if(!isset($_SESSION['auth'])){
 // Get filter parameter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 
+// Filter Labels Map
+$filter_labels = [
+    'all' => 'Filter', // Default label
+    'today' => 'Today Invoice',
+    'due' => 'Due Invoice',
+    'all_due' => 'All Due Invoice',
+    'paid' => 'Paid Invoice',
+    'inactive' => 'Inactive Invoice'
+];
+$active_filter_label = $filter_labels[$filter] ?? 'Filter';
+
 /**
 
  * Added Subqueries to calculate total bought vs total returned.
@@ -301,12 +312,17 @@ include('../includes/header.php');
                         </button>
                         
                         <div class="relative">
-                            <button type="button" onclick="toggleFilterDropdown()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base">
-                                <i class="fas fa-filter"></i>
-                                <span>Filter</span>
+                            <button type="button" onclick="toggleFilterDropdown()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base min-w-[140px] justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-filter"></i>
+                                    <span><?= $active_filter_label; ?></span>
+                                </span>
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
                             <div id="filterDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+                                <a href="?filter=all" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-b border-slate-100 font-semibold">
+                                    <i class="fas fa-times-circle mr-2"></i>Reset Filter
+                                </a>
                                 <a href="?filter=today" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 <?= $filter == 'today' ? 'bg-teal-50 text-teal-700' : '' ?>">Today Invoice</a>
                                 <a href="?filter=all" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 <?= $filter == 'all' ? 'bg-teal-50 text-teal-700' : '' ?>">All Invoice</a>
                                 <a href="?filter=due" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 <?= $filter == 'due' ? 'bg-teal-50 text-teal-700' : '' ?>">Due Invoice</a>
@@ -337,7 +353,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden p-4">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-x-auto p-4">
                     <table id="purchaseTable" class="table table-striped table-hover w-full text-left">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200">
@@ -349,9 +365,9 @@ include('../includes/header.php');
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Supplier</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Stock</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Creator</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Invoice Paid</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Due</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Amount</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Invoice Paid</th>
+                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Due</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Pay</th>
                                 <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Return</th>
@@ -375,9 +391,9 @@ include('../includes/header.php');
                                     <td class="p-4 text-sm text-blue-600 hover:underline cursor-pointer" onclick="window.location.href='/pos/users/add'">
                                         <?= htmlspecialchars($row['creator_display']); ?>
                                     </td>
-                                    <td class="p-4 text-sm text-slate-700 font-bold"><?= $row['amount_display']; ?></td>
-                                    <td class="p-4 text-sm text-slate-700 font-bold"><?= $row['paid_display']; ?></td>
-                                    <td class="p-4 text-sm text-slate-700 font-bold"><?= $row['due_display']; ?></td>
+                                    <td class="p-4 text-sm text-slate-700 font-bold text-right whitespace-nowrap" style="text-align: right !important; padding-right: 25px !important;"><?= $row['amount_display']; ?></td>
+                                    <td class="p-4 text-sm text-slate-700 font-bold text-right whitespace-nowrap" style="text-align: right !important; padding-right: 25px !important;"><?= $row['paid_display']; ?></td>
+                                    <td class="p-4 text-sm text-slate-700 font-bold text-right whitespace-nowrap" style="text-align: right !important; padding-right: 25px !important;"><?= $row['due_display']; ?></td>
                                     <td class="p-4"><?= $row['status_badge']; ?></td>
                                     <td class="p-4 text-center">
                                         <?php if($row['due_raw'] > 0): ?>
@@ -414,9 +430,9 @@ include('../includes/header.php');
                         <tfoot>
                             <tr class="bg-slate-100 font-bold  w-full">
                                 <td colspan="6" class="p-4 text-right text-slate-700 border-t border-slate-200">Total:</td>
-                                <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_amount, 2); ?></td>
-                                <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_paid, 2); ?></td>
-                                <td class="p-4 text-slate-700 border-t border-slate-200"><?= number_format($total_due, 2); ?></td>
+                                <td class="p-4 text-slate-700 border-t border-slate-200 text-right whitespace-nowrap font-bold" style="text-align: right !important; padding-right: 25px !important;"><?= number_format($total_amount, 2); ?></td>
+                                <td class="p-4 text-slate-700 border-t border-slate-200 text-right whitespace-nowrap font-bold" style="text-align: right !important; padding-right: 25px !important;"><?= number_format($total_paid, 2); ?></td>
+                                <td class="p-4 text-slate-700 border-t border-slate-200 text-right whitespace-nowrap font-bold" style="text-align: right !important; padding-right: 25px !important;"><?= number_format($total_due, 2); ?></td>
                                 <td colspan="6" class="p-4 border-t border-slate-200"></td>
                             </tr>
                         </tfoot>

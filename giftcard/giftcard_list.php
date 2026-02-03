@@ -1,16 +1,50 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/date_filter_helper.php');
 
 if(!isset($_SESSION['auth_user'])){
     header("Location: /pos/signin.php");
     exit(0);
 }
 
+// Filter Parameters
+$filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
+$filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
+
+// Fetch Customers List
+$customers_list = [];
+$cust_q = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+if($cust_q) {
+    while($c = mysqli_fetch_assoc($cust_q)) $customers_list[] = $c;
+}
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+
 $query = "SELECT g.*, c.name as customer_name, u.name as created_by_name FROM giftcards g 
           LEFT JOIN customers c ON g.customer_id = c.id 
           LEFT JOIN users u ON g.created_by = u.id 
-          ORDER BY g.id DESC";
+          WHERE 1=1 ";
+
+// Apply Customer Filter
+if($filter_customer > 0) {
+    $query .= " AND g.customer_id = '$filter_customer' ";
+}
+
+// Apply Status Filter
+if($filter_status == 'active'){
+    $query .= " AND g.status = '1' ";
+} elseif ($filter_status == 'inactive'){
+    $query .= " AND g.status = '0' ";
+}
+
+// Apply Date Filter (Assuming created_at column exists, if not usage of expiry_date might be preferred but context implies creation)
+// Checking if created_at exists is hard without schema, but standard practice is 'created_at'.
+// If error occurs, we might need to change to 'id' (proxy for time) or check column names.
+applyDateFilter($query, 'g.created_at', $date_filter, $start_date, $end_date);
+
+$query .= " ORDER BY g.id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 
@@ -51,6 +85,35 @@ $list_config = [
     'title' => 'Giftcard Management',
     'add_url' => '/pos/giftcard/add',
     'table_id' => 'giftcardTable',
+    'date_column' => 'created_at',
+    'filters' => [
+        [
+            'name' => 'customer',
+            'label' => 'Customer',
+            'id' => 'customerFilter',
+            'searchable' => true,
+            'options' => array_merge(
+                [['label' => 'All Customers', 'url' => '?customer_id=0', 'active' => $filter_customer == 0]],
+                array_map(function($c) use ($filter_customer) {
+                    return [
+                        'label' => $c['name'],
+                        'url' => '?customer_id=' . $c['id'],
+                        'active' => $filter_customer == $c['id']
+                    ];
+                }, $customers_list)
+            )
+        ],
+        [
+            'name' => 'status',
+            'label' => 'Status',
+            'id' => 'statusFilter',
+            'options' => [
+                ['label' => 'All Status', 'url' => '?status=all', 'active' => $filter_status == 'all'],
+                ['label' => 'Active', 'url' => '?status=active', 'active' => $filter_status == 'active'],
+                ['label' => 'Inactive', 'url' => '?status=inactive', 'active' => $filter_status == 'inactive'],
+            ]
+        ]
+    ],
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
         ['key' => 'card_no', 'label' => 'Card No.'],

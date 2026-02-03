@@ -48,12 +48,17 @@ while ($row = mysqli_fetch_assoc($result)) {
     $data[] = $row;
 }
 
-// Build customer filter options
-$customer_filter_options = [['label' => 'All Customers', 'url' => '?customer_id=0', 'active' => $filter_customer == 0]];
+// Build customer filter options with parameter preservation
+$current_params = $_GET;
+unset($current_params['customer_id']);
+$base_query = http_build_query($current_params);
+$base_url_prefix = $base_query ? "?$base_query&" : "?";
+
+$customer_filter_options = [['label' => 'All Customers', 'url' => $base_url_prefix . 'customer_id=0', 'active' => $filter_customer == 0]];
 foreach($customers_list as $cust) {
     $customer_filter_options[] = [
         'label' => $cust['name'],
-        'url' => '?customer_id='.$cust['id'],
+        'url' => $base_url_prefix . 'customer_id='.$cust['id'],
         'active' => $filter_customer == $cust['id']
     ];
 }
@@ -96,9 +101,12 @@ $config = [
         
         <div class="content-scroll-area custom-scroll">
             <div class="p-6">
+
                 <?php renderReusableList($config); ?>
             </div>
         </div>
+
+
         <?php include('../includes/footer.php'); ?>
     </main>
 </div>

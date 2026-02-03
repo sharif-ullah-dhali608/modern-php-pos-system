@@ -26,14 +26,46 @@ $page_title = "Store List - Velocity POS";
         
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
             <div class="p-6 lg:p-12">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Store List</h1>
                         <p class="text-slate-500 font-medium text-sm mt-1">Manage your business locations</p>
                     </div>
-                    <a href="/pos/stores/add" class="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-xl transition-all">
-                        <i class="fas fa-plus"></i> <span>Add New Store</span>
-                    </a>
+                    
+                    <div class="flex items-center gap-3">
+                        <!-- Search Bar (Glow Design) -->
+                        <div class="relative group">
+                            <input type="text" id="storeSearch" placeholder="Search records..." 
+                                   class="pl-6 pr-10 py-2 w-64 focus:w-96 hover:w-96 rounded-xl border border-teal-500 bg-white text-sm font-bold text-slate-600 placeholder-slate-400 outline-none focus:shadow-[0_0_10px_rgba(20,184,166,0.4)] hover:shadow-[0_0_10px_rgba(20,184,166,0.2)] focus:border-teal-600 transition-all duration-300 ease-out">
+                            <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-teal-600 text-sm pointer-events-none"></i>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="relative" id="statusFilterDropdown">
+                            <button onclick="toggleStatusDropdown()" class="flex items-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-sm font-bold shadow-md transition-all border border-teal-800">
+                                <i class="fas fa-filter text-xs text-teal-200"></i>
+                                <span id="currentStatusLabel">All Status</span>
+                                <i class="fas fa-chevron-down text-[10px] ml-1 opacity-70 transition-transform duration-200" id="statusChevron"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="statusMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
+                                <div onclick="filterByStatus('all', 'All Status')" class="px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 border-b border-slate-50 cursor-pointer flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> All Status
+                                </div>
+                                <div onclick="filterByStatus('1', 'Active')" class="px-4 py-3 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 cursor-pointer flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                                </div>
+                                <div onclick="filterByStatus('0', 'Inactive')" class="px-4 py-3 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Button (Icon + Text) -->
+                        <a href="/pos/stores/add" class="flex items-center gap-2 px-6 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm shadow-md transition-all border border-teal-800" title="Add New Store">
+                            <i class="fas fa-plus"></i> <span>Add Store</span>
+                        </a>
+                    </div>
                 </div>
 
                 <?php if(mysqli_num_rows($query_run) > 0): ?>
@@ -44,9 +76,10 @@ $page_title = "Store List - Velocity POS";
                             $border_color = $isActive ? 'bg-emerald-600' : 'bg-rose-600';
                             $icon_bg = $isActive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600';
                             $jsonData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                            $searchVal = strtolower($row['store_name'] . ' ' . $row['store_code'] . ' ' . $row['phone'] . ' ' . $row['city_zip']);
                         ?>
                         
-                        <div onclick="openStoreModal(<?= $jsonData ?>)" class="group relative w-full rounded-2xl shadow-lg border border-slate-200 bg-white hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1">
+                        <div onclick="openStoreModal(<?= $jsonData ?>)" class="store-card group relative w-full rounded-2xl shadow-lg border border-slate-200 bg-white hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1" data-status="<?= $isActive ? '1' : '0' ?>" data-search="<?= htmlspecialchars($searchVal) ?>">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 <?= $border_color; ?>"></div>
                             <div class="p-6 pl-8"> 
                                 <div class="flex justify-between items-start mb-4">
@@ -168,4 +201,61 @@ $page_title = "Store List - Velocity POS";
 <?php unset($_SESSION['message']); unset($_SESSION['msg_type']); endif; ?>
 
 <script src="/pos/assets/js/store-list.js"></script>
+<script>
+    // Elements
+    const searchInput = document.getElementById('storeSearch');
+    const storeCards = document.querySelectorAll('.store-card');
+    const statusMenu = document.getElementById('statusMenu');
+    const statusChevron = document.getElementById('statusChevron');
+    const currentStatusLabel = document.getElementById('currentStatusLabel');
+    const statusDropdown = document.getElementById('statusFilterDropdown');
+
+    // State
+    let currentFilterStatus = 'all';
+
+    // 1. Toggle Dropdown
+    function toggleStatusDropdown() {
+        statusMenu.classList.toggle('hidden');
+        statusChevron.classList.toggle('rotate-180');
+    }
+
+    // 2. Select Status
+    function filterByStatus(status, label) {
+        currentFilterStatus = status;
+        currentStatusLabel.innerText = label;
+        toggleStatusDropdown(); // Close menu
+        filterStores(); // Trigger Filter
+    }
+
+    // 3. Master Filter Function
+    function filterStores() {
+        const query = searchInput.value.toLowerCase().trim();
+
+        storeCards.forEach(card => {
+            const dataSearch = card.getAttribute('data-search');
+            const dataStatus = card.getAttribute('data-status');
+            
+            const matchesSearch = dataSearch.includes(query);
+            const matchesStatus = (currentFilterStatus === 'all') || (dataStatus === currentFilterStatus);
+
+            if (matchesSearch && matchesStatus) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+
+    // 4. Close Dropdown on Click Outside
+    document.addEventListener('click', function(event) {
+        if (!statusDropdown.contains(event.target)) {
+            if (!statusMenu.classList.contains('hidden')) {
+                toggleStatusDropdown();
+            }
+        }
+    });
+
+    // 5. Search Listener
+    searchInput.addEventListener('input', filterStores);
+</script>
 
