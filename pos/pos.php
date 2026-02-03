@@ -179,20 +179,115 @@ include('../includes/header.php');
         
         <!-- POS Header Bar (Full Width Navbar) -->
         <div class="pos-header-bar">
-            <select id="store_select" class="store-select">
+            <select id="store_select" class="store-select" style="display:none;">
                 <option value="all">All Stores</option>
                 <?php 
-                $first = true;
+                // Determine which ID to select: Session ID > First Store
+                $selected_store_id = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 0;
+                
                 foreach($stores as $store): 
+                    $is_selected = ($store['id'] == $selected_store_id) ? 'selected' : '';
                 ?>
-                    <option value="<?= $store['id']; ?>" <?= $first ? 'data-default="true"' : ''; ?>>
+                    <option value="<?= $store['id']; ?>" <?= $is_selected; ?>>
                         <?= htmlspecialchars($store['store_name']); ?>
                     </option>
                 <?php 
-                    $first = false;
                 endforeach; 
                 ?>
             </select>
+
+            <!-- Store Trigger Button (Modal Trigger) -->
+            <button onclick="openPosStoreModal()" class="store-trigger-btn group">
+                <div class="store-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="store-info">
+                    <span class="label">Current Store</span>
+                    <span class="value" id="pos_store_name">
+                        <?php 
+                        $curr_store_name = "All Stores"; // Default to All Stores text if no match
+                        if($selected_store_id == 0 || $selected_store_id == 'all') {
+                             $curr_store_name = "All Stores";
+                        } else {
+                            foreach($stores as $s) {
+                                if($s['id'] == $selected_store_id) {
+                                    $curr_store_name = $s['store_name'];
+                                    break;
+                                }
+                            }
+                        }
+                        echo htmlspecialchars($curr_store_name); 
+                        ?>
+                    </span>
+                </div>
+                <i class="fas fa-chevron-down arrow"></i>
+            </button>
+            
+            <!-- Style for animation -->
+            <style>
+            @keyframes gradient-x {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+            }
+            .animate-gradient-x {
+                background-size: 200% 200%;
+                animation: gradient-x 6s ease infinite;
+            }
+            </style>
+
+            <!-- POS STORE SELECTION MODAL -->
+            <div id="posStoreModal" class="fixed inset-0 z-[10000] hidden">
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-300" onclick="closePosStoreModal()"></div>
+                
+                <!-- Modal Content -->
+                <div class="flex h-full w-full items-center justify-center p-4">
+                    <div class="relative w-full max-w-lg transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 modal-content border border-slate-100">
+                        
+                        <!-- Header -->
+                        <div class="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 animate-gradient-x p-6 text-center relative overflow-hidden">
+                            <!-- Decorative Circles -->
+                            <div class="absolute top-[-20%] left-[-10%] w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+                            <div class="absolute bottom-[-20%] right-[-10%] w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
+                            
+                            <div class="w-14 h-14 bg-white/20 rounded-[1rem] flex items-center justify-center mx-auto mb-3 backdrop-blur-md border border-white/20 shadow-lg shadow-teal-900/10">
+                                <i class="fas fa-store text-2xl text-white drop-shadow-md"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-white tracking-tight drop-shadow-sm">Select Store Access</h2>
+                            <p class="text-teal-50 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 opacity-90">Choose your workspace</p>
+                        </div>
+                        
+                        <!-- Search & List -->
+                        <div class="p-8">
+                            <!-- Search Input -->
+                            <div class="relative mb-6 group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-slate-400 group-focus-within:text-teal-500 transition-colors"></i>
+                                </div>
+                                <input type="text" id="pos_modal_store_search" 
+                                    class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-slate-700 font-bold focus:border-teal-500 focus:bg-white outline-none transition-all placeholder:text-slate-300 shadow-inner"
+                                    placeholder="Search store name..." autocomplete="off">
+                            </div>
+
+                            <!-- Stores Grid/List -->
+                            <div id="pos_modal_store_list" class="space-y-3 max-h-[350px] overflow-y-auto custom-scroll pr-2 pb-2">
+                                <!-- Loading State -->
+                                <div class="py-12 text-center">
+                                    <i class="fas fa-circle-notch fa-spin text-teal-500 text-2xl"></i>
+                                    <p class="text-slate-400 text-xs font-bold mt-3 uppercase tracking-widest">Loading Stores...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="bg-slate-50 p-6 border-t border-slate-100 flex justify-center">
+                             <button onclick="closePosStoreModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold px-6 py-2 rounded-xl hover:bg-slate-200 transition-all">
+                                 Cancel
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="nav-links">
                 <a href="/pos"><i class="fas fa-home "></i> DASHBOARD</a>
                 <a href="/pos/pos/" class="active"><i class="fas fa-cash-register"></i> POS</a>

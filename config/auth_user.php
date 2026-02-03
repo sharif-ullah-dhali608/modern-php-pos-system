@@ -92,6 +92,42 @@ if(isset($_POST['login_btn']))
                 'image' => isset($data['user_image']) ? $data['user_image'] : ''
             ];
 
+            // --- STORE VISIBILITY LOGIC ---
+            $u_id = $data['id'];
+            $store_map_q = mysqli_query($conn, "SELECT store_id FROM user_store_map WHERE user_id = '$u_id'");
+            $assigned_stores = [];
+            while ($sm = mysqli_fetch_assoc($store_map_q)) {
+                $assigned_stores[] = $sm['store_id'];
+            }
+
+            // Logic:
+            // 1. If assigned stores exist, set the first one as active.
+            // 2. If NO assigned stores:
+            //    - If Admin -> Default to Store 1 (Master) and allowed.
+            //    - If Not Admin -> Deny Login.
+            
+            if (count($assigned_stores) > 0) {
+                $_SESSION['store_id'] = $assigned_stores[0];
+                $_SESSION['assigned_stores'] = $assigned_stores;
+                $_SESSION['must_select_store'] = true; // Trigger Modal on first load
+            } else {
+                if ($role === 'admin') {
+                    // Admin Fallback
+                    $_SESSION['store_id'] = 1; 
+                    $_SESSION['assigned_stores'] = [1]; 
+                    $_SESSION['must_select_store'] = true; // Trigger Modal
+                } else {
+                    // Deny Access for Staff with no Store
+                    unset($_SESSION['auth']);
+                    unset($_SESSION['auth_user']);
+                    
+                    $_SESSION['message'] = "Access Denied: No stores assigned to your account. Contact Administrator.";
+                    $_SESSION['msg_type'] = "error";
+                    header("Location: /pos/login");
+                    exit(0);
+                }
+            }
+
             $_SESSION['message'] = "Welcome Dashboard"; 
             $_SESSION['msg_type'] = "success";
 

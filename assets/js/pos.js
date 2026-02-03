@@ -274,34 +274,40 @@ document.querySelectorAll('.pos-modal').forEach(modal => {
 });
 
 
-// Store Selection with localStorage Persistence
+// Store Selection: Prefer PHP Session (rendered value) > localStorage
 document.addEventListener('DOMContentLoaded', function () {
     const storeSelect = document.getElementById('store_select');
-    const savedStoreId = localStorage.getItem('pos_selected_store');
 
-    // Restore saved store or select first available store (never "All Stores")
-    if (savedStoreId && savedStoreId !== 'all') {
-        // Check if saved store still exists in options
-        const savedOption = storeSelect.querySelector(`option[value="${savedStoreId}"]`);
-        if (savedOption) {
+    // PHP already sets the 'selected' attribute based on Session
+    // So we just need to ensure we validate it and sync localStorage
+
+    let currentId = storeSelect.value;
+
+    // If for some reason PHP selected 'all' or nothing (shouldn't happen with typical logic), try localStorage or fallback
+    if (!currentId || currentId === 'all') {
+        const savedStoreId = localStorage.getItem('pos_selected_store');
+        if (savedStoreId && savedStoreId !== 'all' && storeSelect.querySelector(`option[value="${savedStoreId}"]`)) {
             storeSelect.value = savedStoreId;
+            currentId = savedStoreId;
         } else {
-            // Saved store no longer exists, select first available store
             selectFirstAvailableStore(storeSelect);
+            currentId = storeSelect.value;
         }
-    } else {
-        // No saved store or was "All Stores", select first available store
-        selectFirstAvailableStore(storeSelect);
     }
 
+    // Sync localStorage with the final decision
+    localStorage.setItem('pos_selected_store', currentId);
+
     // Load products with selected store and update currency
-    const currentId = storeSelect.value;
     const selectedStoreObj = stores.find(s => s.id == currentId);
     if (selectedStoreObj) {
         window.currencySymbol = selectedStoreObj.currency_symbol || '৳';
         window.currencyName = selectedStoreObj.currency_full_name || 'Taka';
     }
     loadProducts(1);
+
+    // Ensure UI Button text matches selected store
+    updateStoreTriggerUI();
 });
 
 // Helper function to select first available store (not "All Stores")
@@ -323,19 +329,144 @@ function selectFirstAvailableStore(storeSelect) {
     }
 }
 
-// Store Selection Listener - Save to localStorage when changed
-// Store Selection Listener - Save to localStorage when changed
-// Use 'mousedown' to track previous value before change
-let previousStoreId = document.getElementById('store_select').value;
-document.getElementById('store_select').addEventListener('mousedown', function () {
-    previousStoreId = this.value;
+// --- POS STORE MODAL LOGIC ---
+
+let posStoreModalStores = []; // Cache stores
+
+function openPosStoreModal() {
+    const modal = document.getElementById('posStoreModal');
+    const searchInput = document.getElementById('pos_modal_store_search');
+
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    // Animate in
+    setTimeout(() => {
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }
+    }, 10);
+
+    // Focus search
+    if (searchInput) {
+        searchInput.value = '';
+        setTimeout(() => searchInput.focus(), 100);
+    }
+
+    // Fetch stores logic
+    fetchPosStores();
+}
+
+function closePosStoreModal() {
+    const modal = document.getElementById('posStoreModal');
+    if (!modal) return;
+
+    const content = modal.querySelector('.modal-content');
+    if (content) {
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+    }
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function fetchPosStores(search = '') {
+    const listContainer = document.getElementById('pos_modal_store_list');
+    listContainer.innerHTML = '<div class="py-12 text-center"><i class="fas fa-circle-notch fa-spin text-teal-500 text-2xl"></i><p class="text-slate-400 text-xs font-bold mt-3 uppercase tracking-widest">Loading...</p></div>';
+
+    fetch(`../users/fetch_stores_modal.php?search=${encodeURIComponent(search)}`)
+        .then(res => res.json())
+        .then(data => {
+            let storesToList = [];
+            // Add "All Stores" option if it matches search (or search is empty)
+            if (search === '' || 'all stores'.includes(search.toLowerCase())) {
+                storesToList.push({
+                    id: 'all',
+                    store_name: 'All Stores',
+                    address: 'Global Access',
+                    currency_symbol: '৳', // Default
+                    currency_full_name: 'Taka'
+                });
+            }
+
+            if (data.success) {
+                storesToList = storesToList.concat(data.stores);
+                posStoreModalStores = storesToList;
+                renderPosStoreList(storesToList);
+            } else {
+                // Even if fetch fails, show All Stores if possible
+                renderPosStoreList(storesToList);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            // Show at least All Stores
+            renderPosStoreList([{ id: 'all', store_name: 'All Stores', address: 'Global Access' }]);
+        });
+}
+
+function renderPosStoreList(stores) {
+    const listContainer = document.getElementById('pos_modal_store_list');
+    const currentStoreId = document.getElementById('store_select').value;
+
+    if (stores.length === 0) {
+        listContainer.innerHTML = '<div class="text-center py-8 text-slate-400 font-bold">No stores found</div>';
+        return;
+    }
+
+    let html = '';
+    stores.forEach(s => {
+        const isAll = s.id === 'all';
+        const initial = isAll ? '<i class="fas fa-globe"></i>' : s.store_name.charAt(0).toUpperCase();
+        const isActive = s.id == currentStoreId;
+        const activeClass = isActive ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-500/20' : 'border-slate-100 hover:border-teal-300 hover:bg-slate-50';
+        const badge = isActive ? `<i class="fas fa-check-circle text-teal-600 text-xl"></i>` : '';
+        const location = s.city_zip || s.address || 'Unknown Location';
+
+        html += `
+            <div onclick="selectPosStore('${s.id}')" 
+                 class="group cursor-pointer relative p-4 rounded-2xl border-2 transition-all duration-200 ${activeClass} flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-lg font-black text-slate-700 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+                    ${initial}
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-slate-800 text-sm group-hover:text-teal-700 transition-colors">${s.store_name}</h4>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-100">ID: ${s.id}</span>
+                        <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1 truncate max-w-[150px]">
+                            <i class="fas fa-map-marker-alt text-slate-300"></i> ${location}
+                        </span>
+                    </div>
+                </div>
+                ${badge}
+            </div>
+        `;
+    });
+
+    listContainer.innerHTML = html;
+}
+
+// Live Search Listener
+document.getElementById('pos_modal_store_search')?.addEventListener('input', function (e) {
+    clearTimeout(window.storeSearchTimeout);
+    window.storeSearchTimeout = setTimeout(() => {
+        fetchPosStores(e.target.value);
+    }, 300);
 });
 
-document.getElementById('store_select').addEventListener('change', function () {
-    const selectedStore = this.value;
+// Global Previous ID tracker
+let previousStoreId = document.getElementById('store_select').value;
+
+/* Refactored Store Change Handler */
+function handleStoreChange(selectedStore, prevStore) {
+    const storeInput = document.getElementById('store_select');
 
     // Check if cart has items
-    if (cart.length > 0) {
+    if (typeof cart !== 'undefined' && cart.length > 0) {
         Swal.fire({
             title: 'Clear Cart?',
             text: "Switching stores will clear your current cart. Do you want to proceed?",
@@ -353,6 +484,7 @@ document.getElementById('store_select').addEventListener('change', function () {
 
                 // Proceed with store change
                 localStorage.setItem('pos_selected_store', selectedStore);
+                storeInput.value = selectedStore; // Ensure value is set
 
                 // --- NEW: Update Currency Symbol on Confirmed Change ---
                 const selectedStoreObj = stores.find(s => s.id == selectedStore);
@@ -366,20 +498,25 @@ document.getElementById('store_select').addEventListener('change', function () {
                     } else {
                         window.posSettings = {}; // Reset if no settings found
                     }
-                    // ---------------------------------
                 }
-                // -------------------------------------------------------
 
                 loadProducts(1);
+                updateStoreTriggerUI(); // Update Button Text
+                // Update Global Previous ID
+                previousStoreId = selectedStore;
+
                 showToast('Cart cleared and store switched', 'info');
             } else {
                 // Revert selection
-                this.value = previousStoreId;
+                storeInput.value = prevStore;
+                updateStoreTriggerUI(); // Revert Button Text
+                // Do NOT update previousStoreId
             }
         });
     } else {
         // Cart is empty, proceed normally
         localStorage.setItem('pos_selected_store', selectedStore);
+        storeInput.value = selectedStore;
 
         // --- NEW: Update Currency Symbol on Change ---
         const selectedStoreObj = stores.find(s => s.id == selectedStore);
@@ -393,12 +530,72 @@ document.getElementById('store_select').addEventListener('change', function () {
             } else {
                 window.posSettings = {}; // Reset if no settings found
             }
-            // ---------------------------------
         }
-        // ----------------------------------------------
 
         loadProducts(1); // Reload from page 1 when store changes
+        updateStoreTriggerUI(); // Update Button Text
+        previousStoreId = selectedStore;
     }
+}
+
+function selectPosStore(id) {
+    const storeInput = document.getElementById('store_select');
+
+    // 1. Manually update previousStoreId if it's undefined (initial load)
+    if (typeof previousStoreId === 'undefined') {
+        previousStoreId = storeInput.value;
+    }
+
+    if (storeInput.value == id) {
+        closePosStoreModal();
+        return;
+    }
+
+    // 2. Ensure option exists (Sync Issue Fix for searched stores)
+    let option = storeInput.querySelector(`option[value="${id}"]`);
+    if (!option) {
+        const storeData = posStoreModalStores.find(s => s.id == id);
+        if (storeData) {
+            option = document.createElement('option');
+            option.value = id;
+            option.textContent = storeData.store_name;
+            storeInput.appendChild(option);
+        } else {
+            option = document.createElement('option');
+            option.value = id;
+            option.textContent = "Store " + id;
+            storeInput.appendChild(option);
+        }
+    }
+
+    // 3. CALL HANDLER DIRECTLY (Bypassing dispatchEvent to ensure execution)
+    handleStoreChange(id, previousStoreId);
+
+    closePosStoreModal();
+}
+
+function updateStoreTriggerUI() {
+    const storeSelect = document.getElementById('store_select');
+    const nameEl = document.getElementById('pos_store_name');
+    if (!nameEl || !storeSelect) return;
+
+    if (storeSelect.value === 'all') {
+        nameEl.textContent = 'All Stores';
+    } else {
+        // Try to find name in stores global or fetch from options if available
+        // option text is reliable
+        const selectedOption = storeSelect.querySelector(`option[value="${storeSelect.value}"]`);
+        if (selectedOption) {
+            nameEl.textContent = selectedOption.textContent.trim();
+        } else {
+            nameEl.textContent = 'Unknown Store';
+        }
+    }
+}
+
+// Keep the change listener just in case, but make it use the handler
+document.getElementById('store_select').addEventListener('change', function () {
+    handleStoreChange(this.value, previousStoreId);
 });
 
 // Track current filters
