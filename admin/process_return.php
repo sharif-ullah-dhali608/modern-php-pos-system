@@ -149,12 +149,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         mysqli_commit($conn);
         
         $_SESSION['message'] = "Return processed successfully. ID: $return_invoice_id";
+        $_SESSION['msg_type'] = "success";
         header("Location: sell_return.php");
         exit;
 
     } catch (Exception $e) {
         mysqli_rollback($conn);
         $_SESSION['message'] = "Error: " . $e->getMessage();
+        $_SESSION['msg_type'] = "error";
         header("Location: sell_return_create.php?id=$original_invoice_id");
         exit;
     }

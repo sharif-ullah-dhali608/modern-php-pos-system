@@ -16,6 +16,7 @@ $filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
+$filter_status = $_GET['status'] ?? 'all';
 
 // Fetch Customers for filter dropdown
 $customers_list = [];
@@ -57,15 +58,21 @@ if($query_run) {
         $total_paid_installments = $paid_data['total_paid'] ?? 0;
         $total_due_installments = $paid_data['total_due'] ?? 0;
         
-        // Skip if all installments are fully paid (due <= 0.01 to handle rounding errors)
-        if($total_due_installments <= 0.01) {
-            continue;
-        }
-        
         $total_receivable = $row['sale_total'] + $row['interest_amount'];
         $remaining = $total_receivable - $row['initial_amount'] - $total_paid_installments;
         if($remaining <= 0.01) $remaining = 0;
+        
+        $is_completed = ($remaining == 0);
+        
+        // Filter Logic
+        if($filter_status == 'active' && $is_completed) continue;
+        if($filter_status == 'completed' && !$is_completed) continue;
+
         $row['remaining_due'] = number_format($remaining, 2);
+        
+        $row['payment_status'] = $is_completed ? 
+            '<span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 font-bold text-xs uppercase">Completed</span>' : 
+            '<span class="px-2 py-1 rounded bg-blue-100 text-blue-700 font-bold text-xs uppercase">Running</span>';
         
         $items[] = $row;
     }
@@ -90,7 +97,17 @@ $list_config = [
     'table_id' => 'installmentTable',
     'date_column' => 'io.created_at',
     'filters' => [
-        ['id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options]
+        ['name' => 'customer_id', 'id' => 'filter_customer', 'label' => 'Customer', 'searchable' => true, 'options' => $customer_filter_options],
+        [
+            'name' => 'status',
+            'id' => 'filter_status',
+            'label' => 'Status',
+            'options' => [
+                ['label' => 'Active Orders', 'url' => '?status=active', 'active' => $filter_status == 'active'],
+                ['label' => 'Completed', 'url' => '?status=completed', 'active' => $filter_status == 'completed'],
+                ['label' => 'All Orders', 'url' => '?status=all', 'active' => $filter_status == 'all'],
+            ]
+        ]
     ],
     'columns' => [
         ['key' => 'invoice_id', 'label' => 'Invoice ID', 'sortable' => true],
@@ -101,7 +118,7 @@ $list_config = [
         ['key' => 'formatted_initial', 'label' => 'Down Payment', 'sortable' => true],
         ['key' => 'interest_display', 'label' => 'Interest', 'sortable' => true],
         ['key' => 'remaining_due', 'label' => 'Due', 'badge_class' => 'bg-red-500/20 text-red-400', 'type' => 'badge'],
-        ['key' => 'payment_status', 'label' => 'Status', 'type' => 'badge', 'badge_class' => 'bg-blue-500/20 text-blue-400'],
+        ['key' => 'payment_status', 'label' => 'Status', 'type' => 'html'],
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,

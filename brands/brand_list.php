@@ -7,15 +7,55 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-$query = "SELECT * FROM brands ORDER BY sort_order ASC, id DESC";
+// Filter Inputs
+$status = $_GET['status'] ?? '';
+$usage = $_GET['usage'] ?? '';
+
+// Build Query
+$where_clause = "WHERE 1=1";
+if($status !== '') {
+    $status = mysqli_real_escape_string($conn, $status);
+    $where_clause .= " AND status = '$status'";
+}
+if($usage === 'used') {
+    $where_clause .= " AND EXISTS (SELECT 1 FROM products WHERE brand_id = brands.id)";
+} elseif($usage === 'unused') {
+    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM products WHERE brand_id = brands.id)";
+}
+
+$query = "SELECT * FROM brands $where_clause ORDER BY sort_order ASC, id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
+
+// Filters Config
+$filters = [];
+// 1. Status
+$filters[] = [
+    'id' => 'filter_status',
+    'label' => 'Status',
+    'options' => [
+        ['label' => 'All Status', 'url' => '?status=', 'active' => ($status === '')],
+        ['label' => 'Active', 'url' => '?status=1', 'active' => ($status === '1')],
+        ['label' => 'Inactive', 'url' => '?status=0', 'active' => ($status === '0')],
+    ]
+];
+// 2. Usage
+$filters[] = [
+    'id' => 'filter_usage',
+    'label' => 'Usage',
+    'options' => [
+        ['label' => 'All Usage', 'url' => '?usage=', 'active' => ($usage === '')],
+        ['label' => 'Used in Products', 'url' => '?usage=used', 'active' => ($usage === 'used')],
+        ['label' => 'Not Used', 'url' => '?usage=unused', 'active' => ($usage === 'unused')],
+    ]
+];
 
 $list_config = [
     'title' => 'Brand List',
     'add_url' => '/pos/brands/add',
     'table_id' => 'brandTable',
+    'filters' => $filters,
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
         ['key' => 'name', 'label' => 'Name', 'sortable' => true],

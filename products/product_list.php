@@ -8,6 +8,19 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
+// Filter Inputs
+$category_id = $_GET['category_id'] ?? '';
+$brand_id    = $_GET['brand_id'] ?? '';
+$supplier_id = $_GET['supplier_id'] ?? '';
+$status      = $_GET['status'] ?? '';
+
+// Build Query
+$where_clause = "WHERE 1=1";
+if(!empty($category_id)) { $category_id = mysqli_real_escape_string($conn, $category_id); $where_clause .= " AND p.category_id = '$category_id'"; }
+if(!empty($brand_id))    { $brand_id = mysqli_real_escape_string($conn, $brand_id);       $where_clause .= " AND p.brand_id = '$brand_id'"; }
+if(!empty($supplier_id)) { $supplier_id = mysqli_real_escape_string($conn, $supplier_id); $where_clause .= " AND p.supplier_id = '$supplier_id'"; }
+if($status !== '')       { $status = mysqli_real_escape_string($conn, $status);           $where_clause .= " AND p.status = '$status'"; }
+
 // Fetch Products with Relations
 $query = "SELECT p.*, 
                  c.name as category_name, 
@@ -23,6 +36,7 @@ $query = "SELECT p.*,
           LEFT JOIN boxes bx ON p.box_id = bx.id
           LEFT JOIN currencies cr ON p.currency_id = cr.id
           LEFT JOIN suppliers s ON p.supplier_id = s.id
+          $where_clause
           ORDER BY p.id DESC";
 
 $query_run = mysqli_query($conn, $query);
@@ -45,10 +59,76 @@ if($query_run) {
     }
 }
 
+// --- Fetch Filter Options ---
+$filters = [];
+
+// 1. Category Filter
+$cat_opts = [['label' => 'All Categories', 'url' => '?category_id=', 'active' => empty($category_id)]];
+$cat_q = mysqli_query($conn, "SELECT id, name FROM categories WHERE status=1 ORDER BY name ASC");
+while($c = mysqli_fetch_assoc($cat_q)) {
+    $cat_opts[] = [
+        'label' => $c['name'],
+        'url' => "?category_id={$c['id']}",
+        'active' => ($category_id == $c['id'])
+    ];
+}
+$filters[] = [
+    'id' => 'filter_cat',
+    'label' => 'Category',
+    'searchable' => true,
+    'options' => $cat_opts
+];
+
+// 2. Brand Filter
+$brand_opts = [['label' => 'All Brands', 'url' => '?brand_id=', 'active' => empty($brand_id)]];
+$brand_q = mysqli_query($conn, "SELECT id, name FROM brands WHERE status=1 ORDER BY name ASC");
+while($b = mysqli_fetch_assoc($brand_q)) {
+    $brand_opts[] = [
+        'label' => $b['name'],
+        'url' => "?brand_id={$b['id']}",
+        'active' => ($brand_id == $b['id'])
+    ];
+}
+$filters[] = [
+    'id' => 'filter_brand',
+    'label' => 'Brand',
+    'searchable' => true,
+    'options' => $brand_opts
+];
+
+// 3. Supplier Filter
+$supp_opts = [['label' => 'All Suppliers', 'url' => '?supplier_id=', 'active' => empty($supplier_id)]];
+$supp_q = mysqli_query($conn, "SELECT id, name FROM suppliers WHERE status=1 ORDER BY name ASC");
+while($s = mysqli_fetch_assoc($supp_q)) {
+    $supp_opts[] = [
+        'label' => $s['name'],
+        'url' => "?supplier_id={$s['id']}",
+        'active' => ($supplier_id == $s['id'])
+    ];
+}
+$filters[] = [
+    'id' => 'filter_supp',
+    'label' => 'Supplier',
+    'searchable' => true,
+    'options' => $supp_opts
+];
+
+// 4. Status Filter
+$filters[] = [
+    'id' => 'filter_status',
+    'label' => 'Status',
+    'options' => [
+        ['label' => 'All Status', 'url' => '?status=', 'active' => ($status === '')],
+        ['label' => 'Active', 'url' => '?status=1', 'active' => ($status === '1')],
+        ['label' => 'Inactive', 'url' => '?status=0', 'active' => ($status === '0')],
+    ]
+];
+
 $list_config = [
     'title' => 'Product List',
     'add_url' => '/pos/products/add',
     'table_id' => 'productTable',
+    'filters' => $filters,
     'columns' => [
         ['key' => 'thumbnail', 'label' => 'Image', 'type' => 'image', 'sortable' => false],
         ['key' => 'product_code', 'label' => 'Code', 'sortable' => true],

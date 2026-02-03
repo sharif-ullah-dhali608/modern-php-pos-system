@@ -71,9 +71,7 @@ $is_filtering = false;
 
 if($date_filter) {
     $filter_label = ucwords(str_replace('_', ' ', $date_filter));
-    if($date_filter !== 'today') {
-        $is_filtering = true;
-    }
+    $is_filtering = true;
 } elseif($start_date && $end_date) {
     if($start_date === $end_date) {
         if($start_date !== date('Y-m-d')) {
@@ -128,9 +126,9 @@ $currency = '';
                         <p class="text-slate-500 font-medium text-sm">Overview of all loans and recent payments</p>
                     </div>
                     
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
                         <?php if($is_filtering): ?>
-                        <a href="<?= strtok($_SERVER['REQUEST_URI'], '?'); ?>" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg border border-red-200 transition-all shadow-sm">
+                        <a href="<?= strtok($_SERVER['REQUEST_URI'], '?'); ?>" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg border border-red-200 transition-all shadow-sm w-full md:w-auto">
                             <i class="fas fa-undo text-xs"></i>
                             <span>Reset</span>
                         </a>
@@ -138,7 +136,7 @@ $currency = '';
 
                         <!-- Advanced Date Filter Dropdown -->
                         <div class="relative w-full md:w-auto">
-                            <button type="button" onclick="toggleFilterDropdown('filter_date')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= $is_filtering ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'; ?> hover:bg-teal-700 hover:text-white font-bold rounded-lg shadow-sm transition-all w-full md:min-w-[180px]">
+                            <button type="button" onclick="toggleFilterDropdown('filter_date')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= $is_filtering ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'; ?> hover:bg-teal-600 hover:text-white font-bold rounded-lg shadow-sm transition-all w-full md:min-w-[180px]">
                                 <i class="fas fa-calendar-alt"></i>
                                 <span><?= $filter_label; ?></span>
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -233,11 +231,11 @@ $currency = '';
                             </div>
                         </div>
 
-                        <a href="/pos/loan/add" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-md">
+                        <a href="/pos/loan/add" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-md w-full md:w-auto">
                             <i class="fas fa-plus"></i>
                             <span>Take Loan</span>
                         </a>
-                        <a href="/pos/loan/list" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition-all shadow-sm">
+                        <a href="/pos/loan/list" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-md w-full md:w-auto">
                             <i class="fas fa-list"></i>
                             <span>View List</span>
                         </a>
@@ -255,7 +253,7 @@ $currency = '';
                                 </div>
                                 <span class="text-sm font-black uppercase tracking-widest opacity-80">Total Loan</span>
                             </div>
-                            <div class="text-2xl lg:text-3xl font-black mb-1 break-words leading-tight"><?= $currency ?><?= number_format($stats['total_loan'], 2) ?></div>
+                            <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_loan'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Payable amount</div>
                         </div>
                         <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">LOAN</div>
@@ -270,7 +268,7 @@ $currency = '';
                                 </div>
                                 <span class="text-sm font-black uppercase tracking-widest opacity-80">Total Paid</span>
                             </div>
-                            <div class="text-2xl lg:text-3xl font-black mb-1 break-words leading-tight"><?= $currency ?><?= number_format($stats['total_paid'], 2) ?></div>
+                            <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_paid'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Amount paid</div>
                         </div>
                         <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">PAID</div>
@@ -285,7 +283,7 @@ $currency = '';
                                 </div>
                                 <span class="text-sm font-black uppercase tracking-widest opacity-80">Total Due</span>
                             </div>
-                            <div class="text-2xl lg:text-3xl font-black mb-1 break-words leading-tight"><?= $currency ?><?= number_format($stats['total_due'], 2) ?></div>
+                            <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_due'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Remaining balance</div>
                         </div>
                         <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">DUE</div>
@@ -300,7 +298,7 @@ $currency = '';
                                 </div>
                                 <span class="text-sm font-black uppercase tracking-widest text-slate-400">Total Loans</span>
                             </div>
-                            <div class="text-2xl lg:text-3xl font-black mb-1 text-slate-800 break-words leading-tight"><?= number_format($stats['total_count']) ?></div>
+                            <div class="text-2xl xl:text-3xl font-black mb-1 text-slate-800 whitespace-nowrap tracking-tight"><?= number_format($stats['total_count']) ?></div>
                             <div class="text-xs font-bold text-slate-400 italic">Active loans</div>
                         </div>
                         <div class="absolute -right-4 -bottom-4 text-slate-50 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">COUNT</div>
@@ -308,13 +306,13 @@ $currency = '';
                 </div>
 
                 <!-- Recent Payments Table -->
-                <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 bg-indigo-50/30 flex items-center justify-between">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 bg-teal-50/30 flex items-center justify-between">
                         <h3 class="font-black text-slate-900 text-lg flex items-center gap-2">
-                            <span class="w-2 h-8 bg-indigo-500 rounded-full"></span>
+                            <span class="w-2 h-8 bg-teal-500 rounded-full"></span>
                             Recent Payments
                         </h3>
-                        <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"><?= count($payments) ?> Entries</span>
+                        <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"><?= count($payments) ?> Entries</span>
                     </div>
                     <div class="flex-1 overflow-x-auto">
                         <table class="w-full text-left border-collapse">

@@ -287,23 +287,7 @@ function renderReusableList($config) {
                 <?php endforeach; ?>
                 
                 <?php // Filter Dropdowns
-                // Determine if any filter is active for Global Reset
-                $is_any_filter_active = false;
-                if(isset($config['date_column'])) {
-                    if(isset($_GET['date_filter']) || isset($_GET['start_date']) || isset($_GET['end_date'])) $is_any_filter_active = true;
-                }
-                foreach($filters as $f) {
-                    if(isset($f['name']) && isset($_GET[$f['name']]) && $_GET[$f['name']] !== '') $is_any_filter_active = true;
-                }
-
-                if($is_any_filter_active): ?>
-                    <a href="<?= strtok($_SERVER['REQUEST_URI'], '?'); ?>" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg border border-rose-200 transition-all shadow-sm">
-                        <i class="fas fa-undo text-xs"></i>
-                        <span>Reset</span>
-                    </a>
-                <?php endif; ?>
-
-                <?php foreach($filters as $filter): 
+                foreach($filters as $filter): 
                     // Determine active filter label
                     $filter_button_label = $filter['label'];
                     $is_filter_active = false;
@@ -336,7 +320,16 @@ function renderReusableList($config) {
                                     // Show first 6 options (All Customers + 5 customers), hide rest initially
                                     $hidden_class = ($option_count > 6) ? 'hidden-initially' : '';
                                 ?>
-                                    <a href="<?= $opt['url']; ?>" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors <?= (isset($opt['active']) && $opt['active']) ? 'bg-teal-50 text-teal-700 font-semibold' : ''; ?> <?= $hidden_class; ?>" data-text="<?= strtolower($opt['label']); ?>">
+                                <?php 
+                                    // Merge existing parameters with the filter URL to preserve other filters
+                                    $mergedUrl = $opt['url'];
+                                    if(strpos($mergedUrl, '?') === 0 && !empty($_GET)) {
+                                        parse_str(substr($mergedUrl, 1), $urlParams);
+                                        $newParams = array_merge($_GET, $urlParams);
+                                        $mergedUrl = '?' . http_build_query($newParams);
+                                    }
+                                    ?>
+                                    <a href="<?= $mergedUrl; ?>" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors <?= (isset($opt['active']) && $opt['active']) ? 'bg-teal-50 text-teal-700 font-semibold' : ''; ?> <?= $hidden_class; ?>" data-text="<?= strtolower($opt['label']); ?>">
                                         <?= $opt['label']; ?>
                                     </a>
                                 <?php endforeach; ?>
@@ -379,6 +372,12 @@ function renderReusableList($config) {
                             <div id="preset-filters-list" class="max-h-60 overflow-y-auto">
                                 <?php
                                 $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+                                // Build query string preserving other filters
+                                $currentGet = $_GET;
+                                unset($currentGet['date_filter'], $currentGet['start_date'], $currentGet['end_date']);
+                                $baseQuery = http_build_query($currentGet);
+                                $dateLinkPrefix = $baseQuery ? "?$baseQuery&" : "?";
+
                                 $preset_filters = [
                                     ['value' => 'today', 'label' => 'Today'],
                                     ['value' => 'tomorrow', 'label' => 'Tomorrow'],
@@ -392,7 +391,7 @@ function renderReusableList($config) {
                                 foreach($preset_filters as $pf):
                                     $is_active = ($date_filter === $pf['value']);
                                 ?>
-                                    <a href="<?= $base_url; ?>?date_filter=<?= $pf['value']; ?>" class="block w-full px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors <?= $is_active ? 'bg-slate-50 font-semibold' : ''; ?>">
+                                    <a href="<?= $base_url . $dateLinkPrefix . 'date_filter=' . $pf['value']; ?>" class="block w-full px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors <?= $is_active ? 'bg-slate-50 font-semibold' : ''; ?>">
                                         <?= $pf['label']; ?>
                                     </a>
                                 <?php endforeach; ?>
@@ -404,7 +403,7 @@ function renderReusableList($config) {
                                 
                                 <!-- Clear Filter -->
                                 <?php if($date_filter || ($start_date && $end_date)): ?>
-                                <a href="<?= $base_url; ?>" class="block w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100">
+                                <a href="<?= $base_url . ($baseQuery ? "?$baseQuery" : ''); ?>" class="block w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100">
                                     <i class="fas fa-times-circle mr-2"></i>Clear Filter
                                 </a>
                                 <?php endif; ?>
@@ -923,7 +922,13 @@ function selectCalendarDateRange(date) {
         // Small timeout to let user see the selection effect?
         setTimeout(() => {
             const baseUrl = window.location.pathname;
-            window.location.href = `${baseUrl}?start_date=${calendarStartDate}&end_date=${calendarEndDate}`;
+            // Preserve existing parameters
+            const params = new URLSearchParams(window.location.search);
+            params.set('start_date', calendarStartDate);
+            params.set('end_date', calendarEndDate);
+            params.delete('date_filter');
+            
+            window.location.href = `${baseUrl}?${params.toString()}`;
         }, 300); // 300ms delay
     }
 }

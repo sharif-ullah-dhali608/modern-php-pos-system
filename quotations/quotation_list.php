@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/date_filter_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -11,9 +12,34 @@ if(!isset($_SESSION['auth'])){
 // ---------------------------------------------------------
 // 1. DATA FETCHING (List View)
 // ---------------------------------------------------------
+
+// Filter Inputs
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date  = $_GET['start_date'] ?? '';
+$end_date    = $_GET['end_date'] ?? '';
+$customer_id = $_GET['customer_id'] ?? '';
+$status      = $_GET['status'] ?? '';
+
+// Build Query
+$where_clause = "WHERE 1=1";
+applyDateFilter($where_clause, 'q.date', $date_filter, $start_date, $end_date);
+
+if(!empty($customer_id)) { $customer_id = mysqli_real_escape_string($conn, $customer_id); $where_clause .= " AND q.customer_id = '$customer_id'"; }
+if(!empty($status)) {
+    $status = mysqli_real_escape_string($conn, $status);
+    if($status === 'sent') {
+        $where_clause .= " AND (q.status = 'sent' OR q.status = 'Sent' OR q.status = '1')";
+    } elseif($status === 'pending') {
+        $where_clause .= " AND (q.status = 'pending' OR q.status = 'Pending' OR q.status = '0')";
+    } else {
+        $where_clause .= " AND q.status = '$status'";
+    }
+}
+
 $query = "SELECT q.*, s.name as supplier_name 
           FROM quotations q
           LEFT JOIN suppliers s ON q.supplier_id = s.id
+          $where_clause
           ORDER BY q.id DESC";
 
 $query_run = mysqli_query($conn, $query);
@@ -78,13 +104,44 @@ if($query_run) {
 // ---------------------------------------------------------
 // 2. LIST CONFIGURATION
 // ---------------------------------------------------------
+
+// --- Fetch Filter Masters ---
+$filters = [];
+
+// Customer Filter
+$cust_opts = [['label' => 'All Customers', 'url' => '?customer_id=', 'active' => empty($customer_id)]];
+$cust_q = mysqli_query($conn, "SELECT id, name FROM customers ORDER BY name ASC");
+if($cust_q){
+    while($c = mysqli_fetch_assoc($cust_q)) {
+        $cust_opts[] = [
+            'label' => $c['name'],
+            'url' => "?customer_id={$c['id']}",
+            'active' => ($customer_id == $c['id'])
+        ];
+    }
+}
+$filters[] = [ 'id' => 'filter_cust', 'label' => 'Customer', 'searchable' => true, 'options' => $cust_opts ];
+
+// Status Filter
+$filters[] = [
+    'id' => 'filter_status',
+    'label' => 'Status',
+    'options' => [
+        ['label' => 'All Status', 'url' => '?status=', 'active' => ($status === '')],
+        ['label' => 'Sent', 'url' => '?status=sent', 'active' => ($status === 'sent')],
+        ['label' => 'Pending', 'url' => '?status=pending', 'active' => ($status === 'pending')],
+    ]
+];
+
 $list_config = [
     'title' => 'Quotation List',
-    'add_url' => '/pos/quotations/add_quotation.php',
+    'add_url' => '#',
     'table_id' => 'quotationTable',
     'status_url' => '/pos/quotations/save_quotation.php', // Required for Status Toggle
     'primary_key' => 'id',
     'name_field' => 'ref_no',
+    'filters' => $filters,
+    'date_column' => 'q.date',
     'columns' => [
         ['key' => 'formatted_date', 'label' => 'Date', 'sortable' => true],
         ['key' => 'ref_no', 'label' => 'Reference No', 'sortable' => true],
@@ -138,6 +195,7 @@ include('../includes/header.php');
     <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
 
     <div class="fixed inset-0 z-10 overflow-y-auto">
+        <input type="hidden" id="view_id_hidden">
         <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
             
             <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all w-full max-w-4xl my-4">
@@ -257,10 +315,45 @@ include('../includes/header.php');
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+    // Custom Toggle Status Override
+    function customToggleStatus(id, currentStatus, updateUrl) {
+        const newStatus = currentStatus == 1 ? 0 : 1;
+        const statusLabel = newStatus == 1 ? 'Sent' : 'Pending';
+        
+        Swal.fire({
+            title: `Change Status?`,
+            text: `Do you want to mark this quotation as ${statusLabel}?`, 
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            confirmButtonText: `Yes, Mark as ${statusLabel}`,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = updateUrl;
+                const inputId = document.createElement('input');
+                inputId.type = 'hidden'; inputId.name = 'item_id'; inputId.value = id;
+                form.appendChild(inputId);
+                const inputStatus = document.createElement('input');
+                inputStatus.type = 'hidden'; inputStatus.name = 'status'; inputStatus.value = newStatus;
+                form.appendChild(inputStatus);
+                const inputBtn = document.createElement('input');
+                inputBtn.type = 'hidden'; inputBtn.name = 'toggle_status_btn'; inputBtn.value = '1';
+                form.appendChild(inputBtn);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
     // AJAX View Details
     $(document).on('click', '.view-btn', function() {
         var id = $(this).data('id');
+        $('#view_id_hidden').val(id);
         $('#view_ref').text('Loading...');
         
         $.ajax({
@@ -314,10 +407,20 @@ include('../includes/header.php');
                     var rows = '';
                     if(items && items.length > 0) {
                         $.each(items, function(key, item) {
-                            var imgPath = item.thumbnail ? item.thumbnail : '/pos/assets/img/no-image.png';
+                            // Generate placeholder initials
+                            const initials = (item.product_name || 'NA').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                            var imgDisplay = '';
+                            
+                            // Check for valid thumbnail
+                            if(item.thumbnail && item.thumbnail !== '/pos/assets/img/no-image.png') {
+                                imgDisplay = '<img src="' + item.thumbnail + '" class="w-10 h-10 object-cover rounded shadow-sm border border-slate-200 mx-auto bg-white" onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement(\'div\'), {className: \'w-10 h-10 flex items-center justify-center bg-teal-100 text-teal-800 font-bold rounded shadow-sm border border-teal-200 mx-auto text-xs\', innerText: \'' + initials + '\'}))">';
+                            } else {
+                                imgDisplay = '<div class="w-10 h-10 flex items-center justify-center bg-teal-100 text-teal-800 font-bold rounded shadow-sm border border-teal-200 mx-auto text-xs">' + initials + '</div>';
+                            }
+
                             rows += '<tr class="hover:bg-teal-50 transition-colors border-b border-slate-100">';
                             rows += '<td class="p-3 text-center text-slate-400 text-[10px]">' + (key + 1) + '</td>';
-                            rows += '<td class="p-3 text-center"><img src="' + imgPath + '" class="w-10 h-10 object-cover rounded shadow-sm border border-slate-200 mx-auto bg-white" onerror="this.src=\'/pos/assets/img/no-image.png\'"></td>';
+                            rows += '<td class="p-3 text-center">' + imgDisplay + '</td>';
                             rows += '<td class="p-3 font-medium text-slate-800">' + item.product_name + '<br><span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-1 rounded">' + (item.product_code || 'N/A') + '</span></td>';
                             rows += '<td class="p-3 text-right font-mono text-slate-600">' + parseFloat(item.price || 0).toFixed(2) + '</td>';
                             rows += '<td class="p-3 text-center font-bold">' + parseFloat(item.qty || 0) + '</td>';
@@ -354,19 +457,70 @@ include('../includes/header.php');
 
     function closeModal() { $('#viewModal').addClass('hidden'); }
 
-    // Print Logic
+    // Ultimate Print Logic (Hidden Iframe + Full CSS)
     function printModal() {
-        var content = document.getElementById('printableArea').innerHTML;
-        var mywindow = window.open('', 'PRINT', 'height=800,width=1000');
-        mywindow.document.write('<html><head><title>Quotation_' + $('#view_ref').text() + '</title>');
-        mywindow.document.write('<link rel="stylesheet" href="/pos/assets/css/output.css">');
-        mywindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>');
-        mywindow.document.write('</head><body class="p-4">');
-        mywindow.document.write(content);
-        mywindow.document.write('</body></html>');
-        mywindow.document.close(); 
-        mywindow.focus(); 
-        setTimeout(function(){ mywindow.print(); mywindow.close(); }, 1500); 
+        const modalContent = document.getElementById('printableArea').innerHTML;
+        const refNo = $('#view_ref').text();
+        
+        // Remove old frame if exists to ensure fresh state
+        $('#print_frame_hidden').remove();
+        
+        // Create hidden iframe
+        const iframe = document.createElement('iframe');
+        iframe.id = 'print_frame_hidden';
+        iframe.style.position = 'fixed';
+        iframe.style.bottom = '0';
+        iframe.style.right = '0';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+        
+        const doc = iframe.contentWindow.document;
+        
+        // Write Content with FULL CSS (Cached)
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Quotation_${refNo}</title>
+                <!-- Reuse main cached CSS -->
+                <link rel="stylesheet" href="/pos/assets/css/output.css">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+                <style>
+                    body { background: white; padding: 0; margin: 0; }
+                    /* Wrapper for proper sizing */
+                    #wrapper { padding: 40px; max-width: 900px; margin: 0 auto; }
+                    
+                    @media print {
+                        body { padding: 0; }
+                        #wrapper { padding: 0; width: 100%; max-width: 100%; margin: 0; }
+                        .no-print { display: none !important; }
+                        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                        
+                        /* Ensure Tailwind Grid/Flex work */
+                        .grid { display: grid !important; }
+                        .flex { display: flex !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="wrapper">
+                    ${modalContent}
+                </div>
+            </body>
+            </html>
+        `);
+        doc.close();
+        
+        // Wait for CSS to load then print
+        iframe.onload = function() {
+            setTimeout(function() {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }, 500); // Short delay for rendering
+        };
     }
 
     // Image Download Logic

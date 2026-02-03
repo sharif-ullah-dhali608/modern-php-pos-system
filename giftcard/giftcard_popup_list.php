@@ -3,6 +3,20 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include('../config/dbcon.php');
+include('../includes/date_filter_helper.php');
+
+// Filter Parameters
+$filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
+$date_filter = $_GET['date_filter'] ?? '';
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+
+// Fetch Customers List
+$customers_list = [];
+$cust_q = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+if($cust_q) {
+    while($c = mysqli_fetch_assoc($cust_q)) $customers_list[] = $c;
+}
 
 // Check login
 if(!isset($_SESSION['auth'])) {
@@ -11,6 +25,7 @@ if(!isset($_SESSION['auth'])) {
 }
 
 // Fetch topup history with giftcard and user info
+// Fetch topup history with giftcard and user info
 $query = "SELECT 
             t.id,
             t.giftcard_id,
@@ -18,11 +33,22 @@ $query = "SELECT
             t.note,
             t.created_at,
             g.card_no,
+            c.name as customer_name,
             u.name as created_by
           FROM giftcard_topups t
           LEFT JOIN giftcards g ON t.giftcard_id = g.id
           LEFT JOIN users u ON t.created_by = u.id
-          ORDER BY t.created_at DESC";
+          LEFT JOIN customers c ON g.customer_id = c.id
+          WHERE 1=1 ";
+
+// Apply Filter
+if($filter_customer > 0) {
+    $query .= " AND g.customer_id = '$filter_customer' ";
+}
+
+applyDateFilter($query, 't.created_at', $date_filter, $start_date, $end_date);
+
+$query .= " ORDER BY t.created_at DESC";
 $result = mysqli_query($conn, $query);
 
 $items = [];
@@ -48,6 +74,25 @@ if($result && mysqli_num_rows($result) > 0) {
 $list_config = [
     'title' => 'Giftcard Topup List',
     'table_id' => 'giftcard_topup_table',
+    'date_column' => 'created_at',
+    'filters' => [
+        [
+            'name' => 'customer',
+            'label' => 'Customer',
+            'id' => 'customerFilter',
+            'searchable' => true,
+            'options' => array_merge(
+                [['label' => 'All Customers', 'url' => '?customer_id=0', 'active' => $filter_customer == 0]],
+                array_map(function($c) use ($filter_customer) {
+                    return [
+                        'label' => $c['name'],
+                        'url' => '?customer_id=' . $c['id'],
+                        'active' => $filter_customer == $c['id']
+                    ];
+                }, $customers_list)
+            )
+        ]
+    ],
     'primary_key' => 'id',
     'name_field' => 'card_no',
     'add_url' => '#', // No add button
@@ -55,6 +100,7 @@ $list_config = [
     'columns' => [
         ['key' => 'date_formatted', 'label' => 'Date', 'type' => 'text'],
         ['key' => 'card_no', 'label' => 'Card No.', 'type' => 'text'],
+        ['key' => 'customer_name', 'label' => 'Customer', 'type' => 'text'],
         ['key' => 'amount_formatted', 'label' => 'Amount', 'type' => 'text'],
         ['key' => 'created_by', 'label' => 'Created By', 'type' => 'text'],
         ['key' => 'delete_btn', 'label' => 'Delete', 'type' => 'html'],

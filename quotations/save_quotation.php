@@ -301,6 +301,26 @@ if(isset($_POST['delete_btn'])) {
     exit(0);
 }
 
+// ---------------------------------------------------------
+// 5. TOGGLE STATUS
+// ---------------------------------------------------------
+if(isset($_POST['toggle_status_btn'])) {
+    $id = (int)$_POST['item_id'];
+    $status = (int)$_POST['status']; 
+    
+    // Update Logic
+    $query = "UPDATE quotations SET status='$status' WHERE id='$id'";
+    if(mysqli_query($conn, $query)) {
+        $_SESSION['message'] = "Status updated successfully!";
+        $_SESSION['msg_type'] = "success";
+    } else {
+        $_SESSION['message'] = "Error updating status: " . mysqli_error($conn);
+        $_SESSION['msg_type'] = "error";
+    }
+    header("Location: /pos/quotations/list");
+    exit(0);
+}
+
 // Fallback redirect
 header("Location: /pos/quotations/list");
 exit(0);

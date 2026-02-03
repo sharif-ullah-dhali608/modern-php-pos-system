@@ -7,15 +7,77 @@ if(!isset($_SESSION['auth'])){
     exit(0);
 }
 
-$query = "SELECT * FROM payment_methods ORDER BY sort_order ASC, id DESC";
+// Filter Inputs
+$status = $_GET['status'] ?? '';
+$code = $_GET['code'] ?? '';
+$usage = $_GET['usage'] ?? '';
+
+// Build Query
+$where_clause = "WHERE 1=1";
+if($status !== '') {
+    $status = mysqli_real_escape_string($conn, $status);
+    $where_clause .= " AND status = '$status'";
+}
+if($code !== '') {
+    $code = mysqli_real_escape_string($conn, $code);
+    $where_clause .= " AND code = '$code'";
+}
+if($usage === 'used') {
+    $where_clause .= " AND EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = payment_methods.id)";
+} elseif($usage === 'unused') {
+    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = payment_methods.id)";
+}
+
+$query = "SELECT * FROM payment_methods $where_clause ORDER BY sort_order ASC, id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
+
+// Fetch Distinct Codes
+$code_query = mysqli_query($conn, "SELECT DISTINCT code FROM payment_methods ORDER BY code ASC");
+$code_options = [['label' => 'All Codes', 'url' => '?code=', 'active' => ($code === '')]];
+while($c = mysqli_fetch_assoc($code_query)) {
+    $code_options[] = [
+        'label' => ucfirst($c['code']),
+        'url' => "?code={$c['code']}",
+        'active' => ($code == $c['code'])
+    ];
+}
+
+// Filters Config
+$filters = [];
+// 1. Status
+$filters[] = [
+    'id' => 'filter_status',
+    'label' => 'Status',
+    'options' => [
+        ['label' => 'All Status', 'url' => '?status=', 'active' => ($status === '')],
+        ['label' => 'Active', 'url' => '?status=1', 'active' => ($status === '1')],
+        ['label' => 'Inactive', 'url' => '?status=0', 'active' => ($status === '0')],
+    ]
+];
+// 2. Code
+$filters[] = [
+    'id' => 'filter_code',
+    'label' => 'Code',
+    'options' => $code_options
+];
+// 3. Usage
+$filters[] = [
+    'id' => 'filter_usage',
+    'label' => 'Usage',
+    'options' => [
+        ['label' => 'All Usage', 'url' => '?usage=', 'active' => ($usage === '')],
+        ['label' => 'Used in Sales', 'url' => '?usage=used', 'active' => ($usage === 'used')],
+        ['label' => 'Not Used', 'url' => '?usage=unused', 'active' => ($usage === 'unused')],
+    ]
+];
 
 $list_config = [
     'title' => 'Payment Method List',
     'add_url' => '/pos/payment-methods/add', // Clean URL
     'table_id' => 'paymentTable',
+    'filters' => $filters,
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
         ['key' => 'name', 'label' => 'Name', 'sortable' => true],
