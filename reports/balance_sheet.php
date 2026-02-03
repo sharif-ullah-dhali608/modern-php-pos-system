@@ -53,7 +53,7 @@ $config = [
         </div>
         <div class="content-scroll-area h-full overflow-y-auto p-6 bg-slate-50">
             <?php renderReusableList($config); ?>
-            <?php include('../includes/footer.php'); ?>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>

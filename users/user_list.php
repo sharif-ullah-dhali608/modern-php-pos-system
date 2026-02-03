@@ -74,11 +74,24 @@ include('../includes/header.php');
 ?>
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
+    
+
     <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
-        <?php include('../includes/navbar.php'); ?>
-        <div class="content-scroll-area custom-scroll h-full overflow-y-auto p-6">
-            <?php include('../includes/reusable_list.php'); renderReusableList($list_config); ?>
-            <?php include('../includes/footer.php'); ?>
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
         </div>
+        
+        <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
+            <div class="p-6">
+                <?php 
+                // This assumes reusable_list.php handles the table generation, 
+                // search, status toggles, and delete modals dynamically.
+                include('../includes/reusable_list.php'); 
+                renderReusableList($list_config); 
+                ?>
+            </div>
+            
+        </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>

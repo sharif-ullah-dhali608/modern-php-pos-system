@@ -153,14 +153,12 @@ include('../includes/header.php');
         <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
             <div class="p-6">
                 <?php 
-                // This assumes reusable_list.php handles the table generation, 
-                // search, status toggles, and delete modals dynamically.
                 include('../includes/reusable_list.php'); 
                 renderReusableList($list_config); 
                 ?>
             </div>
             
-            <?php include('../includes/footer.php'); ?>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>

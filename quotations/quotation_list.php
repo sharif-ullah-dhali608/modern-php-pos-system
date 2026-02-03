@@ -129,8 +129,8 @@ include('../includes/header.php');
                 }
                 ?>
             </div>
-            <?php include('../includes/footer.php'); ?>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 

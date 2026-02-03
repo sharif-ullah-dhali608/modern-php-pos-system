@@ -63,9 +63,8 @@ include('../includes/header.php');
                 renderReusableList($list_config); 
                 ?>
             </div>
-            
-            <?php include('../includes/footer.php'); ?>
         </div>
-    </main>
+        <?php include('../includes/footer.php'); ?>
+    </main> 
 </div>
 

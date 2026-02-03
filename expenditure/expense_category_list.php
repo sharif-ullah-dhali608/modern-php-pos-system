@@ -50,7 +50,7 @@ $config = [
                 <?php renderReusableList($config); ?>
             </div>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 
-<?php include('../includes/footer.php'); ?>

@@ -68,13 +68,17 @@ $config = [
 
 <div class="app-wrapper">
     <?php include('../includes/sidebar.php'); ?>
-    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300 overflow-hidden">
+    <main id="main-content" class="flex-1 lg:ml-64 flex flex-col h-screen min-w-0 transition-all duration-300">
         <div class="navbar-fixed-top">
             <?php include('../includes/navbar.php'); ?>
         </div>
-        <div class="content-scroll-area h-full overflow-y-auto p-6 bg-slate-50">
-            <?php renderReusableList($config); ?>
-            <?php include('../includes/footer.php'); ?>
+        <div class="content-scroll-area custom-scroll h-full overflow-y-auto">
+            <div class="p-6">
+                <?php 
+                renderReusableList($config); 
+                ?>
+            </div>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>

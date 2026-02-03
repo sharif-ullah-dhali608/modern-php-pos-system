@@ -52,33 +52,49 @@ if(isset($_POST['fetch_permissions'])) {
 
     // Full Module and Sub-Permission Mapping based on your provided requirements
     $modules = [
-        'report' => ['Recent activities', 'Dashboard Accounting Report', 'Sell Report', 'Overview Report', 'Collec. Report', 'Full Collec. Report', 'Customer Due Collection RPT', 'Suppler Due Paid RPT', 'Read Analytics', 'Purchase Report', 'Purchase Payment Report', 'Purchase Tax Report', 'Sell Payment Report', 'Sell Tax Report', 'Tax Overview Report', 'Stock Report', 'Send Report via Email'],
-        'accounting' => ['Withdraw', 'Deposit', 'Transfer', 'View Bank Account', 'View Bank Account Sheet', 'View Bank Transfer', 'View Bank Transactions', 'View Income Source', 'Create Bank Account', 'Update Bank Account', 'Delete Bank Account', 'Create Income Source', 'Update Income Source', 'Delete Income Source', 'Income Monthwise', 'Income & Expense', 'Profit & Loss', 'Cashbook'],
-        'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation'],
-        'installment' => ['Read Installment List', 'Create Installment', 'Update Installment', 'Delete Installment', 'Installment Payment', 'Installment Overview'],
-        'expenditure' => ['Read Expense', 'Create Expense', 'Update Expense', 'Delete Expense', 'Read Expense Category', 'Create Expense Category', 'Update Expense Category', 'Delete Expense Category', 'Expense Monthwise', 'Expense Summary'],
-        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log'],
-        'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Delete Invoice', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Read Purchase Log', 'Import Stock'],
-        'transfer' => ['Read Transfer', 'Add Transfer', 'Update Transfer', 'Cancel Transfer'],
-        'giftcard' => ['Read Giftcard', 'Add Giftcard', 'Update Giftcard', 'Delete Giftcard', 'Giftcard Topup', 'Read Giftcard Topup', 'Delete Giftcard Topup'],
-        'product' => ['Read Product List', 'Create Product', 'Update Product', 'Delete Product', 'Import Product', 'Product Bulk Action', 'Delete All Product', 'Read Category List', 'Create Category', 'Update Category', 'Delete Category', 'Read Stock Alert', 'Read Expired Product List', 'Barcode Print', 'Restore All Product'],
-        'supplier' => ['Read Supplier List', 'Create Supplier', 'Update Supplier', 'Delete Supplier', 'Read Supplier Profile'],
+        // DASHBOARD & ANALYTICS
+        'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Profit Card', 'View Recent Sales', 'View Best Selling Product', 'View Stock Alert Widget', 'View Monthly Goals'],
+
+        // CORE MODULES
+        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List'],
+        'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation', 'Convert to Sell'],
+        'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Delete Invoice', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Read Purchase Log', 'Import Stock', 'View Cost Price'],
+
+        // PRODUCTS & STOCK
+        'product' => ['Read Product List', 'Create Product', 'Update Product', 'Delete Product', 'Import Product', 'Product Bulk Action', 'Delete All Product', 'Read Category List', 'Create Category', 'Update Category', 'Delete Category', 'Read Stock Alert', 'Read Expired Product List', 'Barcode Print', 'Restore All Product', 'View Product Cost', 'View Product Supplier', 'View Product Profit'],
         'brand' => ['Read Brand List', 'Create Brand', 'Update Brand', 'Delete Brand', 'Read Brand Profile'],
-        'storebox' => ['Read Box', 'Create Box', 'Update Box', 'Delete Box'],
         'unit' => ['Read Unit', 'Create Unit', 'Update Unit', 'Delete Unit'],
-        'taxrate' => ['Read Taxrate', 'Create Taxrate', 'Update Taxrate', 'Delete Taxrate'],
-        'loan' => ['Read Loan', 'Read Loan Summary', 'Take Loan', 'Update Loan', 'Delete Loan', 'Loan Pay'],
+        'storebox' => ['Read Box', 'Create Box', 'Update Box', 'Delete Box'],
+        
+        // CONTACTS
         'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer', 'Update Customer', 'Delete Customer', 'Add Balance', 'Substract Balance', 'Read Transaction List'],
-        'user' => ['Read User List', 'Create User', 'Update User', 'Delete User', 'Change Password'],
+        'supplier' => ['Read Supplier List', 'Create Supplier', 'Update Supplier', 'Delete Supplier', 'Read Supplier Profile'],
+        'user' => ['Read User List', 'Create User', 'Update User', 'Delete User', 'Change Password', 'View User Activity Log'],
         'usergroup' => ['Read Usergroup List', 'Create Usergroup', 'Update Usergroup', 'Delete Usergroup'],
-        'currency' => ['Read Currency', 'Add Currency', 'Update Currency', 'Change Currency', 'Delete Currency'],
-        'filemanager' => ['Read Filemanager'],
+
+        // ACCOUNTING & FINANCE
+        'accounting' => ['Withdraw', 'Deposit', 'Transfer', 'View Bank Account', 'View Bank Account Sheet', 'View Bank Transfer', 'View Bank Transactions', 'View Income Source', 'Create Bank Account', 'Update Bank Account', 'Delete Bank Account', 'Create Income Source', 'Update Income Source', 'Delete Income Source', 'Income Monthwise', 'Income & Expense', 'Profit & Loss', 'Cashbook'],
+        'expenditure' => ['Read Expense', 'Create Expense', 'Update Expense', 'Delete Expense', 'Read Expense Category', 'Create Expense Category', 'Update Expense Category', 'Delete Expense Category', 'Expense Monthwise', 'Expense Summary'],
+        'loan' => ['Read Loan', 'Read Loan Summary', 'Take Loan', 'Update Loan', 'Delete Loan', 'Loan Pay'],
+        'installment' => ['Read Installment List', 'Create Installment', 'Update Installment', 'Delete Installment', 'Installment Payment', 'Installment Overview'],
+
+        // TRANSFERS & GIFTCARDS
+        'transfer' => ['Read Transfer', 'Add Transfer', 'Update Transfer', 'Cancel Transfer', 'Read Receive List'],
+        'giftcard' => ['Read Giftcard', 'Add Giftcard', 'Update Giftcard', 'Delete Giftcard', 'Giftcard Topup', 'Read Giftcard Topup', 'Delete Giftcard Topup'],
+
+        // REPORTS
+        'report' => ['Overview Report', 'Collection Report', 'Due Collection Report', 'Due Paid Report', 'Sell Report', 'Purchase Report', 'Sell Payment Report', 'Purchase Payment Report', 'Sell Tax Report', 'Purchase Tax Report', 'Tax Overview Report', 'Stock Report', 'Customer Due Report', 'Supplier Due Report', 'Profit Loss Report'],
+
+        // SETTINGS & SYSTEM
+        'settings' => ['View General Settings', 'View Store Settings', 'View Email Settings', 'Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset System'],
         'payment_method' => ['Read Payment Method List', 'Create Payment Method', 'Update Payment Method', 'Delete Payment Method', 'Active/Inactive'],
-        'store' => ['Read Store List', 'Create Store', 'Update Store', 'Delete Store', 'Active Store', 'Upload Favicon', 'Upload Logo'],
+        'currency' => ['Read Currency', 'Add Currency', 'Update Currency', 'Change Currency', 'Delete Currency'],
+        'taxrate' => ['Read Taxrate', 'Create Taxrate', 'Update Taxrate', 'Delete Taxrate'],
         'printer' => ['View Printer', 'Add Printer', 'Update Printer', 'Delete Printer'],
+        'store' => ['Read Store List', 'Create Store', 'Update Store', 'Delete Store', 'Active Store', 'Upload Favicon', 'Upload Logo'],
         'sms' => ['Send SMS', 'View SMS Report', 'View SMS Setting', 'Update SMS Setting', 'Send Email'],
         'language' => ['View Language', 'Add Language', 'Edit Language Info', 'Delete Language', 'Language Translation', 'Delete Language key'],
-        'settings' => ['Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset']
+        'filemanager' => ['Read Filemanager']
     ];
     
     foreach($modules as $title => $permissions) {
