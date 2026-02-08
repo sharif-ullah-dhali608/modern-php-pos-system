@@ -183,7 +183,7 @@ $menu_items = [
         'submenu' => [
             ['title' => 'Add Store', 'link' => '/pos/stores/add'],
             ['title' => 'Store List', 'link' => '/pos/stores/list'],
-            // ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
+            ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
         ],
         'active' => (uri_has('/stores/', $current_uri))
     ],
@@ -490,6 +490,18 @@ $menu_items = [
             $link_classes = $item['active'] ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
             ?>
             <div class="mb-1 relative menu-group">
+                <?php 
+                // Pre-calculate if any submenu item is active (needed for chevron rotation)
+                $submenu_active = false;
+                if($has_submenu) {
+                    foreach($item['submenu'] as $sub) {
+                        if(uri_has($sub['link'], $current_uri)) {
+                            $submenu_active = true;
+                            break;
+                        }
+                    }
+                }
+                ?>
                 <a href="<?= $has_submenu ? '#' : $item['link']; ?>" 
                    class="flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group <?= $link_classes; ?>"
                    <?= $has_submenu ? 'onclick="toggleSubmenu(this); event.preventDefault();"' : ''; ?>>
@@ -498,12 +510,22 @@ $menu_items = [
                         <span class="link-text font-medium text-sm whitespace-nowrap"><?= $item['title']; ?></span>
                     </div>
                     <?php if($has_submenu): ?>
-                        <i class="link-text fas fa-chevron-right text-[10px] transition-transform duration-200 <?= $item['active'] ? 'rotate-90' : ''; ?>"></i>
+                        <i class="link-text fas fa-chevron-right text-[10px] transition-transform duration-200 <?= $submenu_active ? 'rotate-90' : ''; ?>"></i>
                     <?php endif; ?>
                 </a>
                 
                 <?php if($has_submenu): ?>
-                    <div class="submenu ml-4 mt-1 space-y-1 <?= $item['active'] ? '' : 'hidden'; ?>">
+                    <?php 
+                    // Check if any submenu item is actually active
+                    $submenu_active = false;
+                    foreach($item['submenu'] as $sub) {
+                        if(uri_has($sub['link'], $current_uri)) {
+                            $submenu_active = true;
+                            break;
+                        }
+                    }
+                    ?>
+                    <div class="submenu ml-4 mt-1 space-y-1 <?= $submenu_active ? '' : 'hidden'; ?>">
                         <?php foreach($item['submenu'] as $sub): ?>
                             <a href="<?= $sub['link']; ?>" 
        <?= isset($sub['onclick']) ? 'onclick="' . $sub['onclick'] . '"' : ''; ?>
@@ -643,6 +665,20 @@ $menu_items = [
          * INITIALIZE SUBMENU STATE FROM LOCALSTORAGE
          */
         initializeSubmenuState();
+        
+        /**
+         * SCROLL TO ACTIVE ITEM AFTER INITIALIZATION
+         */
+        setTimeout(() => {
+            scrollToActiveSubmenuItem();
+        }, 300);
+    });
+    
+    // Also try on window load as backup
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            scrollToActiveSubmenuItem();
+        }, 100);
     });
 
     /**
@@ -659,24 +695,56 @@ $menu_items = [
                     const submenu = link.nextElementSibling;
                     const chevron = link.querySelector('.fa-chevron-right');
                     if (submenu && submenu.classList.contains('submenu')) {
-                        submenu.classList.remove('hidden');
-                        if (chevron) chevron.classList.add('rotate-90');
+                        // Only open if there's an active submenu item (not hidden by PHP)
+                        const hasActiveItem = submenu.querySelector('a.text-teal-400, a.font-bold');
+                        const isAlreadyVisible = !submenu.classList.contains('hidden');
                         
-                        // Scroll to show the active submenu item
-                        setTimeout(() => {
-                            const activeSubmenuItem = submenu.querySelector('a.text-teal-400, a.font-bold');
-                            if (activeSubmenuItem) {
-                                activeSubmenuItem.scrollIntoView({ 
-                                    behavior: 'smooth', 
-                                    block: 'center' 
-                                });
-                            }
-                        }, 100);
+                        if (hasActiveItem || isAlreadyVisible) {
+                            submenu.classList.remove('hidden');
+                            if (chevron) chevron.classList.add('rotate-90');
+                        } else {
+                            // Clear localStorage if the submenu shouldn't be open
+                            localStorage.removeItem('openSubmenu');
+                        }
                     }
                 }
             });
         }
     }
+    
+    /**
+     * SCROLL TO ACTIVE SUBMENU ITEM
+     */
+    function scrollToActiveSubmenuItem() {
+        const sidebarNav = document.querySelector('aside nav');
+        if (!sidebarNav) return;
+        
+        // Find any active submenu item
+        const activeSubmenuItem = sidebarNav.querySelector('.submenu a.text-teal-400, .submenu a.font-bold');
+        if (!activeSubmenuItem) return;
+        
+        // Calculate the actual offset by walking up the DOM tree
+        let itemOffsetTop = 0;
+        let element = activeSubmenuItem;
+        
+        while (element && element !== sidebarNav) {
+            itemOffsetTop += element.offsetTop;
+            element = element.offsetParent;
+        }
+        
+        const navHeight = sidebarNav.clientHeight;
+        const itemHeight = activeSubmenuItem.clientHeight;
+        
+        // Calculate scroll position to center the item
+        const scrollPosition = itemOffsetTop - (navHeight / 2) + (itemHeight / 2);
+        
+        // Smooth scroll to position
+        sidebarNav.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth'
+        });
+    }
+    
     function toggleSidebarMobile() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');

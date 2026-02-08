@@ -49,6 +49,57 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit(0);
 }
 
+// Handle AJAX requests for Chart Data
+if(isset($_POST['get_chart_data'])) {
+    header('Content-Type: application/json');
+    $year = intval($_POST['year']);
+    $store_id_sess = $_SESSION['store_id'] ?? $_SESSION['auth_user']['store_id'] ?? null;
+    $storeFilter = $store_id_sess ? " AND store_id = '$store_id_sess'" : "";
+
+    $incomeArr = [];
+    $expenseArr = [];
+    $months = [];
+
+    for ($m = 1; $m <= 12; $m++) {
+        // Prepare month string
+        $monthStr = date('M', mktime(0, 0, 0, $m, 1));
+        $months[] = $monthStr;
+
+        // Income
+        $qIn = mysqli_query($conn, "SELECT SUM(grand_total) as val FROM selling_info WHERE YEAR(created_at) = '$year' AND MONTH(created_at) = '$m' $storeFilter");
+        $incomeArr[] = floatval(mysqli_fetch_assoc($qIn)['val'] ?? 0);
+
+        // Expense
+        $qEx = mysqli_query($conn, "SELECT SUM(total_sell) as val FROM purchase_info WHERE YEAR(purchase_date) = '$year' AND MONTH(purchase_date) = '$m' $storeFilter");
+        $expenseArr[] = floatval(mysqli_fetch_assoc($qEx)['val'] ?? 0);
+    }
+
+    // Calculate YoY Growth for this specific year
+    // Last Year Total
+    $lastYear = $year - 1;
+    $qY1 = mysqli_query($conn, "SELECT SUM(grand_total) as t FROM selling_info WHERE YEAR(created_at) = '$year' $storeFilter");
+    $salesThis = floatval(mysqli_fetch_assoc($qY1)['t'] ?? 0);
+    
+    $qY2 = mysqli_query($conn, "SELECT SUM(grand_total) as t FROM selling_info WHERE YEAR(created_at) = '$lastYear' $storeFilter");
+    $salesLast = floatval(mysqli_fetch_assoc($qY2)['t'] ?? 0);
+
+    $growth = 0;
+    if ($salesLast == 0) {
+        $growth = ($salesThis > 0) ? 100 : 0;
+    } else {
+        $growth = (($salesThis - $salesLast) / $salesLast) * 100;
+    }
+
+    echo json_encode([
+        'status' => 200,
+        'income' => $incomeArr,
+        'expense' => $expenseArr,
+        'categories' => $months,
+        'growth' => round($growth, 1)
+    ]);
+    exit;
+}
+
 // Handle AJAX requests with JSON responses (only set when needed)
 if(isset($_POST['payment_modal_btn']) || isset($_POST['view_purchase_btn']) || isset($_POST['return_modal_btn']) || 
    isset($_POST['process_payment_btn']) || isset($_POST['process_return_btn']) || isset($_POST['pay_all_btn']) || 
@@ -1158,8 +1209,12 @@ if(isset($_POST['save_purchase_btn']))
                 '$cost', '$sell', '$qty', '$item_total', '$row_tax'
             )");
             
-          
-            mysqli_query($conn, "UPDATE products SET opening_stock = opening_stock + $qty WHERE id = $product_id");
+            // FIX: Update Product Master Prices (Purchase Price & Selling Price)
+            mysqli_query($conn, "UPDATE products SET 
+                                purchase_price = '$cost', 
+                                selling_price = '$sell',
+                                opening_stock = opening_stock + $qty 
+                                WHERE id = $product_id");
             
             // Also update per-store stock for reports
             mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) 

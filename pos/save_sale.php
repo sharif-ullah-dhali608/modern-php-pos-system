@@ -75,6 +75,12 @@ function processPayment($conn, $user_id) {
     $rounding_adjustment = floatval($_POST['rounding_adjustment'] ?? 0); // New parameter
     $amount_received = floatval($_POST['amount_received']);
     $sale_date = mysqli_real_escape_string($conn, $_POST['sale_date']);
+    
+    // If sale_date is only a date (YYYY-MM-DD), append the current time
+    if(!empty($sale_date) && strlen($sale_date) == 10) {
+        $sale_date .= ' ' . date('H:i:s');
+    }
+    
     $previous_due = floatval($_POST['previous_due'] ?? 0); // Previous due from payment modal
     
     if(empty($cart)) {

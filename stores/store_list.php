@@ -79,7 +79,7 @@ $page_title = "Store List - Velocity POS";
                             $searchVal = strtolower($row['store_name'] . ' ' . $row['store_code'] . ' ' . $row['phone'] . ' ' . $row['city_zip']);
                         ?>
                         
-                        <div onclick="openStoreModal(<?= $jsonData ?>)" class="store-card group relative w-full rounded-2xl shadow-lg border border-slate-200 bg-white hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1" data-status="<?= $isActive ? '1' : '0' ?>" data-search="<?= htmlspecialchars($searchVal) ?>">
+                        <div onclick="openStoreDetailModal(<?= $jsonData ?>)" class="store-card group relative w-full rounded-2xl shadow-lg border border-slate-200 bg-white hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1" data-status="<?= $isActive ? '1' : '0' ?>" data-search="<?= htmlspecialchars($searchVal) ?>">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 <?= $border_color; ?>"></div>
                             <div class="p-6 pl-8"> 
                                 <div class="flex justify-between items-start mb-4">
@@ -119,7 +119,7 @@ $page_title = "Store List - Velocity POS";
 </div>
 
 <div id="storeModal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop" onclick="closeStoreModal()"></div>
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop" onclick="closeStoreDetailModal()"></div>
     <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all opacity-0 scale-95 flex flex-col max-h-[90vh] bg-white border border-slate-300" id="modalPanel">
             <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between rounded-t-2xl z-20">
@@ -133,7 +133,7 @@ $page_title = "Store List - Velocity POS";
                         </div>
                     </div>
                 </div>
-                <button onclick="closeStoreModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition"><i class="fas fa-times"></i></button>
+                <button onclick="closeStoreDetailModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition"><i class="fas fa-times"></i></button>
             </div>
             
             <div class="p-6 overflow-y-auto custom-scroll bg-white">

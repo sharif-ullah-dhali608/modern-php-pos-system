@@ -4,7 +4,7 @@ const modalBackdrop = document.getElementById('modalBackdrop');
 const modalPanel = document.getElementById('modalPanel');
 let currentStoreId = null;
 
-function openStoreModal(data) {
+function openStoreDetailModal(data) {
     currentStoreId = data.id;
     document.getElementById('m_storeName').textContent = data.store_name;
     document.getElementById('m_storeCode').textContent = data.store_code;
@@ -12,7 +12,7 @@ function openStoreModal(data) {
     // Status colors adjusted for Light Mode
     statusEl.textContent = data.status == 1 ? 'ACTIVE' : 'INACTIVE';
     statusEl.className = data.status == 1 ? 'font-bold text-emerald-600' : 'font-bold text-red-600';
-    
+
     const formatter = new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', minimumFractionDigits: 0, maximumFractionDigits: 0 });
     document.getElementById('m_target').textContent = formatter.format(data.daily_target);
     document.getElementById('m_openTime').textContent = formatTime(data.open_time);
@@ -22,11 +22,11 @@ function openStoreModal(data) {
     document.getElementById('m_address').textContent = (data.address || '') + ' ' + (data.city_zip || '');
     document.getElementById('m_invDisc').textContent = data.max_inv_disc || 0;
     document.getElementById('m_lowStock').textContent = data.low_stock || 0;
-    
+
     const oversellEl = document.getElementById('m_overselling');
     let oversellText = 'STRICT';
     // Oversell badge colors adjusted for Light Mode
-    let oversellClass = 'bg-rose-100 text-rose-700'; 
+    let oversellClass = 'bg-rose-100 text-rose-700';
     if (data.overselling === 'allow') {
         oversellText = 'ALLOWED';
         oversellClass = 'bg-emerald-100 text-emerald-700';
@@ -48,16 +48,16 @@ function updateBadge(id, value, text) {
     const el = document.getElementById(id);
     el.textContent = text;
     // Quick Rules Badge colors adjusted for Light Mode
-    if(value == 1) { 
-        el.className = "px-2 py-1 rounded border border-teal-200 bg-teal-100 text-teal-700 text-[10px] font-bold"; 
-        el.style.opacity = "1"; 
-    } 
-    else { 
-        el.className = "px-2 py-1 rounded border border-slate-200 bg-slate-100 text-slate-500 text-[10px] font-bold line-through opacity-70"; 
+    if (value == 1) {
+        el.className = "px-2 py-1 rounded border border-teal-200 bg-teal-100 text-teal-700 text-[10px] font-bold";
+        el.style.opacity = "1";
+    }
+    else {
+        el.className = "px-2 py-1 rounded border border-slate-200 bg-slate-100 text-slate-500 text-[10px] font-bold line-through opacity-70";
     }
 }
 
-function closeStoreModal() {
+function closeStoreDetailModal() {
     modalBackdrop.classList.add('opacity-0');
     modalPanel.classList.remove('modal-enter');
     modalPanel.classList.add('modal-exit');
@@ -65,7 +65,7 @@ function closeStoreModal() {
 }
 
 function formatTime(time) {
-    if(!time) return '--:--';
+    if (!time) return '--:--';
     const [h, m] = time.split(':');
     const hour = parseInt(h, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -73,16 +73,16 @@ function formatTime(time) {
     return `${formattedHour}:${m} ${ampm}`;
 }
 
-function confirmDeleteFromModal() { if(currentStoreId) confirmDelete(event, currentStoreId); }
+function confirmDeleteFromModal() { if (currentStoreId) confirmDelete(event, currentStoreId); }
 
 function confirmDelete(e, id) {
-    if(e) e.stopPropagation();
-    Swal.fire({ 
-        title: 'Are you sure?', 
-        text: "You won't be able to revert this!", 
-        icon: 'warning', 
-        showCancelButton: true, 
-        confirmButtonColor: '#ef4444', 
+    if (e) e.stopPropagation();
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
         confirmButtonText: 'Yes, delete it!',
         // Custom styles for consistency with light mode theme
         background: '#ffffff',
