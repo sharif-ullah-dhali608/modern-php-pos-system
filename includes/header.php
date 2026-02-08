@@ -10,7 +10,14 @@ if(!isset($_SESSION['auth'])){
 $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
 
 // Global Currency Initialization for JavaScript
-$header_curr_q = mysqli_query($conn, "SELECT c.* FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.status = 1 LIMIT 1");
+$sess_store_id = isset($_SESSION['store_id']) ? intval($_SESSION['store_id']) : 0;
+if($sess_store_id > 0) {
+    // 1. Fetch Currency for Active Store
+    $header_curr_q = mysqli_query($conn, "SELECT c.* FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.id = '$sess_store_id' LIMIT 1");
+} else {
+    // 2. Fallback: Default/First Active Store
+    $header_curr_q = mysqli_query($conn, "SELECT c.* FROM stores s JOIN currencies c ON s.currency_id = c.id WHERE s.status = 1 ORDER BY s.id ASC LIMIT 1");
+}
 $header_curr = mysqli_fetch_assoc($header_curr_q) ?: ['symbol_left' => '৳', 'currency_name' => 'Taka'];
 $global_symbol = $header_curr['symbol_left'] ?: ($header_curr['symbol_right'] ?: '৳');
 $global_name = $header_curr['currency_name'] ?: 'Taka';
