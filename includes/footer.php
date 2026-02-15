@@ -112,16 +112,17 @@ endif; ?>
     }
     .search-icon-inside {
         position: absolute;
-        left: 16px;
+        left: 16px; /* Fixed position relative to wrapper */
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
+        color: #0d9488; /* Teal color as requested */
         font-size: 16px;
         transition: all 0.3s ease;
         z-index: 10;
         pointer-events: none;
     }
-    .unique-search-field:focus + .search-icon-inside {
+    .unique-search-field:focus + .search-icon-inside,
+    .search-input-wrapper:focus-within .search-icon-inside {
         color: #0d9488;
     }
 
@@ -215,8 +216,9 @@ endif; ?>
                     }).remove();
                     
                     searchInput.unwrap().addClass('unique-search-field');
-                    // Removed duplicate icon - using CSS background-image instead
-                    // searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
+                    // Wrap in relative container for stable icon positioning
+                    searchInput.wrap('<div class="search-input-wrapper relative inline-block"></div>');
+                    searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
 
                     // Apply horizontal scroll container class
                     $('.data-table').wrap('<div class="data-table-container"></div>');
@@ -355,5 +357,8 @@ endif; ?>
     });
 </script>
     <?php include('bank_modals.php'); ?>
+    
+    <!-- Template Customizer -->
+    <script src="/pos/assets/js/customizer.js"></script>
     </body>
 </html>

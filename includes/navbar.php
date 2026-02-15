@@ -1,4 +1,4 @@
-<nav class="bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-50 shadow-sm transition-colors duration-300">
+<nav id="main-navbar" class="bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-50 shadow-sm transition-colors duration-300">
 
     <style>
     @keyframes gradient-x {
@@ -11,7 +11,7 @@
     }
     </style>
 
-    <div class="px-4 md:px-6 py-4">
+    <div class="px-4 md:px-6 py-4 h-[80px]">
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 flex-1">
                 <button 
@@ -40,7 +40,7 @@
             <!-- Store Trigger Button (Left Navbar) -->
             <div class="flex-1 px-4">
                 <button onclick="openStoreModal(false)" class="group flex flex-col justify-center items-start text-left focus:outline-none">
-                    <div class="flex items-center gap-3 group-hover:bg-white px-4 py-2 rounded-2xl transition-all border border-transparent group-hover:border-teal-100 group-hover:shadow-md">
+                    <div class="store-trigger flex items-center gap-3 group-hover:bg-white px-4 py-2 rounded-2xl transition-all border border-transparent group-hover:border-teal-100 group-hover:shadow-md">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/30 group-hover:scale-110 transition-transform duration-300">
                             <i class="fas fa-store-alt text-lg"></i>
                         </div>
