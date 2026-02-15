@@ -34,6 +34,8 @@ $(document).ready(function () {
                 }).remove();
 
                 searchInput.unwrap().addClass('unique-search-field');
+                // Wrap in relative container for stable icon positioning
+                searchInput.wrap('<div class="search-input-wrapper relative inline-block"></div>');
                 searchInput.before('<i class="fas fa-search search-icon-inside"></i>');
 
                 // Apply horizontal scroll container class

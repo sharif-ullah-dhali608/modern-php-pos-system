@@ -147,9 +147,8 @@ function renderReusableList($config) {
             padding: 10px 14px 10px 40px !important; /* Restored padding for icon */
             outline: none !important;
             transition: all 0.2s !important;
-            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230d9488' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E") no-repeat !important; /* Restored Icon */
-            background-size: 18px !important;
-            background-position: 14px center !important;
+            background: #ffffff !important;
+            /* background-image removed to use injected icon */
             font-size: 14px !important;
             color: #475569 !important;
         }

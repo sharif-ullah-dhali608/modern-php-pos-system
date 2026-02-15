@@ -356,24 +356,24 @@ include('../includes/header.php');
                 <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-x-auto p-4">
                     <table id="purchaseTable" class="table table-striped table-hover w-full text-left">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <tr class="border-b border-slate-200">
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">
                                     <input type="checkbox" id="selectAll" class="form-check-input">
                                 </th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Datetime</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Invoice Id</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Supplier</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Stock</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Creator</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Amount</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Invoice Paid</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Due</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Pay</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Return</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">View</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Edit</th>
-                                <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Delete</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Datetime</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Invoice Id</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Supplier</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Stock</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Creator</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Amount</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Invoice Paid</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-right whitespace-nowrap min-w-[100px]" style="text-align: right !important; padding-right: 25px !important;">Due</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider">Status</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-center">Pay</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-center">Return</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-center">View</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-center">Edit</th>
+                                <th class="p-4 text-xs font-bold uppercase tracking-wider text-center">Delete</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -461,8 +461,8 @@ $menu_items = [
 <div id="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
 
 <aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-all duration-300">
-    <div class="flex items-center gap-3 px-2 py-4 border-b border-white/5 relative group">
-    <div class="w-14 h-14 rounded-2xl shrink-0 bg-gradient-to-br from-teal-900 via-teal-800 from-white/10 to-white/5 border border-white/20 shadow-inner flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+    <div class="flex items-center gap-3 px-4 py-4 h-[81px] border-b border-white/5 relative group">
+    <div class="w-10 h-10 rounded-xl shrink-0 bg-gradient-to-br from-teal-900 via-teal-800 from-white/10 to-white/5 border border-white/20 shadow-inner flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
         <img src="<?= $sidebar_logo; ?>" onerror="this.src='/pos/assets/images/logo.png'" alt="Logo" class="w-full h-full object-contain" />
     </div>
 
