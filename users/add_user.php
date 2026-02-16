@@ -358,6 +358,7 @@ include('../includes/header.php');
                 </form>
             </div>
         </div>
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 

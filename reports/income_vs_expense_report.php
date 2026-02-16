@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Income vs Expense - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -18,13 +19,13 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
 // 1. Total Income (Actual Cash/Payment Received in period)
-$inc_q = "SELECT SUM(amount) as total FROM sell_logs ";
+$inc_q = "SELECT SUM(amount) as total FROM sell_logs sl WHERE 1=1 " . getStoreFilterDirect('sl');
 applyDateFilter($inc_q, 'created_at', $date_filter, $start_date, $end_date);
 $inc_res = mysqli_query($conn, $inc_q);
 $total_income = mysqli_fetch_assoc($inc_res)['total'] ?? 0;
 
 // 2. Total Expense (Actual Payments made in period)
-$exp_q = "SELECT SUM(amount) as total FROM purchase_logs ";
+$exp_q = "SELECT SUM(amount) as total FROM purchase_logs pl WHERE 1=1 " . getStoreFilterDirect('pl');
 applyDateFilter($exp_q, 'created_at', $date_filter, $start_date, $end_date);
 $exp_res = mysqli_query($conn, $exp_q);
 $total_expense = mysqli_fetch_assoc($exp_res)['total'] ?? 0;

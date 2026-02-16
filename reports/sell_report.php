@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Sell Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
@@ -19,7 +20,7 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
 // Fetch Data
-$query = "SELECT si.*, COALESCE(c.name, 'Walking Customer') as customer_name,
+$query = "SELECT si.*, COALESCE(c.name, 'Walking Customer') as customer_name, c.image as customer_image,
           (SELECT SUM(qty_sold) FROM selling_item WHERE invoice_id = si.invoice_id) as total_qty,
           (SELECT SUM(price_sold) FROM selling_item WHERE invoice_id = si.invoice_id) as total_selling_price,
           (si.grand_total - IFNULL((SELECT SUM(grand_total) FROM selling_info WHERE ref_invoice_id = si.invoice_id AND inv_type = 'return'), 0)) as net_amount,
@@ -27,6 +28,9 @@ $query = "SELECT si.*, COALESCE(c.name, 'Walking Customer') as customer_name,
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           WHERE si.inv_type = 'sale' ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('si');
 
 if($filter_customer > 0) {
     $query .= " AND si.customer_id = $filter_customer ";
@@ -83,6 +87,7 @@ $config = [
     'columns' => [
         ['label' => 'Invoice ID', 'key' => 'invoice_id'],
         ['label' => 'Date', 'key' => 'created_at'],
+        ['label' => 'Photo', 'key' => 'customer_image', 'type' => 'image', 'path' => '/pos/uploads/customers/'],
         ['label' => 'Customer', 'key' => 'customer_name'],
         ['label' => 'Quantity', 'key' => 'total_qty'],
         ['label' => 'Selling Price', 'key' => 'total_selling_price', 'type' => 'number'],

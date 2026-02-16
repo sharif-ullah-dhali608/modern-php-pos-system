@@ -10,10 +10,19 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Stock Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $filter_store = isset($_GET['store_id']) ? intval($_GET['store_id']) : 0;
 $filter_category = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+
+// Fetch Store Filter (Permission Based)
+$store_filter = getStoreFilterWithJoin('products', 'p'); // Table: products, Alias: p
+
+// Ensure JOIN is present even if permission allows all (Admin)
+if (empty($store_filter['join'])) {
+    $store_filter['join'] = " LEFT JOIN product_store_map psm ON p.id = psm.product_id";
+}
 
 // Fetch Data
 $query = "SELECT p.id, p.product_name, p.product_code, c.name as category_name, 
@@ -21,17 +30,15 @@ $query = "SELECT p.id, p.product_name, p.product_code, c.name as category_name,
           p.alert_quantity, p.thumbnail, p.selling_price, p.purchase_price
           FROM products p 
           LEFT JOIN categories c ON p.category_id = c.id 
-          LEFT JOIN product_store_map psm ON p.id = psm.product_id 
-          WHERE p.status = 1 ";
+          {$store_filter['join']}
+          WHERE p.status = 1 {$store_filter['where']} ";
 
+// Apply specific store filter if selected (on top of permission filter)
+// If permission allows all (where is empty), and user selects strict store, we filter by it.
+// If permission restricts to Store A, and user selects Store A, it's redundant but fine.
+// If permission restricts to Store A, and user selects Store B, result is empty (Correct).
 if($filter_store > 0) {
-    $query = "SELECT p.id, p.product_name, p.product_code, c.name as category_name, 
-              COALESCE(psm.stock, 0) as total_stock,
-              p.alert_quantity, p.thumbnail, p.selling_price, p.purchase_price
-              FROM products p 
-              LEFT JOIN categories c ON p.category_id = c.id 
-              LEFT JOIN product_store_map psm ON p.id = psm.product_id AND psm.store_id = $filter_store
-              WHERE p.status = 1 ";
+    $query .= " AND psm.store_id = $filter_store ";
 }
 
 if($filter_category > 0) {
@@ -39,7 +46,6 @@ if($filter_category > 0) {
 }
 
 $query .= " GROUP BY p.id ORDER BY p.product_name ASC";
-
 $result = mysqli_query($conn, $query);
 $data = [];
 $total_stock_value = 0;
@@ -65,10 +71,34 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 
 // Filter Options
-$store_options = [['label' => 'All Stores', 'url' => '?category_id='.$filter_category, 'active' => $filter_store == 0]];
-$s_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE status = 1");
-while($s = mysqli_fetch_assoc($s_res)) {
-    $store_options[] = ['label' => $s['store_name'], 'url' => '?store_id='.$s['id'].'&category_id='.$filter_category, 'active' => $filter_store == $s['id']];
+$filters = [];
+
+// Store Filter Logic
+$should_show_store_filter = false;
+$store_options = [];
+
+if(canViewAllStores()) {
+    $should_show_store_filter = true;
+    $store_options[] = ['label' => 'All Stores', 'url' => '?category_id='.$filter_category, 'active' => $filter_store == 0];
+    $s_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE status = 1");
+    while($s = mysqli_fetch_assoc($s_res)) {
+        $store_options[] = ['label' => $s['store_name'], 'url' => '?store_id='.$s['id'].'&category_id='.$filter_category, 'active' => $filter_store == $s['id']];
+    }
+} else {
+    // Check assigned stores for staff
+    $uid = $_SESSION['auth_user']['user_id'];
+    $s_res = mysqli_query($conn, "SELECT s.id, s.store_name FROM stores s JOIN user_store_map usm ON s.id = usm.store_id WHERE usm.user_id = '$uid' AND s.status = 1");
+    if(mysqli_num_rows($s_res) > 1) {
+        $should_show_store_filter = true;
+        $store_options[] = ['label' => 'All My Stores', 'url' => '?category_id='.$filter_category, 'active' => $filter_store == 0];
+        while($s = mysqli_fetch_assoc($s_res)) {
+            $store_options[] = ['label' => $s['store_name'], 'url' => '?store_id='.$s['id'].'&category_id='.$filter_category, 'active' => $filter_store == $s['id']];
+        }
+    }
+}
+
+if($should_show_store_filter) {
+    $filters[] = ['id' => 'filter_store', 'label' => 'Store', 'options' => $store_options];
 }
 
 $cat_options = [['label' => 'All Categories', 'url' => '?store_id='.$filter_store, 'active' => $filter_category == 0]];
@@ -76,6 +106,7 @@ $c_res = mysqli_query($conn, "SELECT id, name FROM categories WHERE status = 1")
 while($c = mysqli_fetch_assoc($c_res)) {
     $cat_options[] = ['label' => $c['name'], 'url' => '?store_id='.$filter_store.'&category_id='.$c['id'], 'active' => $filter_category == $c['id']];
 }
+$filters[] = ['id' => 'filter_category', 'label' => 'Category', 'options' => $cat_options];
 
 $config = [
     'title' => 'Stock Report',
@@ -83,17 +114,14 @@ $config = [
     'primary_key' => 'id',
     'name_field' => 'product_name',
     'data' => $data,
-    'filters' => [
-        ['id' => 'filter_store', 'label' => 'Store', 'options' => $store_options],
-        ['id' => 'filter_category', 'label' => 'Category', 'options' => $cat_options]
-    ],
+    'filters' => $filters,
     'summary_cards' => [
         ['label' => 'Total Products', 'value' => count($data), 'border_color' => 'border-teal-500'],
         ['label' => 'Low Stock Items', 'value' => $low_stock_count, 'border_color' => 'border-rose-500'],
     ],
     'columns' => [
         ['label' => 'SL', 'key' => 'sl'],
-        ['label' => 'Image', 'key' => 'thumbnail', 'type' => 'image', 'path' => ''],
+        ['label' => 'Image', 'key' => 'thumbnail', 'type' => 'image', 'path' => '/pos/uploads/products/'],
         ['label' => 'Product Name', 'key' => 'product_name'],
         ['label' => 'Code', 'key' => 'product_code'],
         ['label' => 'Category', 'key' => 'category_name'],

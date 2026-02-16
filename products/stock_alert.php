@@ -10,7 +10,19 @@ if(!isset($_SESSION['auth'])){
 }
 
 // Fetch Filters
-$filter_store = isset($_GET['store_id']) ? intval($_GET['store_id']) : 0;
+$session_store_id = $_SESSION['store_id'] ?? 0;
+// Fetch Filters
+$session_store_id = $_SESSION['store_id'] ?? 0;
+$filter_store_param = $_GET['store_id'] ?? null;
+
+if($filter_store_param === 'all') {
+    $filter_store = 0; // Show all my stores
+} elseif($filter_store_param !== null) {
+    $filter_store = intval($filter_store_param);
+} else {
+    $filter_store = $session_store_id; // Default to current workspace
+}
+
 $filter_product = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
@@ -20,21 +32,65 @@ $end_date = $_GET['end_date'] ?? '';
 function get_filter_url($params) {
     $current_params = $_GET;
     foreach($params as $k => $v) {
-        if($v === 0 || $v === '') unset($current_params[$k]);
+        if(($v === 0 && !is_string($v)) || $v === '') unset($current_params[$k]);
         else $current_params[$k] = $v;
     }
     return '?' . http_build_query($current_params);
 }
 
-// Fetch Stores for filter
-$stores_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE status = 1 ORDER BY store_name ASC");
-$store_options = [['label' => 'All Stores', 'url' => get_filter_url(['store_id' => 0]), 'active' => ($filter_store === 0)]];
-while($st = mysqli_fetch_assoc($stores_res)) {
-    $store_options[] = [
-        'label' => $st['store_name'],
-        'url' => get_filter_url(['store_id' => $st['id']]),
-        'active' => ($filter_store === $st['id'])
-    ];
+// --- DATA ACCESS & PERMISSION LOGIC ---
+$u_id = $_SESSION['auth_user']['user_id'];
+$u_role = $_SESSION['auth_user']['role_as'];
+
+$allowed_store_ids = [];
+$is_admin = ($u_role === 'admin');
+$can_view_all = $is_admin; 
+$should_show_filter = $is_admin; 
+
+if(!$is_admin) {
+    // Fetch assigned stores
+    $usm_q = mysqli_query($conn, "SELECT store_id FROM user_store_map WHERE user_id='$u_id'");
+    while($row = mysqli_fetch_assoc($usm_q)) {
+        $allowed_store_ids[] = $row['store_id'];
+    }
+    
+    // If user has multiple stores, they can use the filter
+    if(count($allowed_store_ids) > 1) {
+        $should_show_filter = true;
+    }
+}
+
+// --- FETCH STORES FOR FILTER ---
+$store_options = [];
+if($is_admin) {
+    // Admin sees "All Stores"
+    $stores_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE status = 1 ORDER BY store_name ASC");
+    $store_options[] = ['label' => 'All Stores', 'url' => get_filter_url(['store_id' => 'all']), 'active' => ($filter_store === 0 && $filter_store_param === 'all')];
+    while($st = mysqli_fetch_assoc($stores_res)) {
+        $store_options[] = [
+            'label' => $st['store_name'],
+            'url' => get_filter_url(['store_id' => $st['id']]),
+            'active' => ($filter_store === $st['id'])
+        ];
+    }
+} else {
+    // Non-admin sees "All My Stores" and only their assigned stores
+    // We already have $allowed_store_ids from the restriction logic above
+    if(!empty($allowed_store_ids)) {
+        $allowed_list = implode(',', $allowed_store_ids);
+        $stores_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE id IN ($allowed_list) AND status = 1 ORDER BY store_name ASC");
+        
+        // Only show "All My Stores" if they have more than one store (though hidden otherwise by $should_show_filter)
+        $store_options[] = ['label' => 'All My Stores', 'url' => get_filter_url(['store_id' => 'all']), 'active' => ($filter_store === 0 && $filter_store_param === 'all')];
+        
+        while($st = mysqli_fetch_assoc($stores_res)) {
+            $store_options[] = [
+                'label' => $st['store_name'],
+                'url' => get_filter_url(['store_id' => $st['id']]),
+                'active' => ($filter_store === $st['id'])
+            ];
+        }
+    }
 }
 
 // Fetch Products (that have alerts) for filter
@@ -42,6 +98,17 @@ $prod_filter_query = "SELECT DISTINCT p.id, p.product_name
                       FROM products p
                       JOIN product_store_map psm ON p.id = psm.product_id
                       WHERE p.status = 1 AND psm.stock <= p.alert_quantity";
+
+// Data Restriction for Product Filter
+if(!$is_admin) {
+    if(!empty($allowed_store_ids)) {
+        $allowed_list = implode(',', $allowed_store_ids);
+        $prod_filter_query .= " AND psm.store_id IN ($allowed_list) ";
+    } else {
+        $prod_filter_query .= " AND 1=0 ";
+    }
+}
+
 if($filter_store > 0) $prod_filter_query .= " AND psm.store_id = $filter_store";
 $prod_filter_query .= " ORDER BY p.product_name ASC";
 $prod_res = mysqli_query($conn, $prod_filter_query);
@@ -57,7 +124,7 @@ while($pr = mysqli_fetch_assoc($prod_res)) {
 // Find active labels for buttons
 $selected_store_name = 'Filter by Store';
 foreach($store_options as $opt) {
-    if($opt['active'] && $filter_store > 0) {
+    if($opt['active']) {
         $selected_store_name = $opt['label'];
         break;
     }
@@ -71,6 +138,7 @@ foreach($product_options as $opt) {
     }
 }
 
+
 // Fetch Data
 $query = "SELECT p.*, psm.stock, psm.store_id, st.store_name, s.name as supplier_name, s.mobile as supplier_mobile
           FROM products p
@@ -79,7 +147,20 @@ $query = "SELECT p.*, psm.stock, psm.store_id, st.store_name, s.name as supplier
           LEFT JOIN suppliers s ON p.supplier_id = s.id
           WHERE p.status = 1 AND psm.stock <= p.alert_quantity";
 
+// Data Restriction: If not admin, restrict to allowed stores
+if(!$is_admin) {
+    if(!empty($allowed_store_ids)) {
+        $allowed_list = implode(',', $allowed_store_ids);
+        $query .= " AND psm.store_id IN ($allowed_list) ";
+    } else {
+        // User has NO stores assigned? Show nothing.
+        $query .= " AND 1=0 "; 
+    }
+}
+
 if($filter_store > 0) {
+    // If user tries to filter by a store they don't have access to (via URL hacking), 
+    // the above IN clause will naturally block it (intersection of sets).
     $query .= " AND psm.store_id = $filter_store";
 }
 if($filter_product > 0) {
@@ -123,6 +204,25 @@ if($query_run) {
     }
 }
 
+// Build Filters Array
+$list_filters = [];
+
+if($should_show_filter) {
+    $list_filters[] = [
+        'id' => 'filter_store',
+        'label' => $selected_store_name,
+        'options' => $store_options,
+        'searchable' => true
+    ];
+}
+
+$list_filters[] = [
+    'id' => 'filter_product',
+    'label' => $selected_product_name,
+    'options' => $product_options,
+    'searchable' => true
+];
+
 $list_config = [
     'title' => 'Stock Alert List',
     'add_url' => '#', // No add new button for this list
@@ -143,24 +243,11 @@ $list_config = [
             'label' => 'Point of Sale',
             'icon' => 'fas fa-cash-register',
             'onclick' => "window.location.href='/pos/pos/'",
-            'class' => 'inline-flex items-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition-all'
+            'class' => 'inline-flex items-center gap-2 px-5 py-3 btn-premium text-white font-bold rounded-lg shadow transition-all'
         ]
     ],
     'date_column' => 'p.created_at',
-    'filters' => [
-        [
-            'id' => 'filter_store',
-            'label' => $selected_store_name,
-            'options' => $store_options,
-            'searchable' => true
-        ],
-        [
-            'id' => 'filter_product',
-            'label' => $selected_product_name,
-            'options' => $product_options,
-            'searchable' => true
-        ]
-    ],
+    'filters' => $list_filters,
     'primary_key' => 'id',
     'name_field' => 'product_name'
 ];

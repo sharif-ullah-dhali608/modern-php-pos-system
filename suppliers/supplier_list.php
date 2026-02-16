@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php');
+include('../includes/permission_helper.php'); // Store filtering helper
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -10,9 +12,17 @@ if(!isset($_SESSION['auth'])){
 
 // Fetch suppliers with store count (Active relationship count)
 // We use a subquery to count how many stores each supplier is assigned to
+
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('suppliers', 's');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 $query = "SELECT s.*, 
           (SELECT COUNT(*) FROM supplier_stores_map WHERE supplier_id = s.id) as store_count
-          FROM suppliers s 
+          FROM suppliers s
+          {$store_join}
+          WHERE 1=1 {$store_where}
           ORDER BY s.sort_order ASC, s.id DESC";
 $query_run = mysqli_query($conn, $query);
 
@@ -21,10 +31,15 @@ while($row = mysqli_fetch_assoc($query_run)) {
     $suppliers[] = $row;
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_supplier_supplier') ? '/pos/suppliers/add' : '#';
+$edit_url = check_user_permission('update_supplier_supplier') ? '/pos/suppliers/edit' : '#';
+$delete_url = check_user_permission('delete_supplier_supplier') ? '/pos/suppliers/save_supplier.php' : '#';
+
 // Prepare data for reusable list component
 $list_config = [
     'title' => 'Supplier List',
-    'add_url' => '/pos/suppliers/add', // Points to the create/edit file
+    'add_url' => $add_url,
     'table_id' => 'supplierTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -38,8 +53,8 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $suppliers,
-    'edit_url' => '/pos/suppliers/edit', // Points to the create/edit file
-    'delete_url' => '/pos/suppliers/save_supplier.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'status_url' => '/pos/suppliers/save_supplier.php',
     'primary_key' => 'id',
     'name_field' => 'name' // Used for delete confirmation message (e.g. "Delete Global Traders?")

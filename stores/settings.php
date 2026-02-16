@@ -32,140 +32,14 @@ if(mysqli_num_rows($check_col) == 0) {
 <!-- TomSelect CSS -->
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
 
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #0d9488 0%, #115e59 100%);
-        --glass-bg: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(255, 255, 255, 0.5);
-        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-        --card-bg: rgba(255, 255, 255, 0.9);
-    }
-    
-    body { 
-        background-color: #f0f4f8; 
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%);
-        background-attachment: fixed;
-        font-family: 'Outfit', sans-serif; 
-    }
-
-    /* Glass Card */
-    .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--glass-shadow);
-        border-radius: 24px;
-    }
-
-    /* Switch Toggle */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 48px;
-        height: 26px;
-    }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #cbd5e1;
-        transition: .4s;
-        border-radius: 34px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    input:checked + .slider { background: var(--primary-gradient); }
-    input:checked + .slider:before { transform: translateX(22px); }
-
-    /* Tabs */
-    .nav-tabs-glass {
-        display: inline-flex;
-        background: rgba(255,255,255,0.5);
-        padding: 5px;
-        border-radius: 16px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-    }
-    .nav-link-glass {
-        padding: 10px 24px;
-        border-radius: 12px;
-        color: #64748b;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .nav-link-glass.active {
-        background: white;
-        color: #0d9488;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transform: translateY(-1px);
-    }
-    .nav-link-glass:hover:not(.active) {
-        color: #334155;
-        background: rgba(255,255,255,0.8);
-    }
-
-    .settings-section { display: none; animation: slideUp 0.4s ease-out; }
-    .settings-section.active { display: block; }
-    
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-
-    /* Hide number input spinners */
-    .no-spin::-webkit-inner-spin-button, 
-    .no-spin::-webkit-outer-spin-button { 
-        -webkit-appearance: none; 
-        margin: 0; 
-    }
-    .no-spin {
-        -moz-appearance: textfield;
-    }
-
-    /* Input Styles */
-    .glass-input {
-        width: 100%;
-        padding: 12px 16px;
-        background: rgba(255,255,255,0.8);
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        transition: all 0.3s;
-        font-size: 15px;
-    }
-    .glass-input:focus {
-        outline: none;
-        border-color: #0d9488;
-        background: white;
-        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
-    }
-</style>
 
 <div class="app-wrapper flex flex-col h-screen overflow-hidden">
     <?php include('../includes/sidebar.php'); ?>
-    <?php include('../includes/navbar.php'); ?>
     
     <main id="main-content" class="lg:ml-64 flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300">
-        
+        <div class="navbar-fixed-top">
+            <?php include('../includes/navbar.php'); ?>
+        </div> 
         <div class="flex-1 overflow-y-auto flex flex-col">
             <div class="max-w-7xl mx-auto w-full p-4 md:p-8">
             
@@ -206,7 +80,7 @@ if(mysqli_num_rows($check_col) == 0) {
                             <!-- LEFT COLUMN: Localization & Basic Store Info -->
                             <div class="space-y-6">
                                 <!-- Localization & Layouts Card -->
-                                <div class="glass-card p-8">
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-globe text-lg"></i>
@@ -244,10 +118,10 @@ if(mysqli_num_rows($check_col) == 0) {
                                             </div>
                                             
                                             <!-- Dropdown Menu -->
-                                            <div id="currency_dropdown_menu" class="hidden absolute z-50 w-full mt-2 bg-white rounded-xl border border-slate-200 shadow-xl max-h-80 overflow-hidden">
+                                            <div id="currency_dropdown_menu" class="hidden absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl max-h-80 overflow-hidden">
                                                 <!-- Search Input -->
-                                                <div class="p-3 border-b border-slate-100">
-                                                    <input type="text" id="currency_search" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-500" placeholder="Search currency..." oninput="filterCurrencies()">
+                                                <div class="p-3 border-b border-slate-100 dark:border-slate-700">
+                                                    <input type="text" id="currency_search" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:border-teal-500 dark:bg-slate-900 dark:text-white" placeholder="Search currency..." oninput="filterCurrencies()">
                                                 </div>
                                                 
                                                 <!-- Currency List -->
@@ -258,8 +132,8 @@ if(mysqli_num_rows($check_col) == 0) {
                                                     while($curr = mysqli_fetch_assoc($curr_q)) {
                                                         $count++;
                                                         $display_class = $count > 5 ? 'hidden currency-item-hidden' : '';
-                                                        $selected_class = ($curr['id'] == $current_curr) ? 'bg-teal-50 text-teal-600' : '';
-                                                        echo "<div class='currency-item $display_class $selected_class px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors' data-id='{$curr['id']}' data-name='{$curr['currency_name']} ({$curr['code']})' onclick='selectCurrency({$curr['id']}, \"{$curr['currency_name']} ({$curr['code']})\")'>
+                                                        $selected_class = ($curr['id'] == $current_curr) ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' : 'dark:text-slate-200';
+                                                        echo "<div class='currency-item $display_class $selected_class px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors' data-id='{$curr['id']}' data-name='{$curr['currency_name']} ({$curr['code']})' onclick='selectCurrency({$curr['id']}, \"{$curr['currency_name']} ({$curr['code']})\")'>
                                                                 {$curr['currency_name']} ({$curr['code']})
                                                               </div>";
                                                     }
@@ -313,7 +187,7 @@ if(mysqli_num_rows($check_col) == 0) {
                             </div>
 
                             <!-- Basic Store Information Card (in left column) -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-store text-lg"></i>
@@ -399,7 +273,7 @@ if(mysqli_num_rows($check_col) == 0) {
                             </div>
 
                             <!-- SMS & Notifications Card (in left column) -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-sms text-lg"></i>
@@ -439,7 +313,7 @@ if(mysqli_num_rows($check_col) == 0) {
                             </div>
 
                             <!-- Expiration System Card (in left column) -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-calendar-times text-lg"></i>
@@ -483,7 +357,7 @@ if(mysqli_num_rows($check_col) == 0) {
                         <!-- RIGHT COLUMN: Branding + Tax & System Config -->
                         <div class="space-y-6">
                             <!-- Branding Assets Card -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-palette text-lg"></i>
@@ -494,19 +368,15 @@ if(mysqli_num_rows($check_col) == 0) {
                                 <!-- 2-Column Grid for Logo & Favicon -->
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <!-- Logo Upload Card - Premium Design -->
-                                    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-6 border-2 border-teal-100 shadow-xl shadow-teal-500/10 hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-300 group">
-                                        <!-- Decorative Background Pattern -->
-                                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-400/10 to-transparent rounded-full blur-2xl"></div>
-                                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-400/10 to-transparent rounded-full blur-2xl"></div>
-                                        
+                                    <div class="rounded-3xl bg-white dark:bg-slate-800 p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 group">
                                         <div class="relative z-10">
                                             <div class="flex items-center gap-3 mb-5">
-                                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
-                                                    <i class="fas fa-image text-white text-lg"></i>
+                                                <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center shadow-sm">
+                                                    <i class="fas fa-image text-lg"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-bold text-slate-800 text-lg">Store Logo</h4>
-                                                    <p class="text-xs text-slate-500">Primary brand identity</p>
+                                                    <h4 class="font-bold text-slate-800 dark:text-white text-lg">Store Logo</h4>
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400">Primary brand identity</p>
                                                 </div>
                                             </div>
                                             
@@ -515,15 +385,14 @@ if(mysqli_num_rows($check_col) == 0) {
                                             ?>
                                             
                                             <div class="mb-5 flex justify-center">
-                                                <div class="relative w-full h-40 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-dashed border-teal-200 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-teal-300 transition-colors">
+                                                <div class="relative w-full h-40 bg-white dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-teal-500 dark:group-hover:border-teal-500 transition-colors">
                                                     <img id="logo_preview" src="<?= $current_logo; ?>" alt="Logo" class="max-w-full max-h-full object-contain p-4">
-                                                    <div class="absolute inset-0 bg-gradient-to-t from-teal-500/5 to-transparent pointer-events-none"></div>
                                                 </div>
                                             </div>
                                             
                                             <div class="relative">
                                                 <input type="file" name="logo_file" id="logo_file" accept="image/*" class="hidden" onchange="previewLogo(this)">
-                                                <label for="logo_file" class="block w-full bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 hover:from-teal-600 hover:via-teal-700 hover:to-cyan-700 text-white text-center py-3.5 rounded-2xl cursor-pointer transition-all font-bold shadow-lg shadow-teal-500/40 hover:shadow-xl hover:shadow-teal-500/50 transform hover:-translate-y-0.5 active:translate-y-0">
+                                                <label for="logo_file" class="block w-full bg-teal-600 hover:bg-teal-700 text-white text-center py-3.5 rounded-xl cursor-pointer transition-all font-bold shadow-lg shadow-teal-500/20">
                                                     <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Upload Logo
                                                 </label>
                                             </div>
@@ -535,19 +404,15 @@ if(mysqli_num_rows($check_col) == 0) {
                                     </div>
 
                                     <!-- Favicon Upload Card - Premium Design -->
-                                    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 border-2 border-indigo-100 shadow-xl shadow-indigo-500/10 hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300 group">
-                                        <!-- Decorative Background Pattern -->
-                                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/10 to-transparent rounded-full blur-2xl"></div>
-                                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-transparent rounded-full blur-2xl"></div>
-                                        
+                                    <div class="rounded-3xl bg-white dark:bg-slate-800 p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 group">
                                         <div class="relative z-10">
                                             <div class="flex items-center gap-3 mb-5">
-                                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                                                    <i class="fas fa-bookmark text-white text-lg"></i>
+                                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-sm">
+                                                    <i class="fas fa-bookmark text-lg"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-bold text-slate-800 text-lg">Favicon</h4>
-                                                    <p class="text-xs text-slate-500">Browser tab icon</p>
+                                                    <h4 class="font-bold text-slate-800 dark:text-white text-lg">Favicon</h4>
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400">Browser tab icon</p>
                                                 </div>
                                             </div>
                                             
@@ -556,15 +421,14 @@ if(mysqli_num_rows($check_col) == 0) {
                                             ?>
                                             
                                             <div class="mb-5 flex justify-center">
-                                                <div class="relative w-full h-40 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-dashed border-indigo-200 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-indigo-300 transition-colors">
+                                                <div class="relative w-full h-40 bg-white dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-indigo-500 dark:group-hover:border-indigo-500 transition-colors">
                                                     <img id="favicon_preview" src="<?= $current_favicon; ?>" alt="Favicon" class="max-w-full max-h-full object-contain p-4">
-                                                    <div class="absolute inset-0 bg-gradient-to-t from-indigo-500/5 to-transparent pointer-events-none"></div>
                                                 </div>
                                             </div>
                                             
                                             <div class="relative">
                                                 <input type="file" name="favicon_file" id="favicon_file" accept="image/*,.ico" class="hidden" onchange="previewFavicon(this)">
-                                                <label for="favicon_file" class="block w-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:via-indigo-700 hover:to-purple-700 text-white text-center py-3.5 rounded-2xl cursor-pointer transition-all font-bold shadow-lg shadow-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/50 transform hover:-translate-y-0.5 active:translate-y-0">
+                                                <label for="favicon_file" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3.5 rounded-xl cursor-pointer transition-all font-bold shadow-lg shadow-indigo-500/20">
                                                     <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Upload Favicon
                                                 </label>
                                             </div>
@@ -577,14 +441,14 @@ if(mysqli_num_rows($check_col) == 0) {
                                 </div>
                                 
                                 <!-- Brand Guidelines Note -->
-                                <div class="mt-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl border border-purple-100">
+                                <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
                                     <div class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <i class="fas fa-lightbulb text-purple-600 text-sm"></i>
+                                        <div class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-slate-200 dark:border-slate-600">
+                                            <i class="fas fa-lightbulb text-amber-500 text-sm"></i>
                                         </div>
                                         <div>
-                                            <h5 class="font-bold text-slate-700 text-sm mb-1">Brand Guidelines</h5>
-                                            <p class="text-xs text-slate-600 leading-relaxed">
+                                            <h5 class="font-bold text-slate-700 dark:text-white text-sm mb-1">Brand Guidelines</h5>
+                                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                                                 Use high-quality images for best results. Logo appears on receipts and invoices. Favicon shows in browser tabs.
                                             </p>
                                         </div>
@@ -594,7 +458,7 @@ if(mysqli_num_rows($check_col) == 0) {
                             
 
                             <!-- System Configuration Card (in right column) -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                             <div class="flex items-center gap-3 mb-6">
                                 <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm">
                                     <i class="fas fa-cog text-lg"></i>
@@ -678,7 +542,7 @@ if(mysqli_num_rows($check_col) == 0) {
 
 
                             <!-- Tax & Registration Card (in right column) -->
-                            <div class="glass-card p-8">
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
                                         <i class="fas fa-file-invoice-dollar text-lg"></i>
@@ -720,7 +584,7 @@ if(mysqli_num_rows($check_col) == 0) {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                         <!-- Interface Toggles Card -->
-                        <div class="glass-card p-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                             <div class="flex items-center gap-3 mb-6">
                                 <span class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm">
                                     <i class="fas fa-desktop text-lg"></i>
@@ -754,7 +618,7 @@ if(mysqli_num_rows($check_col) == 0) {
                         </div>
 
                         <!-- Display Options Card -->
-                        <div class="glass-card p-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                             <div class="flex items-center gap-3 mb-6">
                                 <span class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
                                     <i class="fas fa-eye text-lg"></i>
@@ -792,7 +656,7 @@ if(mysqli_num_rows($check_col) == 0) {
 
                     <!-- Tab: Product Limits -->
                     <div id="product_limits" class="settings-section">
-                        <div class="glass-card p-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
                             <div class="flex items-center gap-3 mb-6">
                                 <span class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
                                     <i class="fas fa-shield-alt text-lg"></i>
@@ -800,8 +664,8 @@ if(mysqli_num_rows($check_col) == 0) {
                                 <h3 class="text-xl font-bold text-slate-700">Product Quantity Limits</h3>
                             </div>
 
-                            <div class="mb-6 bg-white/50 p-4 rounded-xl border border-slate-100/50">
-                                <label class="block text-sm font-bold text-slate-600 mb-2">Target Scope</label>
+                            <div class="mb-6 bg-white/50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100/50 dark:border-slate-700/50">
+                                <label class="block text-sm font-bold text-slate-600 dark:text-slate-300 mb-2">Target Scope</label>
                                 <select id="limit_store_select" onchange="refreshLimitTable()" class="glass-input cursor-pointer">
                                     <option value="global">🌐 Global Limit (All Stores)</option>
                                     <?php
@@ -823,10 +687,10 @@ if(mysqli_num_rows($check_col) == 0) {
                                 <input type="text" id="limit_search" placeholder="Search product to set limit..." class="glass-input shadow-sm" style="padding-left: 3rem !important;">
                             </div>
 
-                            <div class="overflow-hidden rounded-xl border border-slate-200">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
                                 <table class="w-full text-left border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider">
+                                        <tr class="bg-slate-50/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
                                             <th class="p-4 font-bold">Product Name</th>
                                             <th class="p-4 font-bold">Code</th>
                                             <th class="p-4 font-bold">Current Stock</th>
@@ -834,7 +698,7 @@ if(mysqli_num_rows($check_col) == 0) {
                                             <th class="p-4 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="limit_table_body" class="bg-white/40 backdrop-blur-sm">
+                                    <tbody id="limit_table_body" class="bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm">
                                         <tr>
                                             <td colspan="5" class="p-8 text-center text-slate-400">
                                                 Start typing to search products...

@@ -2,6 +2,8 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -12,10 +14,10 @@ include('../includes/header.php');
 
 // Simple Filters logic
 $where = "WHERE 1=1";
-if(isset($_GET['store_id']) && !empty($_GET['store_id'])) {
-    $sid = (int)$_GET['store_id'];
-    $where .= " AND e.store_id='$sid'";
-}
+
+// Add store filtering using helper (expenses has direct store_id column)
+$where .= getStoreFilterDirect('e');
+
 if(isset($_GET['category_id']) && !empty($_GET['category_id'])) {
     $cid = (int)$_GET['category_id'];
     $where .= " AND e.category_id='$cid'";
@@ -96,14 +98,19 @@ if(isset($_GET['store_id']) && !empty($_GET['store_id'])) {
     }
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_expense_expenditure') ? '/pos/expenditure/expense_add' : '#';
+$edit_url = check_user_permission('update_expense_expenditure') ? '/pos/expenditure/expense_edit' : '#';
+$delete_url = check_user_permission('delete_expense_expenditure') ? '/pos/expenditure/save_expense' : '#';
+
 $config = [
     'title' => 'Expenditures',
     'table_id' => 'expenseTable',
     'primary_key' => 'id',
     'name_field' => 'title',
-    'add_url' => '/pos/expenditure/expense_add',
-    'edit_url' => '/pos/expenditure/expense_edit',
-    'delete_url' => '/pos/expenditure/save_expense',
+    'add_url' => $add_url,
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'summary_cards' => [
         ['label' => 'Total Expenditure', 'value' => $currency_symbol . number_format($total_amount, 2), 'border_color' => 'border-rose-500'],
         ['label' => 'Today\'s Expense', 'value' => $currency_symbol . number_format($today_amount, 2), 'border_color' => 'border-emerald-500'],

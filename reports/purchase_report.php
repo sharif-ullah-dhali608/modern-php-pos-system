@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Purchase Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $filter_supplier = isset($_GET['supplier_id']) ? intval($_GET['supplier_id']) : 0;
@@ -24,6 +25,9 @@ $query = "SELECT pin.*, COALESCE(s.name, 'N/A') as supplier_name,
           FROM purchase_info pin 
           LEFT JOIN suppliers s ON pin.sup_id = s.id 
           WHERE 1=1 ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('pin');
 
 if($filter_supplier > 0) {
     $query .= " AND pin.sup_id = $filter_supplier ";

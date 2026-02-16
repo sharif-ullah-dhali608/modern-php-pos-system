@@ -22,9 +22,12 @@ if(isset($_POST['fetch_groups'])) {
                         <?= $row['member_count']; ?> </span>
                 </td>
                 <td class="p-4 text-center">
-                    <button onclick="openPermission(<?= $row['id']; ?>, '<?= $row['name']; ?>')" class="w-10 h-10 inline-flex items-center justify-center text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+                    <button onclick="openPermission(<?= $row['id']; ?>, '<?= $row['name']; ?>')" class="w-10 h-10 inline-flex items-center justify-center text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white transition-all" title="Manage Permission">
                         <i class="fas fa-user-lock"></i>
-                    </button>                            
+                    </button> 
+                    <button onclick="openCopyModal(<?= $row['id']; ?>, '<?= $row['name']; ?>')" class="w-10 h-10 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-xl hover:bg-teal-600 hover:text-white transition-all ml-2" title="Copy Permission">
+                        <i class="fas fa-copy"></i>
+                    </button>                           
                 </td>
                 <td class="p-4 text-center">
                     <button onclick="deleteGroup(<?= $row['id']; ?>)" class="w-10 h-10 inline-flex items-center justify-center text-red-600 bg-red-50 rounded-xl hover:bg-red-600 hover:text-white transition-all">
@@ -53,40 +56,41 @@ if(isset($_POST['fetch_permissions'])) {
     // Full Module and Sub-Permission Mapping based on your provided requirements
     $modules = [
         // DASHBOARD & ANALYTICS
-        'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Profit Card', 'View Recent Sales', 'View Best Selling Product', 'View Stock Alert Widget', 'View Monthly Goals'],
+        'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Profit Card', 'View Recent Sales', 'View Recent Activities', 'View Best Selling Product', 'View Stock Alert Widget', 'View Monthly Goals', 'View Total Orders', 'View Total Customers', 'View Total Products', 'View POS Shortcut', 'View Sell List Shortcut', 'View Overview Shortcut', 'View Sell Rep Shortcut', 'View Purchase Shortcut', 'View Stock Shortcut', 'View Stores Shortcut'],
 
         // CORE MODULES
-        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List'],
-        'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation', 'Convert to Sell'],
-        'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Delete Invoice', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Read Purchase Log', 'Import Stock', 'View Cost Price'],
+        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List', 'View All Stores Data'],
+        'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation', 'Convert to Sell', 'View All Stores Data'],
+        'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Delete Invoice', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Read Purchase Log', 'Import Stock', 'View Cost Price', 'View All Stores Data'],
 
         // PRODUCTS & STOCK
-        'product' => ['Read Product List', 'Create Product', 'Update Product', 'Delete Product', 'Import Product', 'Product Bulk Action', 'Delete All Product', 'Read Category List', 'Create Category', 'Update Category', 'Delete Category', 'Read Stock Alert', 'Read Expired Product List', 'Barcode Print', 'Restore All Product', 'View Product Cost', 'View Product Supplier', 'View Product Profit'],
-        'brand' => ['Read Brand List', 'Create Brand', 'Update Brand', 'Delete Brand', 'Read Brand Profile'],
-        'unit' => ['Read Unit', 'Create Unit', 'Update Unit', 'Delete Unit'],
-        'storebox' => ['Read Box', 'Create Box', 'Update Box', 'Delete Box'],
+        'product' => ['Read Product List', 'Create Product', 'Update Product', 'Delete Product', 'Import Product', 'Product Bulk Action', 'Delete All Product', 'Read Stock Alert', 'Read Expired Product List', 'Barcode Print', 'Restore All Product', 'View Product Cost', 'View Product Supplier', 'View Product Profit', 'View All Stores Data'],
+        'category' => ['Read Category List', 'Create Category', 'Update Category', 'Delete Category', 'View Category Details', 'View All Stores Data'],
+        'brand' => ['Read Brand List', 'Create Brand', 'Update Brand', 'Delete Brand', 'Read Brand Profile', 'View All Stores Data'],
+        'unit' => ['Read Unit', 'Create Unit', 'Update Unit', 'Delete Unit', 'View All Stores Data'],
+        'storebox' => ['Read Box', 'Create Box', 'Update Box', 'Delete Box', 'View All Stores Data'],
         
         // CONTACTS
-        'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer', 'Update Customer', 'Delete Customer', 'Add Balance', 'Substract Balance', 'Read Transaction List'],
-        'supplier' => ['Read Supplier List', 'Create Supplier', 'Update Supplier', 'Delete Supplier', 'Read Supplier Profile'],
-        'user' => ['Read User List', 'Create User', 'Update User', 'Delete User', 'Change Password', 'View User Activity Log'],
-        'usergroup' => ['Read Usergroup List', 'Create Usergroup', 'Update Usergroup', 'Delete Usergroup'],
+        'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer', 'Update Customer', 'Delete Customer', 'Add Balance', 'Substract Balance', 'Read Transaction List', 'View All Stores Data'],
+        'supplier' => ['Read Supplier List', 'Create Supplier', 'Update Supplier', 'Delete Supplier', 'Read Supplier Profile', 'View All Stores Data'],
+        'user' => ['Read User List', 'Create User', 'Update User', 'Delete User', 'Change Password', 'View User Activity Log', 'View All Stores Data'],
+        'usergroup' => ['Read Usergroup List', 'Create Usergroup', 'Update Usergroup', 'Delete Usergroup', 'View All Stores Data'],
 
         // ACCOUNTING & FINANCE
-        'accounting' => ['Withdraw', 'Deposit', 'Transfer', 'View Bank Account', 'View Bank Account Sheet', 'View Bank Transfer', 'View Bank Transactions', 'View Income Source', 'Create Bank Account', 'Update Bank Account', 'Delete Bank Account', 'Create Income Source', 'Update Income Source', 'Delete Income Source', 'Income Monthwise', 'Income & Expense', 'Profit & Loss', 'Cashbook'],
-        'expenditure' => ['Read Expense', 'Create Expense', 'Update Expense', 'Delete Expense', 'Read Expense Category', 'Create Expense Category', 'Update Expense Category', 'Delete Expense Category', 'Expense Monthwise', 'Expense Summary'],
-        'loan' => ['Read Loan', 'Read Loan Summary', 'Take Loan', 'Update Loan', 'Delete Loan', 'Loan Pay'],
-        'installment' => ['Read Installment List', 'Create Installment', 'Update Installment', 'Delete Installment', 'Installment Payment', 'Installment Overview'],
+        'accounting' => ['Withdraw', 'Deposit', 'Transfer', 'View Bank Account', 'View Bank Account Sheet', 'View Bank Transfer', 'View Bank Transactions', 'View Income Source', 'Create Bank Account', 'Update Bank Account', 'Delete Bank Account', 'Create Income Source', 'Update Income Source', 'Delete Income Source', 'Income Monthwise', 'Income & Expense', 'Profit & Loss', 'Cashbook', 'View All Stores Data'],
+        'expenditure' => ['Read Expense', 'Create Expense', 'Update Expense', 'Delete Expense', 'Read Expense Category', 'Create Expense Category', 'Update Expense Category', 'Delete Expense Category', 'Expense Monthwise', 'Expense Summary', 'View All Stores Data'],
+        'loan' => ['Read Loan', 'Read Loan Summary', 'Take Loan', 'Update Loan', 'Delete Loan', 'Loan Pay', 'View All Stores Data'],
+        'installment' => ['Read Installment List', 'Create Installment', 'Update Installment', 'Delete Installment', 'Installment Payment', 'Installment Overview', 'View All Stores Data'],
 
         // TRANSFERS & GIFTCARDS
-        'transfer' => ['Read Transfer', 'Add Transfer', 'Update Transfer', 'Cancel Transfer', 'Read Receive List'],
-        'giftcard' => ['Read Giftcard', 'Add Giftcard', 'Update Giftcard', 'Delete Giftcard', 'Giftcard Topup', 'Read Giftcard Topup', 'Delete Giftcard Topup'],
+        'transfer' => ['Read Transfer', 'Add Transfer', 'Update Transfer', 'Cancel Transfer', 'Read Receive List', 'View All Stores Data'],
+        'giftcard' => ['Read Giftcard', 'Add Giftcard', 'Update Giftcard', 'Delete Giftcard', 'Giftcard Topup', 'Read Giftcard Topup', 'Delete Giftcard Topup', 'View All Stores Data'],
 
         // REPORTS
-        'report' => ['Overview Report', 'Collection Report', 'Due Collection Report', 'Due Paid Report', 'Sell Report', 'Purchase Report', 'Sell Payment Report', 'Purchase Payment Report', 'Sell Tax Report', 'Purchase Tax Report', 'Tax Overview Report', 'Stock Report', 'Customer Due Report', 'Supplier Due Report', 'Profit Loss Report'],
+        'report' => ['Overview Report', 'Collection Report', 'Due Collection Report', 'Due Paid Report', 'Sell Report', 'Purchase Report', 'Sell Payment Report', 'Purchase Payment Report', 'Sell Tax Report', 'Purchase Tax Report', 'Tax Overview Report', 'Stock Report', 'Customer Due Report', 'Supplier Due Report', 'Profit Loss Report', 'View All Stores Data'],
 
         // SETTINGS & SYSTEM
-        'settings' => ['View General Settings', 'View Store Settings', 'View Email Settings', 'Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset System'],
+        'settings' => ['View General Settings', 'View Store Settings', 'View Email Settings', 'Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset System', 'View All Stores Data'],
         'payment_method' => ['Read Payment Method List', 'Create Payment Method', 'Update Payment Method', 'Delete Payment Method', 'Active/Inactive'],
         'currency' => ['Read Currency', 'Add Currency', 'Update Currency', 'Change Currency', 'Delete Currency'],
         'taxrate' => ['Read Taxrate', 'Create Taxrate', 'Update Taxrate', 'Delete Taxrate'],
@@ -119,7 +123,12 @@ if(isset($_POST['fetch_permissions'])) {
         echo '<div class="permission-list space-y-1 overflow-y-auto custom-scroll pr-2" id="'.$mod_id.'" style="max-height: 250px;">';
         foreach($permissions as $perm) {
             $perm_slug = strtolower(str_replace([' ', '.', '&', '/'], '_', $perm)) . "_" . $title;
-            $checked = (isset($existing_perms['access'][$perm_slug]) && $existing_perms['access'][$perm_slug] == "true") ? 'checked' : '';
+            // Handle if existing_perms is just `true` (super admin case?) or array
+            $isChecked = false;
+            if(is_array($existing_perms) && isset($existing_perms['access'][$perm_slug]) && $existing_perms['access'][$perm_slug] == "true") {
+                $isChecked = true;
+            }
+            $checked = $isChecked ? 'checked' : '';
             
             echo '<label class="flex items-center gap-3 py-1 cursor-pointer group perm-item">';
             echo '  <input type="checkbox" name="access['.$perm_slug.']" value="true" '.$checked.' class="perm-check w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">';
@@ -136,6 +145,9 @@ if(isset($_POST['fetch_permissions'])) {
 /**
  * 3. SAVE NEW USER GROUP
  */
+/**
+ * 3. SAVE NEW USER GROUP
+ */
 if(isset($_POST['add_group_btn'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $slug = mysqli_real_escape_string($conn, $_POST['slug']);
@@ -144,7 +156,66 @@ if(isset($_POST['add_group_btn'])) {
     if(mysqli_num_rows($check) > 0) {
         echo json_encode(['status'=>400, 'message'=>'Slug already exists!']);
     } else {
-        $query = "INSERT INTO user_groups (name, slug) VALUES ('$name','$slug')";
+        // Auto-assign permissions based on Role Name
+        $role_perms = [];
+        $role_name_lower = strtolower(trim($name));
+
+        if(in_array($role_name_lower, ['cashier', 'salesman', 'manager'])) {
+            // Define Permission Sets (Human Readable Identical to $modules array above)
+            $auto_permissions = [];
+
+            if($role_name_lower == 'cashier') {
+                $auto_permissions = [
+                    'dashboard' => ['View Dashboard', 'View POS Shortcut', 'View Total Orders', 'View Total Customers'],
+                    'sell' => ['Create Sell', 'View Sell Invoice', 'Sell Payment', 'Create Due'],
+                    'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer'],
+                    'product' => ['Read Product List'],
+                    'payment_method' => ['Read Payment Method List']
+                ];
+            } elseif($role_name_lower == 'salesman') {
+                $auto_permissions = [
+                    'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Recent Sales', 'View POS Shortcut', 'View Sell List Shortcut', 'View Total Orders', 'View Total Customers'],
+                    'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email'],
+                    'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Convert to Sell'],
+                    'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer', 'Update Customer', 'Add Balance', 'Substract Balance', 'Read Transaction List'],
+                    'product' => ['Read Product List', 'View Product Cost', 'View Product Profit'],
+                    'report' => ['Sell Report', 'Customer Due Report']
+                ];
+            } elseif($role_name_lower == 'manager') {
+                $auto_permissions = [
+                    'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Profit Card', 'View Recent Sales', 'View Recent Activities', 'View Best Selling Product', 'View Monthly Goals', 'View Total Orders', 'View Total Customers', 'View Total Products', 'View POS Shortcut', 'View Sell List Shortcut', 'View Overview Shortcut', 'View Sell Rep Shortcut', 'View Purchase Shortcut', 'View Stock Shortcut'],
+                    'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List'],
+                    'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation', 'Convert to Sell'],
+                    'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Read Purchase Log', 'Import Stock', 'View Cost Price'],
+                    'product' => ['Read Product List', 'Create Product', 'Update Product', 'Delete Product', 'Import Product', 'Read Stock Alert', 'Read Expired Product List', 'Barcode Print', 'View Product Cost', 'View Product Supplier', 'View Product Profit'],
+                    'category' => ['Read Category List', 'Create Category', 'Update Category', 'Delete Category'],
+                    'brand' => ['Read Brand List', 'Create Brand', 'Update Brand', 'Delete Brand'],
+                    'unit' => ['Read Unit', 'Create Unit', 'Update Unit', 'Delete Unit'],
+                    'customer' => ['Read Customer List', 'Read Customer Profile', 'Create Customer', 'Update Customer', 'Delete Customer', 'Add Balance', 'Substract Balance', 'Read Transaction List'],
+                    'supplier' => ['Read Supplier List', 'Create Supplier', 'Update Supplier', 'Delete Supplier', 'Read Supplier Profile'],
+                    'user' => ['Read User List', 'View User Activity Log'],
+                    'accounting' => ['Withdraw', 'Deposit', 'Transfer', 'View Bank Account', 'View Bank Account Sheet', 'View Bank Transfer', 'View Bank Transactions', 'View Income Source', 'Income Monthwise', 'Income & Expense', 'Profit & Loss', 'Cashbook'],
+                    'expenditure' => ['Read Expense', 'Create Expense', 'Update Expense', 'Delete Expense', 'Read Expense Category', 'Create Expense Category', 'Update Expense Category', 'Delete Expense Category', 'Expense Monthwise', 'Expense Summary'],
+                    'loan' => ['Read Loan', 'Read Loan Summary', 'Take Loan', 'Update Loan', 'Loan Pay'],
+                    'installment' => ['Read Installment List', 'Create Installment', 'Update Installment', 'Installment Payment', 'Installment Overview'],
+                    'transfer' => ['Read Transfer', 'Add Transfer', 'Update Transfer', 'Read Receive List'],
+                    'giftcard' => ['Read Giftcard', 'Add Giftcard', 'Update Giftcard', 'Giftcard Topup', 'Read Giftcard Topup'],
+                    'report' => ['Overview Report', 'Collection Report', 'Due Collection Report', 'Due Paid Report', 'Sell Report', 'Purchase Report', 'Sell Payment Report', 'Purchase Payment Report', 'Sell Tax Report', 'Purchase Tax Report', 'Tax Overview Report', 'Stock Report', 'Customer Due Report', 'Supplier Due Report', 'Profit Loss Report']
+                ];
+            }
+
+            // Convert to Slugs
+            foreach ($auto_permissions as $module => $perms) {
+                foreach ($perms as $perm) {
+                    $slug_key = strtolower(str_replace([' ', '.', '&', '/'], '_', $perm)) . "_" . $module;
+                    $role_perms['access'][$slug_key] = "true";
+                }
+            }
+        }
+
+        $permission_stm = empty($role_perms) ? '' : serialize($role_perms);
+        
+        $query = "INSERT INTO user_groups (name, slug, permission) VALUES ('$name','$slug', '$permission_stm')";
         if(mysqli_query($conn, $query)) {
             echo json_encode(['status'=>200, 'message'=>'User Group Created Successfully!']);
         } else {
@@ -178,6 +249,59 @@ if(isset($_POST['delete_group_btn'])) {
     $id = (int)$_POST['group_id'];
     mysqli_query($conn, "DELETE FROM user_groups WHERE id = '$id'");
     echo json_encode(['status'=>200]);
+    exit;
+}
+
+/**
+ * 6. FETCH SOURCE GROUPS FOR COPY MODAL
+ */
+if(isset($_POST['fetch_source_groups'])) {
+    $target_id = (int)$_POST['target_id'];
+    
+    // Fetch all groups except the target one
+    $query = "SELECT id, name FROM user_groups WHERE id != '$target_id' ORDER BY name ASC";
+    $query_run = mysqli_query($conn, $query);
+    
+    echo '<option value="">Select Source Group...</option>';
+    
+    if(mysqli_num_rows($query_run) > 0) {
+        foreach($query_run as $row) {
+            echo '<option value="'.$row['id'].'">'.$row['name'].'</option>';
+        }
+    } else {
+        echo '<option value="" disabled>No other groups available</option>';
+    }
+    exit;
+}
+
+/**
+ * 7. COPY PERMISSIONS
+ */
+if(isset($_POST['copy_permission_btn'])) {
+    $target_id = (int)$_POST['target_group_id'];
+    $source_id = (int)$_POST['source_group_id'];
+    
+    if($target_id == $source_id) {
+        echo json_encode(['status'=>400, 'message'=>'Source and Target cannot be same!']);
+        exit;
+    }
+    
+    // Fetch Source Permission
+    $source_query = mysqli_query($conn, "SELECT permission FROM user_groups WHERE id = '$source_id'");
+    if(mysqli_num_rows($source_query) > 0) {
+        $source_data = mysqli_fetch_assoc($source_query);
+        $permissions = $source_data['permission']; // Serialized string
+        
+        // Update Target with Source Permissions
+        $update_query = "UPDATE user_groups SET permission = '$permissions' WHERE id = '$target_id'";
+        if(mysqli_query($conn, $update_query)) {
+            echo json_encode(['status'=>200, 'message'=>'Permissions Copied Successfully!']);
+        } else {
+            echo json_encode(['status'=>500, 'message'=>'Database Update Failed']);
+        }
+    } else {
+        echo json_encode(['status'=>404, 'message'=>'Source Group not found!']);
+    }
     exit;
 }
 ?>

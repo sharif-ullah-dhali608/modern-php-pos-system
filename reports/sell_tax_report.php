@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Sell Tax Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -24,7 +25,7 @@ $query = "SELECT si.invoice_id, si.created_at, si.tax_amount as order_tax,
                 ELSE (price_sold * qty_sold) * (tax_rate / 100)
               END) FROM selling_item WHERE invoice_id = si.invoice_id) as item_tax
           FROM selling_info si
-          WHERE si.inv_type = 'sale' ";
+          WHERE si.inv_type = 'sale' " . getStoreFilterDirect('si');
 
 applyDateFilter($query, 'si.created_at', $date_filter, $start_date, $end_date);
 

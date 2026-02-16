@@ -4,6 +4,7 @@ session_start();
 $base_path = '../'; 
 include($base_path . 'config/dbcon.php');
 include($base_path . 'includes/date_filter_helper.php');
+include($base_path . 'includes/store_filter_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -18,17 +19,20 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $filter_status = $_GET['status'] ?? 'all';
 
-// Fetch Customers for filter dropdown
+// Fetch Customers for filter dropdown (Filtered by store)
 $customers_list = [];
-$cust_result = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+$cust_store_filter = getStoreFilterWithJoin('customers', 'c');
+$cust_query = "SELECT c.id, c.name FROM customers c {$cust_store_filter['join']} WHERE c.status = 1 {$cust_store_filter['where']} ORDER BY c.name ASC";
+$cust_result = mysqli_query($conn, $cust_query);
 while($c = mysqli_fetch_assoc($cust_result)) $customers_list[] = $c;
 
-// Fetch Installment Orders
+// Fetch Installment Orders (Filtered by store)
+$store_sql = getStoreFilterDirect('si');
 $query = "SELECT io.*, si.grand_total as sale_total, c.name as customer_name, c.mobile as customer_mobile
           FROM installment_orders io
           LEFT JOIN selling_info si ON io.invoice_id = si.invoice_id
           LEFT JOIN customers c ON si.customer_id = c.id
-          WHERE 1=1 ";
+          WHERE 1=1 $store_sql";
 
 // Apply Customer Filter
 if($filter_customer > 0) {

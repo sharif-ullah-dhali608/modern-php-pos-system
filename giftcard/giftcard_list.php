@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth_user'])){
     header("Location: /pos/signin.php");
@@ -56,34 +57,57 @@ if($query_run) {
         $row['expiry_formatted'] = !empty($row['expiry_date']) ? date('d M, Y', strtotime($row['expiry_date'])) : 'N/A';
         
         // Status Badge (Clickable to toggle)
+        $can_edit = check_user_permission('update_giftcard_giftcard');
+        
         $row['status_badge'] = $row['status'] == 1 ? 
-            '<button onclick="toggleStatus('.$row['id'].', 1, \'/pos/giftcard/save\')" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-wider hover:bg-emerald-100 cursor-pointer transition-all">✓ Active</button>' :
-            '<button onclick="toggleStatus('.$row['id'].', 0, \'/pos/giftcard/save\')" class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-black uppercase tracking-wider hover:bg-amber-100 cursor-pointer transition-all">⚠ Inactive</button>';
+            ($can_edit ? '<button onclick="toggleStatus('.$row['id'].', 1, \'/pos/giftcard/save\')" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-wider hover:bg-emerald-100 cursor-pointer transition-all">✓ Active</button>' : '<span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-wider">✓ Active</span>') :
+            ($can_edit ? '<button onclick="toggleStatus('.$row['id'].', 0, \'/pos/giftcard/save\')" class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-black uppercase tracking-wider hover:bg-amber-100 cursor-pointer transition-all">⚠ Inactive</button>' : '<span class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-black uppercase tracking-wider">⚠ Inactive</span>');
 
         // Custom Actions
-        $row['custom_actions'] = '<div class="flex items-center gap-2">
-                                <button onclick="viewGiftcard('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-indigo-500 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all" title="View Details">
+        // Permissions
+        $can_view = check_user_permission('view_giftcard_giftcard');
+        $can_edit = check_user_permission('update_giftcard_giftcard');
+        $can_delete = check_user_permission('delete_giftcard_giftcard');
+
+        $actions_html = '<div class="flex items-center gap-2">';
+        
+        if($can_view) {
+             $actions_html .= '<button onclick="viewGiftcard('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-indigo-500 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all" title="View Details">
                                     <i class="fas fa-eye text-xs"></i>
-                                </button>
-                                <a href="/pos/giftcard/edit?id='.$row['id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
+                               </button>';
+        }
+
+        if($can_edit) {
+             $actions_html .= '<a href="/pos/giftcard/edit?id='.$row['id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
                                     <i class="fas fa-edit text-xs"></i>
-                                </a>
-                                <button onclick="openTopupModal('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-600 hover:text-white transition-all" title="Add Topup">
+                               </a>
+                               <button onclick="openTopupModal('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-600 hover:text-white transition-all" title="Add Topup">
                                     <i class="fas fa-plus-circle text-xs"></i>
-                                </button>
-                                <button type="button" onclick="confirmDelete('.$row['id'].', \''.addslashes($row['card_no']).'\', \'/pos/giftcard/save_giftcard.php\')" 
+                               </button>';
+        }
+
+        if($can_delete) {
+             $actions_html .= '<button type="button" onclick="confirmDelete('.$row['id'].', \''.addslashes($row['card_no']).'\', \'/pos/giftcard/save_giftcard.php\')" 
                                         class="w-8 h-8 inline-flex items-center justify-center text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="Delete">
                                     <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
-                           </div>';
+                               </button>';
+        }
+        
+        $actions_html .= '</div>';
+        $row['custom_actions'] = $actions_html;
 
         $items[] = $row;
     }
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_giftcard_giftcard') ? '/pos/giftcard/add' : '#';
+$delete_url = check_user_permission('delete_giftcard_giftcard') ? '/pos/giftcard/save' : '#';
+$status_url = check_user_permission('update_giftcard_giftcard') ? '/pos/giftcard/save' : '#';
+
 $list_config = [
     'title' => 'Giftcard Management',
-    'add_url' => '/pos/giftcard/add',
+    'add_url' => $add_url,
     'table_id' => 'giftcardTable',
     'date_column' => 'created_at',
     'filters' => [
@@ -126,15 +150,9 @@ $list_config = [
         ['key' => 'custom_actions', 'label' => 'Actions', 'type' => 'html']
     ],
     'data' => $items,
-    'delete_url' => '/pos/giftcard/save',
-    'status_url' => '/pos/giftcard/save',
-    'primary_key' => 'id',
-    'permissions' => [
-        'add' => 'giftcard_add',
-        'view' => 'giftcard_view',
-        'edit' => 'giftcard_edit',
-        'delete' => 'giftcard_delete'
-    ]
+    'delete_url' => $delete_url,
+    'status_url' => $status_url,
+    'primary_key' => 'id'
 ];
 
 $page_title = "Giftcard Management - Velocity POS";

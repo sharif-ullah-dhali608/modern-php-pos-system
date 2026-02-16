@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Due Collection List - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -23,6 +24,9 @@ $query = "SELECT sl.*, u.name as user_name, pm.name as payment_method_name
           JOIN users u ON sl.created_by = u.id
           LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id
           WHERE sl.type = 'due_paid' ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('sl');
 
 applyDateFilter($query, 'sl.created_at', $date_filter, $start_date, $end_date);
 

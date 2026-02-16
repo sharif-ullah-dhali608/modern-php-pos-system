@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -13,8 +15,14 @@ $status = $_GET['status'] ?? '';
 $decimal = $_GET['decimal'] ?? '';
 $usage = $_GET['usage'] ?? '';
 
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('currencies', 'c', 'store_currency', 'c.id = psm.currency_id');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 // Build Query
 $where_clause = "WHERE 1=1";
+$where_clause .= $store_where; // Add store filtering
 if($status !== '') {
     $status = mysqli_real_escape_string($conn, $status);
     $where_clause .= " AND c.status = '$status'";
@@ -32,7 +40,8 @@ if($usage === 'used') {
 // Fetch currencies with store count
 $query = "SELECT c.*, 
           (SELECT COUNT(*) FROM store_currency WHERE currency_id = c.id) as store_count
-          FROM currencies c 
+          FROM currencies c
+          {$store_join}
           $where_clause
           ORDER BY c.sort_order ASC, c.id DESC";
 $query_run = mysqli_query($conn, $query);
@@ -83,9 +92,15 @@ $filters[] = [
 ];
 
 // Prepare data for reusable list component
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_currency_currency') ? '/pos/currency/add' : '#';
+$edit_url = check_user_permission('update_currency_currency') ? '/pos/currency/edit' : '#';
+$delete_url = check_user_permission('delete_currency_currency') ? '/pos/currency/save_currency.php' : '#';
+$status_url = check_user_permission('update_currency_currency') ? '/pos/currency/save_currency.php' : '#';
+
 $list_config = [
     'title' => 'Currency List',
-    'add_url' => '/pos/currency/add',
+    'add_url' => $add_url,
     'table_id' => 'currencyTable',
     'filters' => $filters,
     'columns' => [
@@ -100,9 +115,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $currencies,
-    'edit_url' => '/pos/currency/edit',
-    'delete_url' => '/pos/currency/save_currency.php',
-    'status_url' => '/pos/currency/save_currency.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
+    'status_url' => $status_url,
     'primary_key' => 'id',
     'name_field' => 'currency_name'
 ];

@@ -1,4 +1,4 @@
-<nav id="main-navbar" class="bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-50 shadow-sm transition-colors duration-300">
+<nav id="main-navbar" class="relative bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-[10000] shadow-sm transition-colors duration-300">
 
     <style>
     @keyframes gradient-x {
@@ -25,7 +25,7 @@
             <?php
             // --- Store Selection Modal Logic ---
             $current_store_id = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 0;
-            $curr_store_name = 'Select Store';
+            $curr_store_name = __('select_store');
             
             // Get current store name quickly
             if($current_store_id) {
@@ -35,20 +35,96 @@
             
             // Check if we MUST open the modal (First Login)
             $must_select = isset($_SESSION['must_select_store']) && $_SESSION['must_select_store'] === true;
+
+            // Check if user has access to multiple stores (or is admin)
+            $can_switch_store = false;
+            $u_id = $_SESSION['auth_user']['user_id'] ?? 0;
+            $u_role = $_SESSION['auth_user']['role_as'] ?? '';
+
+            if($u_role === 'admin') {
+                $can_switch_store = true;
+            } else {
+                $store_count_q = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM user_store_map WHERE user_id='$u_id'");
+                $store_cnt = 0;
+                if($r = mysqli_fetch_assoc($store_count_q)) $store_cnt = $r['cnt'];
+                
+                // If staff has > 1 store, they can switch
+                if($store_cnt > 1) $can_switch_store = true;
+            }
+
+            // --- Comprehensive Notification System: Data Fetching ---
+            $check_store_id = $_SESSION['store_id'] ?? 0;
+            $notifications = [
+                'low_stock' => ['count' => 0, 'items' => [], 'icon' => 'fa-exclamation-triangle', 'color' => 'rose', 'title' => __('low_stock'), 'link' => '/pos/products/stock_alert'],
+                'cust_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-user-clock', 'color' => 'orange', 'title' => __('customer_dues'), 'link' => '/pos/reports/due-collection'],
+                'sup_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-file-invoice-dollar', 'color' => 'amber', 'title' => __('supplier_payments'), 'link' => '/pos/purchases/list'],
+                'installments' => ['count' => 0, 'items' => [], 'icon' => 'fa-calendar-alt', 'color' => 'blue', 'title' => __('upcoming_installments'), 'link' => '/pos/installment/list'],
+                'logs' => ['count' => 0, 'items' => [], 'icon' => 'fa-history', 'color' => 'slate', 'title' => __('security_logs'), 'link' => '/pos/reports/overview']
+            ];
+
+            // Helper: Time Ago
+            if(!function_exists('notifTimeAgo')) {
+                function notifTimeAgo($timestamp) {
+                    if(!is_numeric($timestamp)) $timestamp = strtotime($timestamp);
+                    $diff = time() - $timestamp;
+                    if ($diff < 1) return 'now';
+                    if ($diff < 60) return $diff . 's';
+                    if ($diff < 3600) return floor($diff / 60) . 'm';
+                    if ($diff < 86400) return floor($diff / 3600) . 'h';
+                    return date('d M', $timestamp);
+                }
+            }
+
+            if ($check_store_id) {
+                // 1. Low Stock Alerts
+                $low_stock_q = mysqli_query($conn, "SELECT p.product_name, psm.stock, p.alert_quantity FROM products p JOIN product_store_map psm ON p.id = psm.product_id WHERE psm.store_id = '$check_store_id' AND p.status = 1 AND psm.stock <= p.alert_quantity ORDER BY psm.stock ASC LIMIT 3");
+                while ($r = mysqli_fetch_assoc($low_stock_q)) $notifications['low_stock']['items'][] = ['title' => $r['product_name'], 'sub' => "Stock: " . $r['stock'] . " (Limit: " . $r['alert_quantity'] . ")", 'time' => ''];
+                $notifications['low_stock']['count'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM products p JOIN product_store_map psm ON p.id = psm.product_id WHERE psm.store_id = '$check_store_id' AND p.status = 1 AND psm.stock <= p.alert_quantity"))['total'] ?? 0;
+
+                // 2. Customer Dues
+                $cust_due_q = mysqli_query($conn, "SELECT name, current_due FROM customers WHERE current_due > 0 ORDER BY current_due DESC LIMIT 3");
+                while ($r = mysqli_fetch_assoc($cust_due_q)) $notifications['cust_due']['items'][] = ['title' => $r['name'], 'sub' => "Due: " . number_format($r['current_due'], 2), 'time' => ''];
+                $notifications['cust_due']['count'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM customers WHERE current_due > 0"))['total'] ?? 0;
+
+                // 3. Supplier Dues
+                $sup_due_q = mysqli_query($conn, "SELECT s.name, pi.invoice_id, pi.total_sell FROM purchase_info pi LEFT JOIN suppliers s ON pi.sup_id = s.id WHERE pi.payment_status = 'due' AND pi.store_id = '$check_store_id' ORDER BY pi.info_id DESC LIMIT 3");
+                while ($r = mysqli_fetch_assoc($sup_due_q)) $notifications['sup_due']['items'][] = ['title' => ($r['name'] ?? 'Inv: #'.$r['invoice_id']), 'sub' => "Amt: " . number_format($r['total_sell'], 2), 'time' => ''];
+                $notifications['sup_due']['count'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM purchase_info WHERE payment_status = 'due' AND store_id = '$check_store_id'"))['total'] ?? 0;
+
+                // 4. Upcoming Installments (Due within 7 days)
+                $inst_q = mysqli_query($conn, "SELECT invoice_id, payable FROM installment_payments WHERE payment_status = 'due' AND store_id = '$check_store_id' AND payment_date <= DATE_ADD(NOW(), INTERVAL 7 DAY) ORDER BY payment_date ASC LIMIT 3");
+                while ($r = mysqli_fetch_assoc($inst_q)) $notifications['installments']['items'][] = ['title' => "Inv: #".$r['invoice_id'], 'sub' => "Payable: " . number_format($r['payable'], 2), 'time' => ''];
+                $notifications['installments']['count'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM installment_payments WHERE payment_status = 'due' AND store_id = '$check_store_id' AND payment_date <= DATE_ADD(NOW(), INTERVAL 7 DAY)"))['total'] ?? 0;
+
+                // 5. Activity Logs (Security/Recent)
+                $logs_q = mysqli_query($conn, "SELECT pmethod_id, type, amount, created_at FROM sell_logs WHERE store_id = '$check_store_id' ORDER BY created_at DESC LIMIT 3");
+                while ($r = mysqli_fetch_assoc($logs_q)) $notifications['logs']['items'][] = ['title' => ucfirst(str_replace('_', ' ', $r['type'])), 'sub' => "Amt: " . number_format($r['amount'], 2), 'time' => notifTimeAgo($r['created_at'])];
+                $notifications['logs']['count'] = 3; // Always show latest 3 logs for awareness
+            }
+
+            $total_notif_count = array_sum(array_column($notifications, 'count'));
+            
+            // Interaction classes
+            $btn_interaction = $can_switch_store ? 'onclick="openStoreModal(false)" class="group flex flex-col justify-center items-start text-left focus:outline-none cursor-pointer"' : 'class="flex flex-col justify-center items-start text-left cursor-default"';
+            $hover_card = $can_switch_store ? 'group-hover:bg-white group-hover:border-teal-100 group-hover:shadow-md' : '';
+            $hover_icon = $can_switch_store ? 'group-hover:scale-110' : '';
+            $hover_text = $can_switch_store ? 'group-hover:text-teal-600' : '';
             ?>
             
             <!-- Store Trigger Button (Left Navbar) -->
             <div class="flex-1 px-4">
-                <button onclick="openStoreModal(false)" class="group flex flex-col justify-center items-start text-left focus:outline-none">
-                    <div class="store-trigger flex items-center gap-3 group-hover:bg-white px-4 py-2 rounded-2xl transition-all border border-transparent group-hover:border-teal-100 group-hover:shadow-md">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/30 group-hover:scale-110 transition-transform duration-300">
+                <button <?= $btn_interaction; ?>>
+                    <div class="store-trigger flex items-center gap-3 px-4 py-2 rounded-2xl transition-all border border-transparent <?= $hover_card; ?>">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/30 transition-transform duration-300 <?= $hover_icon; ?>">
                             <i class="fas fa-store-alt text-lg"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] uppercase font-black text-teal-600/80 tracking-widest group-hover:text-teal-600 transition-colors">Current Workspace</div>
+                            <div class="text-[10px] uppercase font-black text-teal-600/80 tracking-widest transition-colors <?= $hover_text; ?>">Current Workspace</div>
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-black text-slate-800 truncate max-w-[150px] md:max-w-[200px]" id="nav_store_name"><?= htmlspecialchars($curr_store_name); ?></span>
+                                <?php if($can_switch_store): ?>
                                 <i class="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-teal-500 transition-all group-hover:translate-x-1"></i>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -56,7 +132,7 @@
             </div>
             
             <!-- STORE SELECTION MODAL -->
-            <div id="storeSelectionModal" class="fixed inset-0 z-[10000] hidden">
+            <div id="storeSelectionModal" class="fixed inset-0 z-[50000] hidden" style="z-index: 50000 !important;">
                 <!-- Backdrop with Light Blur -->
                 <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-300"></div>
                 
@@ -255,20 +331,145 @@
             }
             </script>
             </div>
-            
+
             <div class="flex items-center gap-4">
-                <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all">
-                    <i class="fas fa-globe"></i>
-                </button>
+            
+                <!-- Language Switcher -->
+                <div class="relative group">
+                    <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all focus:outline-none focus:ring-0" type="button">
+                        <i class="fas fa-language text-xl"></i>
+                    </button>
+                    <!-- Language Dropdown -->
+                    <div class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium p-1 z-[1002]">
+                        <div class="p-2 border-b border-slate-100 mb-1">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Language</h3>
+                        </div>
+                        <a href="?lang=en" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors <?= ($_SESSION['lang']??'en') == 'en' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600' ?>">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">EN</span>
+                                <span class="text-sm">English</span>
+                            </div>
+                            <?php if(($_SESSION['lang']??'en') == 'en'): ?><i class="fas fa-check text-teal-500 text-xs"></i><?php endif; ?>
+                        </a>
+                        <a href="?lang=bn" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors <?= ($_SESSION['lang']??'en') == 'bn' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600' ?>">
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">BN</span>
+                                <span class="text-sm">বাংলা</span>
+                            </div>
+                            <?php if(($_SESSION['lang']??'en') == 'bn'): ?><i class="fas fa-check text-teal-500 text-xs"></i><?php endif; ?>
+                        </a>
+                    </div>
+                </div>
                 
-                <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <!-- Theme Switcher -->
+                <div class="relative group">
+                    <button id="theme-toggle-btn" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all focus:outline-none focus:ring-0" type="button">
+                        <i class="fas fa-desktop" id="theme-icon"></i>
+                    </button>
+                    <!-- Theme Dropdown -->
+                    <div class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium p-1 z-[1002]">
+                        <div class="p-2 border-b border-slate-100 mb-1">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Theme</h3>
+                        </div>
+                        <button onclick="setTheme('light')" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-slate-600 group/theme" data-theme-val="light">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-500 flex items-center justify-center"><i class="fas fa-sun text-xs"></i></div>
+                                <span class="text-sm font-medium group-hover/theme:text-slate-900">Light</span>
+                            </div>
+                            <i class="fas fa-check text-teal-500 text-xs opacity-0 theme-check"></i>
+                        </button>
+                        <button onclick="setTheme('dark')" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-slate-600 group/theme" data-theme-val="dark">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-moon text-xs"></i></div>
+                                <span class="text-sm font-medium group-hover/theme:text-slate-900">Dark</span>
+                            </div>
+                            <i class="fas fa-check text-teal-500 text-xs opacity-0 theme-check"></i>
+                        </button>
+                        <button onclick="setTheme('system')" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-slate-600 group/theme" data-theme-val="system">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center"><i class="fas fa-desktop text-xs"></i></div>
+                                <span class="text-sm font-medium group-hover/theme:text-slate-900">System</span>
+                            </div>
+                            <i class="fas fa-check text-teal-500 text-xs opacity-0 theme-check"></i>
+                        </button>
+                        <button onclick="setTheme('login-style')" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-slate-600 group/theme" data-theme-val="login-style">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-500 flex items-center justify-center"><i class="fas fa-magic text-xs"></i></div>
+                                <span class="text-sm font-medium group-hover/theme:text-slate-900"><?= __('gradient_theme') ?></span>
+                            </div>
+                            <i class="fas fa-check text-teal-500 text-xs opacity-0 theme-check"></i>
+                        </button>
+                    </div>
+                </div>
                 
-                <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all relative">
-                    <i class="fas fa-bell"></i>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+                <div class="relative group">
+                    <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all focus:outline-none focus:ring-0" type="button">
+                        <i class="fas fa-bell text-xl notification-bell-icon"></i>
+                    </button>
+                    
+                    <?php if($total_notif_count > 0): ?>
+                        <span class="absolute block bg-rose-500 text-white font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg shadow-rose-500/40 z-[1001] transition-transform group-hover:scale-110 pointer-events-none" 
+                              style="width: 21px; height: 21px; top: -5px; right: -5px; font-size: 10px; min-width: 21px;">
+                            <?= $total_notif_count ?>
+                        </span>
+                    <?php endif; ?>
+
+                    <!-- Notification Dropdown -->
+                    <div class="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium px-1 py-1">
+                        <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-xl">
+                            <h3 class="text-sm font-bold text-slate-800"><?= __('notification_center') ?></h3>
+                            <?php if($total_notif_count > 0): ?>
+                                <span class="text-[10px] font-black bg-teal-100 text-teal-600 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    <?= $total_notif_count ?> <?= __('total') ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="max-h-[400px] overflow-y-auto py-1 custom-scroll">
+                            <?php if($total_notif_count > 0): ?>
+                                <?php foreach($notifications as $key => $cat): ?>
+                                    <?php if($cat['count'] > 0): ?>
+                                        <div class="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] bg-slate-50/30 flex items-center justify-between">
+                                            <span><?= $cat['title'] ?></span>
+                                            <span class="text-<?= $cat['color'] ?>-500"><?= $cat['count'] ?></span>
+                                        </div>
+                                        <?php foreach($cat['items'] as $item): ?>
+                                            <a href="<?= $cat['link'] ?>" class="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors group/item border-b border-slate-50 last:border-0">
+                                                <div class="w-8 h-8 rounded-lg bg-<?= $cat['color'] ?>-50 flex items-center justify-center text-<?= $cat['color'] ?>-500 shrink-0 shadow-sm transition-transform group-hover/item:scale-110">
+                                                    <i class="fas <?= $cat['icon'] ?> text-xs"></i>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <p class="text-[13px] font-bold text-slate-700 truncate"><?= htmlspecialchars($item['title']) ?></p>
+                                                        <?php if(!empty($item['time'])): ?>
+                                                            <span class="text-[9px] font-black text-slate-400 uppercase shrink-0"><?= $item['time'] ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-500 mt-0.5 font-medium"><?= htmlspecialchars($item['sub']) ?></p>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="py-12 text-center opacity-50">
+                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-inner">
+                                        <i class="fas fa-bell-slash text-2xl text-slate-300"></i>
+                                    </div>
+                                    <p class="text-[11px] font-black uppercase tracking-widest text-slate-400"><?= __('all_clear') ?></p>
+                                    <p class="text-[10px] text-slate-400 font-medium"><?= __('no_new_alerts') ?></p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="p-2 border-t border-slate-100 bg-slate-50/50 rounded-b-xl">
+                            <a href="/pos/reports/overview" class="block w-full text-center py-2.5 text-xs font-bold text-teal-600 hover:text-white hover:bg-teal-500 rounded-lg transition-all shadow-sm">
+                                View Full Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 
 
                 
@@ -298,7 +499,7 @@
                         }
                         ?>
 
-                        <button class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all">
+                        <button class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 focus:outline-none focus:ring-0 transition-all">
                             <div class="relative">
                                 <span class="absolute inset-0 rounded-full border border-teal-400/60 animate-pulse"></span>
                                 <img 
@@ -316,7 +517,7 @@
                             <i class="fas fa-chevron-down text-slate-500 text-xs"></i>
                         </button>
                     
-                    <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                    <div class="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium">
                         <div class="p-2">
                                 <a href="javascript:void(0)" onclick="openMyProfile()" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-700">
                                     <i class="fas fa-user w-5 text-teal-600"></i>
@@ -348,7 +549,7 @@ function toggleSidebarMobile() {
 </script>
 
 <!-- Shared View User Modal (global) -->
-<div id="viewUserModal" class="fixed inset-0 z-[9999] hidden overflow-y-auto overflow-x-hidden">
+<div id="viewUserModal" class="fixed inset-0 z-[50000] hidden overflow-y-auto overflow-x-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 50000 !important;">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"></div>
     <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 modal-content border border-slate-100">
@@ -403,24 +604,136 @@ function viewUser(id) {
         url: "/pos/users/fetch_user_modal.php",
         data: { user_id: id },
         success: function(response) {
-            body.innerHTML = response;
-        },
-        error: function() {
-            body.innerHTML = '<p class="text-center py-8 text-red-500">Failed to load user data.</p>';
+            $('#user_view_body').html(response);
         }
     });
 }
-
 function closeViewModal() {
     const modal = document.getElementById('viewUserModal');
     const content = modal.querySelector('.modal-content');
+    
     content.classList.remove('scale-100', 'opacity-100');
     content.classList.add('scale-95', 'opacity-0');
+    
     setTimeout(() => {
-        if(modal) modal.classList.add('hidden');
-    }, 200);
+        modal.classList.add('hidden');
+    }, 300);
 }
 
+// --- Theme Switcher Logic ---
+function setTheme(theme) {
+    let state = {
+        theme: 'light',
+        primary: 'teal',
+        skin: 'default',
+        layout_menu: 'expanded',
+        layout_navbar: 'sticky',
+        layout_content: 'wide'
+    };
+    
+    // Read existing config
+    const saved = localStorage.getItem('pos_config');
+    if (saved) {
+        try {
+            state = { ...state, ...JSON.parse(saved) };
+        } catch (e) {
+            console.error('Error parsing pos_config', e);
+        }
+    }
+    
+    // Update theme
+    state.theme = theme;
+    
+    // Save back to config
+    localStorage.setItem('pos_config', JSON.stringify(state));
+    localStorage.setItem('theme', theme); // Keep legacy key for now just in case
+    
+    applyTheme(theme);
+}
+
+function applyTheme(theme) {
+    const root = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+    
+    root.classList.remove('dark');
+    root.removeAttribute('data-theme');
+
+    if (theme === 'dark') {
+        root.classList.add('dark');
+        root.setAttribute('data-theme', 'dark');
+        if(icon) icon.className = 'fas fa-moon';
+    } else if (theme === 'light') {
+        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'light');
+        if(icon) icon.className = 'fas fa-sun';
+    } else if (theme === 'login-style') {
+        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'login-style');
+        if(icon) icon.className = 'fas fa-magic';
+    } else {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            root.classList.add('dark');
+            root.setAttribute('data-theme', 'dark');
+        } else {
+            root.classList.remove('dark');
+            root.setAttribute('data-theme', 'light');
+        }
+        if(icon) icon.className = 'fas fa-desktop';
+    }
+    
+    document.querySelectorAll('.theme-check').forEach(el => el.classList.add('opacity-0'));
+    const activeBtn = document.querySelector(`button[data-theme-val="${theme}"]`);
+    if(activeBtn) {
+        const check = activeBtn.querySelector('.theme-check');
+        if(check) check.classList.remove('opacity-0');
+        activeBtn.classList.add('bg-slate-50', 'font-bold');
+    }
+    
+    document.querySelectorAll('button[data-theme-val]').forEach(btn => {
+        if(btn !== activeBtn) btn.classList.remove('bg-slate-50', 'font-bold');
+    });
+}
+
+(function() {
+    let savedTheme = 'system';
+    
+    // Try to get from pos_config first (Customizer standard)
+    const config = localStorage.getItem('pos_config');
+    if(config) {
+        try {
+            const state = JSON.parse(config);
+            if(state.theme) savedTheme = state.theme;
+        } catch(e) {}
+    } else {
+        // Fallback to legacy key
+        savedTheme = localStorage.getItem('theme') || 'system';
+    }
+    
+    applyTheme(savedTheme);
+    
+    if(window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            // Check current config again
+            let current = 'system';
+            const c = localStorage.getItem('pos_config');
+            if(c) {
+                try {
+                    const s = JSON.parse(c);
+                    if(s.theme) current = s.theme;
+                } catch(e) {}
+            } else {
+                current = localStorage.getItem('theme') || 'system';
+            }
+            
+            if(current === 'system') {
+                applyTheme('system');
+            }
+        });
+    }
+})();
+</script>
+
+<script>
 // Close on escape key
 document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') closeViewModal();

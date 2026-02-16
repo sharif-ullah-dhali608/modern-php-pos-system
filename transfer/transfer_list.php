@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/permission_helper.php');
 
 if (!isset($_SESSION['auth'])) {
     header("Location: /pos/login");
@@ -133,11 +134,14 @@ while ($row = mysqli_fetch_assoc($result)) {
     $data[] = $row;
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_transfer_transfer') ? '/pos/transfer/stock_transfer' : '#';
+
 // Config for Reusable List
 $config = [
     'title' => 'Transfer List',
     'table_id' => 'transfer_table',
-    'add_url' => '/pos/transfer/stock_transfer',
+    'add_url' => $add_url,
     'primary_key' => 'id',
     'data' => $data,
     'filters' => [

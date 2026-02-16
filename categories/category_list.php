@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -9,14 +11,20 @@ if(!isset($_SESSION['auth'])){
 
 $status = $_GET['status'] ?? '';
 
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('categories', 'c');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 // Build Query
 $where_clause = "WHERE 1=1";
+$where_clause .= $store_where; // Add store filtering
 if($status !== '') {
     $status = mysqli_real_escape_string($conn, $status);
-    $where_clause .= " AND status = '$status'";
+    $where_clause .= " AND c.status = '$status'";
 }
 
-$query = "SELECT * FROM categories $where_clause ORDER BY sort_order ASC, id DESC";
+$query = "SELECT c.* FROM categories c {$store_join} $where_clause ORDER BY c.sort_order ASC, c.id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
@@ -33,9 +41,14 @@ $filters[] = [
     ]
 ];
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_category_category') ? '/pos/categories/add' : '#';
+$edit_url = check_user_permission('update_category_category') ? '/pos/categories/edit' : '#';
+$delete_url = check_user_permission('delete_category_category') ? '/pos/categories/save_category.php' : '#';
+
 $list_config = [
     'title' => 'Category List',
-    'add_url' => '/pos/categories/add',
+    'add_url' => $add_url,
     'table_id' => 'categoryTable',
     'filters' => $filters,
     'columns' => [
@@ -47,8 +60,8 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/categories/edit',
-    'delete_url' => '/pos/categories/save_category.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'status_url' => '/pos/categories/save_category.php',
     'primary_key' => 'id',
     'name_field' => 'name'

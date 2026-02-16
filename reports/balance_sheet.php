@@ -11,11 +11,24 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Balance Sheet - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
-// Fetch Current Assets
-$cash_q = mysqli_query($conn, "SELECT (SUM(CASE WHEN pm.code = 'cash' THEN sl.amount ELSE 0 END) - SUM(IFNULL((SELECT SUM(amount) FROM purchase_logs WHERE pmethod_id = pm.id), 0))) as balance 
-                                FROM sell_logs sl JOIN payment_methods pm ON sl.pmethod_id = pm.id");
-$cash_balance = mysqli_fetch_assoc($cash_q)['balance'] ?? 0;
+// Fetch Current Assets - Cash in Hand
+// Cash In (Sales)
+$cash_in_q = "SELECT SUM(sl.amount) as total 
+              FROM sell_logs sl 
+              JOIN payment_methods pm ON sl.pmethod_id = pm.id 
+              WHERE pm.code = 'cash' " . getStoreFilterDirect('sl');
+$cash_in = mysqli_fetch_assoc(mysqli_query($conn, $cash_in_q))['total'] ?? 0;
+
+// Cash Out (Purchases)
+$cash_out_q = "SELECT SUM(pl.amount) as total 
+               FROM purchase_logs pl 
+               JOIN payment_methods pm ON pl.pmethod_id = pm.id 
+               WHERE pm.code = 'cash' " . getStoreFilterDirect('pl');
+$cash_out = mysqli_fetch_assoc(mysqli_query($conn, $cash_out_q))['total'] ?? 0;
+
+$cash_balance = $cash_in - $cash_out;
 
 $data = [
     ['id' => 1, 'category' => 'Assets', 'item' => 'Cash in Hand', 'amount' => $cash_balance],

@@ -10,12 +10,18 @@ if(!isset($_SESSION['auth'])){
 
 $page_title = "Collection Report - Velocity POS";
 include('../includes/header.php');
-
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
+
+// Get Store Filters (strip initial " AND " for join usage if using directly in ON logic, 
+// BUT getStoreFilterDirect returns " AND ...". So we can just append it.)
+$sl_filter = getStoreFilterDirect('sl');
+$si_filter = getStoreFilterDirect('si');
+$si_ref_filter = getStoreFilterDirect('si_ref'); // For ref invoice
 
 // Fetch Data - Aggregate by User
 $query = "SELECT u.name as user_name, u.id as user_id,
@@ -34,10 +40,10 @@ $query = "SELECT u.name as user_name, u.id as user_id,
            
           SUM(sl.amount) as total_received
           FROM users u
-          LEFT JOIN sell_logs sl ON sl.created_by = u.id AND DATE(sl.created_at) BETWEEN '$start_date' AND '$end_date'
-          LEFT JOIN selling_info si_ref ON sl.ref_invoice_id = si_ref.invoice_id
+          LEFT JOIN sell_logs sl ON sl.created_by = u.id AND DATE(sl.created_at) BETWEEN '$start_date' AND '$end_date' $sl_filter
+          LEFT JOIN selling_info si_ref ON sl.ref_invoice_id = si_ref.invoice_id $si_ref_filter
           /* Join to count invoices created in period by this user */
-          LEFT JOIN selling_info si ON si.created_by = u.id AND DATE(si.created_at) BETWEEN '$start_date' AND '$end_date' AND si.inv_type = 'sale'
+          LEFT JOIN selling_info si ON si.created_by = u.id AND DATE(si.created_at) BETWEEN '$start_date' AND '$end_date' AND si.inv_type = 'sale' $si_filter
           WHERE u.status = 1 ";
 
 $query .= " GROUP BY u.id ORDER BY total_received DESC";

@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -76,22 +77,35 @@ if($query_run) {
         }
 
         // Custom Actions (Pay, Edit, Delete)
+        // Permissions
+        $can_view = check_user_permission('view_loan_loan');
+        $can_edit = check_user_permission('update_loan_loan');
+        $can_delete = check_user_permission('delete_loan_loan');
+
         $payBtn = '';
-        if($row['due'] > 0) {
+        if($row['due'] > 0 && $can_edit) {
             $payBtn = '<button onclick="openPayModal('.$row['loan_id'].', \''.addslashes($row['title']).'\', '.$row['due'].')" class="w-8 h-8 inline-flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-600 hover:text-white transition-all" title="Add Payment">
                             <i class="fas fa-money-bill-wave text-xs"></i>
                         </button>';
         }
-        $row['custom_actions'] = '<div class="flex items-center gap-2">
-                                '.$payBtn.'
-                                <a href="/pos/loan/edit/'.$row['loan_id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
+
+        $actions_html = '<div class="flex items-center gap-2">'.$payBtn;
+        
+        if($can_edit) {
+             $actions_html .= '<a href="/pos/loan/edit/'.$row['loan_id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
                                     <i class="fas fa-edit text-xs"></i>
-                                </a>
-                                <button type="button" onclick="confirmDelete('.$row['loan_id'].', \''.addslashes($row['title']).'\', \'/pos/loan/save\')" 
+                               </a>';
+        }
+
+        if($can_delete) {
+             $actions_html .= '<button type="button" onclick="confirmDelete('.$row['loan_id'].', \''.addslashes($row['title']).'\', \'/pos/loan/save\')" 
                                         class="w-8 h-8 inline-flex items-center justify-center text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="Delete">
                                     <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
-                           </div>';
+                               </button>';
+        }
+        
+        $actions_html .= '</div>';
+        $row['custom_actions'] = $actions_html;
 
         // Summary calculations
         $summary_total_loan += $row['payable'];
@@ -122,12 +136,16 @@ $loan_from_filter_options = [
 // Currency symbol - Set to empty as per user request
 $currency = '';
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_loan_loan') ? '/pos/loan/add' : '#';
+$delete_url = check_user_permission('delete_loan_loan') ? '/pos/loan/save' : '#';
+
 // Reusable List Configuration
 $list_config = [
     'title' => 'Loan Management',
-    'add_url' => '/pos/loan/add',
+    'add_url' => $add_url,
     'table_id' => 'loanTable',
-    'delete_url' => '/pos/loan/save',
+    'delete_url' => $delete_url,
     'primary_key' => 'loan_id',
     'name_field' => 'title',
     

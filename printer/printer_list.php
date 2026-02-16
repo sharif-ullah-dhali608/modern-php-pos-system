@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login"); 
@@ -9,7 +10,12 @@ if(!isset($_SESSION['auth'])){
 }
 
 // Fetch printers data
-$query = "SELECT * FROM printers ORDER BY sort_order ASC, printer_id DESC";
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('printers', 'p', 'printer_store_map', 'p.printer_id = psm.printer_id');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
+$query = "SELECT p.* FROM printers p {$store_join} WHERE 1=1 {$store_where} ORDER BY p.sort_order ASC, p.printer_id DESC";
 $query_run = mysqli_query($conn, $query);
 
 $printers_data = [];

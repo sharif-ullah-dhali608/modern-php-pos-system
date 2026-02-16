@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Sell Log Details";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $filter_customer = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
@@ -32,12 +33,15 @@ $pm_result = mysqli_query($conn, "SELECT id, name FROM payment_methods WHERE sta
 while($pm = mysqli_fetch_assoc($pm_result)) $pm_list[] = $pm;
 
 // Fetch Data - exclude hidden 'payment' type entries (used for invoice calculations only)
-$query = "SELECT sl.*, c.name as customer_name, pm.name as pmethod_name, u.name as created_by_name 
+$query = "SELECT sl.*, c.name as customer_name, c.image as customer_image, pm.name as pmethod_name, u.name as created_by_name 
           FROM sell_logs sl 
           LEFT JOIN customers c ON sl.customer_id = c.id 
           LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id 
           LEFT JOIN users u ON sl.created_by = u.id 
           WHERE sl.type != 'payment'";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('sl');
 
 // Apply Customer Filter
 if($filter_customer > 0) {
@@ -184,6 +188,7 @@ $config = [
     'columns' => [
         ['label' => 'Created At', 'key' => 'created_at'],
         ['label' => 'Type', 'key' => 'type_display', 'type' => 'html'],
+        ['label' => 'Photo', 'key' => 'customer_image', 'type' => 'image', 'path' => '/pos/uploads/customers/'],
         ['label' => 'Customer', 'key' => 'customer_display'],
         ['label' => 'Payment Method', 'key' => 'payment_display', 'type' => 'html'],
         ['label' => 'Transaction ID', 'key' => 'transaction_id_display'],

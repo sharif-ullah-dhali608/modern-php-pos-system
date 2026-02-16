@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php');
+include('../includes/permission_helper.php'); // Store filtering helper
 
 // TEMPORARY FIX: Reconcile Payments & Dues
 if(isset($_GET['fix_balance']) && $_GET['fix_balance'] == 1) {
@@ -98,9 +100,17 @@ if(!isset($_SESSION['auth'])){
 
 // Fetch customers with store count (Active relationship count)
 // We use a subquery to count how many stores each customer is assigned to
+
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('customers', 'c');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 $query = "SELECT c.*, 
           (SELECT COUNT(*) FROM customer_stores_map WHERE customer_id = c.id) as store_count
-          FROM customers c 
+          FROM customers c
+          {$store_join}
+          WHERE 1=1 {$store_where}
           ORDER BY c.sort_order ASC, c.id DESC";
 $query_run = mysqli_query($conn, $query);
 
@@ -109,10 +119,15 @@ while($row = mysqli_fetch_assoc($query_run)) {
     $customers[] = $row;
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_customer_customer') ? '/pos/customers/add' : '#';
+$edit_url = check_user_permission('update_customer_customer') ? '/pos/customers/edit' : '#';
+$delete_url = check_user_permission('delete_customer_customer') ? '/pos/customers/save_customer.php' : '#';
+
 // Prepare data for reusable list component
 $list_config = [
     'title' => 'Customer List',
-    'add_url' => '/pos/customers/add', // Points to the create/edit file
+    'add_url' => $add_url,
     'table_id' => 'customerTable',
     'columns' => [
         ['key' => 'image', 'label' => 'Photo', 'type' => 'image', 'path' => '/pos/uploads/customers/'],
@@ -130,8 +145,8 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $customers,
-    'edit_url' => '/pos/customers/edit', // Points to the edit file (often same as add.php?id=x)
-    'delete_url' => '/pos/customers/save_customer.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'status_url' => '/pos/customers/save_customer.php',
     'primary_key' => 'id',
     'name_field' => 'name' // Used for delete confirmation message (e.g. "Delete John Doe?")

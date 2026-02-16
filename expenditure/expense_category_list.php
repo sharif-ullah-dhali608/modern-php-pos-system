@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/reusable_list.php');
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -18,15 +19,21 @@ while($row = mysqli_fetch_assoc($result)) {
     $data[] = $row;
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_expense_category_expenditure') ? '/pos/expenditure/category_add' : '#';
+$edit_url = check_user_permission('update_expense_category_expenditure') ? '/pos/expenditure/category_edit' : '#';
+$delete_url = check_user_permission('delete_expense_category_expenditure') ? '/pos/expenditure/save_category' : '#';
+$status_url = check_user_permission('update_expense_category_expenditure') ? '/pos/expenditure/save_category' : '#';
+
 $config = [
     'title' => 'Expense Categories',
     'table_id' => 'expenseCategoryTable',
     'primary_key' => 'category_id',
     'name_field' => 'category_name',
-    'add_url' => '/pos/expenditure/category_add',
-    'edit_url' => '/pos/expenditure/category_edit',
-    'delete_url' => '/pos/expenditure/save_category', // Handles delete_btn post
-    'status_url' => '/pos/expenditure/save_category', // Handles toggle_status_btn post
+    'add_url' => $add_url,
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url, // Handles delete_btn post
+    'status_url' => $status_url, // Handles toggle_status_btn post
     'columns' => [
         ['label' => 'ID', 'key' => 'category_id'],
         ['label' => 'Category Name', 'key' => 'category_name'],

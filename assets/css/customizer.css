@@ -14,7 +14,208 @@
 
     /* Theme Defines */
     --tc-primary: #0d9488;
+    --tc-primary-rgb: 13, 148, 136;
     /* Default Teal */
+}
+
+/* Force SweetAlert2 to be on top of everything (Sidebar is 30000, Modals 50000) */
+div:where(.swal2-container) {
+    z-index: 60000 !important;
+}
+
+/* Premium Button Utility - Professional Deep Style */
+.btn-premium,
+.btn-premium-muted {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.75rem 1.25rem !important;
+    /* Standardized px-5 py-3 */
+    font-weight: 700 !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    cursor: pointer !important;
+}
+
+.btn-premium {
+    background-color: var(--tc-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(var(--tc-primary-rgb), 0.15) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.btn-premium-muted {
+    background-color: rgba(var(--tc-primary-rgb), 0.1) !important;
+    color: var(--tc-primary) !important;
+    border-color: rgba(var(--tc-primary-rgb), 0.2) !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="dark"] .btn-premium-muted {
+    background-color: rgba(var(--tc-primary-rgb), 0.15) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.btn-premium:hover,
+.btn-premium-muted:hover {
+    filter: brightness(1.005);
+    transform: translateY(-1px);
+}
+
+.btn-premium:hover {
+    box-shadow: 0 6px 20px 0 rgba(var(--tc-primary-rgb), 0.45) !important;
+}
+
+.btn-premium-muted:hover {
+    background-color: rgba(var(--tc-primary-rgb), 0.2) !important;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-premium i,
+.btn-premium-muted i {
+    transition: transform 0.3s ease;
+}
+
+.btn-premium:hover i,
+.btn-premium-muted:hover i {
+    transform: scale(1.1);
+}
+
+/* Navbar Premium Dropdown - Solves transparency/overlap bleed-through */
+.dropdown-premium {
+    background: #ffffff !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    z-index: 10001 !important;
+}
+
+[data-theme="dark"] .dropdown-premium {
+    background: #1e293b !important;
+    /* Solid Dark Slate - no transparency */
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Specialized Dropdown Item Hover for Dark Mode */
+.dropdown-premium a {
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .dropdown-premium a {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .dropdown-premium a:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+.dropdown-premium a:hover i {
+    transform: translateX(2px);
+    transition: transform 0.2s ease;
+}
+
+/* Notification Bell Icon - Force Visibility */
+.notification-bell-icon {
+    color: #475569 !important;
+    /* Slate-600 */
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .notification-bell-icon,
+[data-theme="login-style"] .notification-bell-icon {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.notification-bell-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Gradient Theme (Login-Style) - Fixes white-on-white text visibility */
+[data-theme="login-style"] .dropdown-premium {
+    background: #ffffff !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Force dark text inside premium dropdowns for gradient theme */
+[data-theme="login-style"] .dropdown-premium .text-slate-800,
+[data-theme="login-style"] .dropdown-premium .text-slate-700,
+[data-theme="login-style"] .dropdown-premium .text-slate-600,
+[data-theme="login-style"] .dropdown-premium h3 {
+    color: #1e293b !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .text-slate-500,
+[data-theme="login-style"] .dropdown-premium .text-slate-400,
+[data-theme="login-style"] .dropdown-premium span:not(.bg-rose-500):not(.bg-teal-100) {
+    color: #64748b !important;
+}
+
+/* Allow semantic colors to persist */
+[data-theme="login-style"] .dropdown-premium .text-rose-500 {
+    color: #f43f5e !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .text-orange-500 {
+    color: #f97316 !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .text-amber-500 {
+    color: #f59e0b !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .text-blue-500 {
+    color: #3b82f6 !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .text-teal-600 {
+    color: #0d9488 !important;
+}
+
+/* Background consistency for icons and headers */
+[data-theme="login-style"] .dropdown-premium .bg-rose-50 {
+    background-color: #fff1f2 !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .bg-orange-50 {
+    background-color: #fff7ed !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .bg-amber-50 {
+    background-color: #fffbeb !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .bg-blue-50 {
+    background-color: #eff6ff !important;
+}
+
+[data-theme="login-style"] .dropdown-premium .bg-slate-50,
+[data-theme="login-style"] .dropdown-premium .bg-slate-50\/30,
+[data-theme="login-style"] .dropdown-premium .bg-slate-50\/50 {
+    background-color: #f8fafc !important;
+}
+
+[data-theme="login-style"] .dropdown-premium a {
+    color: #1e293b !important;
+    background: transparent !important;
+}
+
+[data-theme="login-style"] .dropdown-premium a:hover {
+    background-color: #f1f5f9 !important;
+    color: var(--tc-primary) !important;
+}
+
+[data-theme="login-style"] .dropdown-premium a i {
+    color: #64748b !important;
+}
+
+[data-theme="login-style"] .dropdown-premium a:hover i {
+    color: var(--tc-primary) !important;
+}
+
+[data-theme="login-style"] .dropdown-premium hr {
+    border-color: #e2e8f0 !important;
 }
 
 /* Dark Theme Variables */
@@ -53,8 +254,9 @@
     transform: translateY(-50%);
     width: 48px;
     height: 48px;
-    background: #0d9488;
-    /* Always Teal/Brand color for recognition */
+    height: 48px;
+    background: var(--tc-primary) !important;
+    /* Dynamic Primary Color */
     border: none;
     border-radius: 8px 0 0 8px;
     color: white;
@@ -63,7 +265,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    justify-content: center;
     font-size: 20px;
+}
+
+/* Global Dynamic Toggle Check */
+[data-theme="dark"] .customizer-toggle,
+[data-theme="dark"] #sidebar-toggle {
+    background-color: var(--tc-primary) !important;
+    color: white !important;
+}
+
+/* Ensure Sidebar Toggle Matches */
+#sidebar-toggle {
+    background-color: var(--tc-primary) !important;
+    color: white !important;
 }
 
 /* Body */
@@ -285,10 +501,7 @@ html[data-primary="indigo"] .active-submenu-bg {
     color: #818cf8 !important;
 }
 
-[data-primary="indigo"] #sidebar-toggle,
-[data-primary="indigo"] .customizer-toggle {
-    background-color: #6366f1 !important;
-}
+/* Removed specific toggle override to use global var(--tc-primary) */
 
 [data-primary="indigo"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #6366f1 !important;
@@ -356,10 +569,7 @@ html[data-primary="blue"] .active-submenu-bg {
     color: #60a5fa !important;
 }
 
-[data-primary="blue"] #sidebar-toggle,
-[data-primary="blue"] .customizer-toggle {
-    background-color: #3b82f6 !important;
-}
+/* Removed specific toggle override to use global var(--tc-primary) */
 
 [data-primary="blue"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #3b82f6 !important;
@@ -427,10 +637,7 @@ html[data-primary="purple"] .active-submenu-bg {
     color: #c084fc !important;
 }
 
-[data-primary="purple"] #sidebar-toggle,
-[data-primary="purple"] .customizer-toggle {
-    background-color: #a855f7 !important;
-}
+/* Removed specific toggle override to use global var(--tc-primary) */
 
 [data-primary="purple"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #a855f7 !important;
@@ -498,10 +705,7 @@ html[data-primary="rose"] .active-submenu-bg {
     color: #fb7185 !important;
 }
 
-[data-primary="rose"] #sidebar-toggle,
-[data-primary="rose"] .customizer-toggle {
-    background-color: #f43f5e !important;
-}
+/* Removed specific toggle override to use global var(--tc-primary) */
 
 [data-primary="rose"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #f43f5e !important;
@@ -569,10 +773,7 @@ html[data-primary="amber"] .active-submenu-bg {
     color: #fbbf24 !important;
 }
 
-[data-primary="amber"] #sidebar-toggle,
-[data-primary="amber"] .customizer-toggle {
-    background-color: #f59e0b !important;
-}
+/* Removed specific toggle override to use global var(--tc-primary) */
 
 [data-primary="amber"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background: #f59e0b !important;
@@ -643,6 +844,435 @@ body.navbar-static nav {
     border-color: #334155;
 }
 
+/* === 14. RECEIPT DESIGN STUDIO === */
+/* Glass Card Handling */
+.glass-template-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #e2e8f0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .glass-template-card {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="login-style"] .glass-template-card {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: #1e293b !important;
+}
+
+/* Canvas Background */
+.preview-canvas {
+    background: #f1f5f9;
+}
+
+[data-theme="dark"] .preview-canvas,
+[data-theme="login-style"] .preview-canvas {
+    background: #0f172a !important;
+}
+
+/* 
+   CRITICAL: Force Reset for Receipt Templates 
+   This ensures they look like "Paper" in all themes 
+*/
+#receipt-classic,
+#receipt-minimal,
+#receipt-modern {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    padding: 20px !important;
+}
+
+/* Force inner elements to respect light theme colors */
+#receipt-classic *,
+#receipt-minimal *,
+#receipt-modern * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* Modern needs specific coloring */
+#receipt-modern {
+    color: #1e293b !important;
+    padding: 0 !important;
+    /* Modern has its own padding */
+}
+
+#receipt-modern .premium-header {
+    background-color: #f8fafc !important;
+}
+
+#receipt-modern .premium-total-box {
+    color: #ffffff !important;
+}
+
+/* Paper Container Wrapper */
+.receipt-paper-container {
+    background: #ffffff !important;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Titles */
+.page-title.receipt-studio {
+    color: #1e293b;
+}
+
+[data-theme="dark"] .page-title.receipt-studio,
+[data-theme="login-style"] .page-title.receipt-studio {
+    color: #ffffff !important;
+}
+
+/* Utility: Premium Backgrounds */
+.premium-bg {
+    background: #f8fafc;
+    background-attachment: fixed;
+}
+
+[data-theme="dark"] .premium-bg {
+    background: linear-gradient(135deg, #0f172a 0%, #0d9488 50%, #064e3b 100%) !important;
+}
+
+[data-theme="login-style"] .premium-bg {
+    background: linear-gradient(135deg, #1e293b 0%, #0f766e 50%, #134e4a 100%) !important;
+}
+
+/* Utility: Entrance Animations */
+.slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === 15. STORE SETTINGS CUSTOMIZER === */
+/* Glass Card (Generic) */
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+    transition: all 0.3s ease;
+}
+
+/* Glass Input (Solid Style for Consistency) */
+.glass-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.3s;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: #0d9488;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+[data-theme="dark"] .glass-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: white;
+}
+
+/* Solid Tabs */
+.nav-tabs-glass {
+    display: inline-flex;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    gap: 12px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+}
+
+[data-theme="dark"] .nav-tabs-glass {
+    background: transparent;
+    border-bottom: 1px solid #334155;
+    border: none;
+    border-bottom: 1px solid #334155;
+}
+
+.nav-link-glass {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.nav-link-glass.active {
+    background: #0d9488;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+}
+
+[data-theme="dark"] .nav-link-glass.active {
+    background: #0d9488;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+}
+
+.nav-link-glass:hover:not(.active) {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+/* Premium Segmented Report Tabs */
+.report-tabs-container {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.report-tabs-wrapper {
+    display: inline-flex;
+    padding: 5px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    gap: 4px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.report-tab-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.report-tab-pill i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.report-tab-pill:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.6);
+    color: #334155;
+}
+
+.report-tab-pill.active {
+    background: #ffffff;
+    color: #0d9488;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.report-tab-pill.active i {
+    color: #0d9488;
+    transform: scale(1.1);
+}
+
+/* Theme Awareness for Report Tabs */
+[data-theme="dark"] .report-tabs-wrapper,
+[data-theme="login-style"] .report-tabs-wrapper {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .report-tab-pill.active,
+[data-theme="login-style"] .report-tab-pill.active {
+    background: #0d9488;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+}
+
+[data-theme="dark"] .report-tab-pill.active i,
+[data-theme="login-style"] .report-tab-pill.active i {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .report-tab-pill:not(.active),
+[data-theme="login-style"] .report-tab-pill:not(.active) {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .report-tab-pill:hover:not(.active),
+[data-theme="login-style"] .report-tab-pill:hover:not(.active) {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .nav-link-glass:hover:not(.active) {
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+/* Tab Content Visibility & Animation */
+.settings-section {
+    display: none;
+    animation: slideUp 0.4s ease-out;
+}
+
+.settings-section.active {
+    display: block;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Toggle Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+input:checked+.slider {
+    background-color: #0d9488;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #0d9488;
+}
+
+input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+/* Dark Mode Toggle Switch */
+[data-theme="dark"] .slider {
+    background-color: #334155;
+}
+
+[data-theme="dark"] input:checked+.slider {
+    background-color: #0d9488;
+}
+
+[data-theme="dark"] .glass-card {
+    background: rgba(30, 41, 59, 0.7) !important;
+    border-color: #334155 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="login-style"] .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #cbd5e1;
+}
+
+/* Dark Mode Text Overrides for Settings Page */
+[data-theme="dark"] .glass-card h3,
+[data-theme="dark"] .glass-card h4,
+[data-theme="dark"] .glass-card label,
+[data-theme="dark"] .glass-card .text-slate-700,
+[data-theme="dark"] .glass-card .text-slate-600 {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .glass-card .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+/* TomSelect Dark Mode Overrides */
+[data-theme="dark"] .ts-control {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .ts-control>input {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .ts-dropdown {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .ts-dropdown .option {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .ts-dropdown .active {
+    background-color: #334155 !important;
+    color: #2dd4bf !important;
+}
+
+[data-theme="dark"] .ts-wrapper.multi .ts-control>div {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+    border: 1px solid #475569;
+}
+
 /* Gradient Theme - Glassy Cards */
 [data-theme="login-style"] .bg-white {
     background: rgba(255, 255, 255, 0.85) !important;
@@ -711,11 +1341,11 @@ body.navbar-static nav {
 }
 
 [data-theme="login-style"] .bg-white {
-    background: rgba(255, 255, 255, 0.75) !important;
-    /* Ghola Glassy */
-    backdrop-filter: blur(20px);
-    /* Strong blur */
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.85) !important;
+    /* Reduced Ghola Glassy for clarity */
+    backdrop-filter: blur(10px);
+    /* Balanced blur */
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
 }
 
@@ -786,8 +1416,41 @@ body.navbar-static nav {
     /* Keep glass bg */
 }
 
-/* === 7. NUCLEAR OPTION INPUTS (Successfully Implemented Previously) === */
-/* Fix Input Fields on Add Pages (Gradient & Dark Themes) - REFINED DARK GLASS */
+/* === SIDEBAR - REMOVE ALL BORDERS === */
+/* Remove borders from all sidebar elements in all themes */
+#sidebar *,
+#sidebar a,
+#sidebar .menu-group,
+#sidebar .submenu,
+#sidebar .submenu a,
+#sidebar nav,
+#sidebar nav *,
+.sidebar *,
+.sidebar a,
+.sidebar .menu-group,
+.sidebar .submenu {
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+}
+
+/* Keep only the logo section border */
+#sidebar .border-b.border-white\/5,
+.sidebar .border-b.border-white\/5 {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Keep active menu left border */
+#sidebar .active-submenu-bg,
+.sidebar .active-submenu-bg {
+    border-left: 4px solid #0d9488 !important;
+    box-shadow: none !important;
+}
+
+/* === 7. FORM INPUTS - GRADIENT THEME (Light & Visible) === */
 [data-theme="login-style"] input[type="text"],
 [data-theme="login-style"] input[type="number"],
 [data-theme="login-style"] input[type="email"],
@@ -795,7 +1458,44 @@ body.navbar-static nav {
 [data-theme="login-style"] input[type="date"],
 [data-theme="login-style"] select,
 [data-theme="login-style"] textarea,
-[data-theme="login-style"] .select2-container--default .select2-selection--single,
+[data-theme="login-style"] .select2-container--default .select2-selection--single {
+    background-color: #ffffff !important;
+    /* Pure white background */
+    border: 2px solid #cbd5e1 !important;
+    /* Stronger slate border */
+    color: #1e293b !important;
+    /* Dark slate text */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+}
+
+[data-theme="login-style"] input:focus,
+[data-theme="login-style"] select:focus,
+[data-theme="login-style"] textarea:focus {
+    background-color: #ffffff !important;
+    border: 2px solid #0d9488 !important;
+    /* Teal focus border */
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1) !important;
+    outline: none !important;
+    color: #1e293b !important;
+}
+
+/* Placeholder - Gradient Theme */
+[data-theme="login-style"] ::placeholder {
+    color: #94a3b8 !important;
+    /* Visible slate gray */
+    opacity: 1 !important;
+}
+
+/* Autofill Fix - Gradient Theme */
+[data-theme="login-style"] input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+    -webkit-text-fill-color: #1e293b !important;
+    border: 2px solid #cbd5e1 !important;
+}
+
+/* === DARK THEME INPUTS (Keep existing dark glass style) === */
 [data-theme="dark"] input[type="text"],
 [data-theme="dark"] input[type="number"],
 [data-theme="dark"] input[type="email"],
@@ -805,18 +1505,14 @@ body.navbar-static nav {
 [data-theme="dark"] textarea,
 [data-theme="dark"] .select2-container--default .select2-selection--single {
     background-color: rgba(15, 23, 42, 0.3) !important;
-    /* Higher transparency */
     backdrop-filter: blur(12px) !important;
-    /* Glass effect */
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    /* Softer border */
     color: #ffffff !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.3s ease !important;
     font-weight: 500 !important;
 }
 
-[data-theme="login-style"] input:focus,
 [data-theme="dark"] input:focus {
     background-color: rgba(15, 23, 42, 0.8) !important;
     border: 2px solid #ffffff !important;
@@ -825,27 +1521,142 @@ body.navbar-static nav {
     color: #ffffff !important;
 }
 
-/* Autofill Fix */
-[data-theme="login-style"] input:-webkit-autofill,
+/* Autofill Fix - Dark Theme */
 [data-theme="dark"] input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
     -webkit-text-fill-color: white !important;
     border: 1px solid #f8fafc !important;
 }
 
-/* Placeholder */
-[data-theme="login-style"] ::placeholder,
+/* Placeholder - Dark Theme */
 [data-theme="dark"] ::placeholder {
     color: rgba(255, 255, 255, 0.6) !important;
     opacity: 1 !important;
 }
 
-/* Select2 Dropdowns */
-[data-theme="login-style"] .select2-dropdown,
+/* Select2 Dropdowns - Gradient Theme (Light) */
+[data-theme="login-style"] .select2-dropdown {
+    background-color: #ffffff !important;
+    border: 2px solid #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+[data-theme="login-style"] .select2-results__option {
+    color: #1e293b !important;
+}
+
+[data-theme="login-style"] .select2-results__option--highlighted {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+}
+
+/* Select2 Dropdowns - Dark Theme */
 [data-theme="dark"] .select2-dropdown {
     background-color: #0f172a !important;
     border: 1px solid #f8fafc !important;
     color: white !important;
+}
+
+/* === COMPREHENSIVE DARK THEME OVERRIDES === */
+
+/* White Background Cards - Higher Specificity */
+html[data-theme="dark"] .bg-white {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Slate Background Elements */
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100 {
+    background-color: rgba(15, 23, 42, 0.3) !important;
+}
+
+/* Text Colors - Labels and Headings */
+html[data-theme="dark"] .text-slate-700,
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-slate-900 {
+    color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-600 {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+/* Border Colors */
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-300 {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Checkboxes and Radio Buttons */
+html[data-theme="dark"] input[type="checkbox"],
+html[data-theme="dark"] input[type="radio"] {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+html[data-theme="dark"] input[type="checkbox"]:checked,
+html[data-theme="dark"] input[type="radio"]:checked {
+    background-color: #0d9488 !important;
+    border-color: #0d9488 !important;
+}
+
+/* Labels */
+html[data-theme="dark"] label {
+    color: #f1f5f9 !important;
+}
+
+/* Specific Component Overrides */
+html[data-theme="dark"] .rounded-xl,
+html[data-theme="dark"] .rounded-lg,
+html[data-theme="dark"] .rounded-2xl {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Status Card - Dark Theme Override (ID-based) */
+html[data-theme="dark"] #status-card {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html[data-theme="dark"] #status-card h3,
+html[data-theme="dark"] #status-card p {
+    color: #f1f5f9 !important;
+}
+
+/* Override for inactive status text specifically */
+html[data-theme="dark"] #status-label {
+    color: #cbd5e1 !important;
+}
+
+/* Universal Status Card Fix - Target by class attribute containing color values */
+html[data-theme="dark"] [class*="bg-[#f1f5f9]"],
+html[data-theme="dark"] [class*="bg-[#e2e8f0]"],
+html[data-theme="dark"] div[class*="bg-slate-"] {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Fix text in all status-like cards */
+html[data-theme="dark"] [class*="bg-[#f1f5f9]"] h3,
+html[data-theme="dark"] [class*="bg-[#f1f5f9]"] p,
+html[data-theme="dark"] [class*="bg-[#e2e8f0]"] h3,
+html[data-theme="dark"] [class*="bg-[#e2e8f0]"] p {
+    color: #f1f5f9 !important;
+}
+
+/* Keep active/green status cards as-is (don't override green backgrounds) */
+html[data-theme="dark"] [class*="bg-[#064e3b]"],
+html[data-theme="dark"] [class*="bg-emerald"],
+html[data-theme="dark"] [class*="bg-teal"] {
+    /* Keep original green/teal backgrounds */
+    background-color: inherit !important;
 }
 
 /* DataTables Controls */
@@ -1659,3 +2470,116 @@ html[data-theme="login-style"] table.dataTable thead .sorting_desc:after {
     background-size: cover !important;
 } 
 */
+
+/* === 14. RECEIPT DESIGN STUDIO === */
+/* Glass Card Handling */
+.glass-template-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #e2e8f0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .glass-template-card {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="login-style"] .glass-template-card {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: #1e293b !important;
+}
+
+/* Canvas Background */
+.preview-canvas {
+    background: #f1f5f9;
+}
+
+[data-theme="dark"] .preview-canvas,
+[data-theme="login-style"] .preview-canvas {
+    background: #0f172a !important;
+}
+
+/* 
+   CRITICAL: Force Reset for Receipt Templates 
+   This ensures they look like "Paper" in all themes 
+   Using * selector to force all children to inherit or override theme defaults
+*/
+#receipt-classic,
+#receipt-minimal,
+#receipt-modern {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    padding: 20px !important;
+}
+
+/* Force inner elements to respect light theme colors */
+#receipt-classic *,
+#receipt-minimal * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* Modern needs specific coloring */
+#receipt-modern {
+    color: #1e293b !important;
+    padding: 0 !important;
+    /* Modern has its own padding */
+}
+
+#receipt-modern .premium-header {
+    background-color: #f8fafc !important;
+}
+
+#receipt-modern .premium-total-box {
+    color: #ffffff !important;
+}
+
+/* Paper Container Wrapper */
+.receipt-paper-container {
+    background: #ffffff !important;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Titles */
+.page-title.receipt-studio {
+    color: #1e293b;
+}
+
+[data-theme="dark"] .page-title.receipt-studio,
+[data-theme="login-style"] .page-title.receipt-studio {
+    color: #ffffff !important;
+}
+
+/* Utility: Premium Backgrounds */
+.premium-bg {
+    background: #f8fafc;
+    background-attachment: fixed;
+}
+
+[data-theme="dark"] .premium-bg {
+    background: linear-gradient(135deg, #0f172a 0%, #0d9488 50%, #064e3b 100%) !important;
+}
+
+[data-theme="login-style"] .premium-bg {
+    background: linear-gradient(135deg, #1e293b 0%, #0f766e 50%, #134e4a 100%) !important;
+}
+
+/* Utility: Entrance Animations */
+.slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

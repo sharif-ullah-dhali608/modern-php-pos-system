@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Profit and Loss - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -18,13 +19,13 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
 // 1. Total Sales
-$sale_q = "SELECT SUM(grand_total) as total FROM selling_info WHERE inv_type = 'sale' ";
+$sale_q = "SELECT SUM(grand_total) as total FROM selling_info si WHERE inv_type = 'sale' " . getStoreFilterDirect('si');
 applyDateFilter($sale_q, 'created_at', $date_filter, $start_date, $end_date);
 $sale_res = mysqli_query($conn, $sale_q);
 $total_sales = mysqli_fetch_assoc($sale_res)['total'] ?? 0;
 
 // 2. Total Purchases
-$pur_q = "SELECT SUM(total_sell) as total FROM purchase_info ";
+$pur_q = "SELECT SUM(total_sell) as total FROM purchase_info pin WHERE 1=1 " . getStoreFilterDirect('pin');
 applyDateFilter($pur_q, 'created_at', $date_filter, $start_date, $end_date);
 $pur_res = mysqli_query($conn, $pur_q);
 $total_pur = mysqli_fetch_assoc($pur_res)['total'] ?? 0;

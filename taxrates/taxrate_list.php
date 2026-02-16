@@ -1,20 +1,33 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/signin.php");
     exit(0);
 }
 
-$query = "SELECT * FROM taxrates ORDER BY sort_order ASC, id DESC";
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('taxrates', 't');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
+$query = "SELECT t.* FROM taxrates t {$store_join} WHERE 1=1 {$store_where} ORDER BY t.sort_order ASC, t.id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_taxrate_taxrate') ? '/pos/taxrates/add' : '#';
+$edit_url = check_user_permission('update_taxrate_taxrate') ? '/pos/taxrates/edit' : '#';
+$delete_url = check_user_permission('delete_taxrate_taxrate') ? '/pos/taxrates/save_taxrate.php' : '#';
+$status_url = check_user_permission('update_taxrate_taxrate') ? '/pos/taxrates/save_taxrate.php' : '#';
+
 $list_config = [
     'title' => 'Taxrate List',
-    'add_url' => '/pos/taxrates/add',
+    'add_url' => $add_url,
     'table_id' => 'taxrateTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,9 +38,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/taxrates/edit',
-    'delete_url' => '/pos/taxrates/save_taxrate.php',
-    'status_url' => '/pos/taxrates/save_taxrate.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
+    'status_url' => $status_url,
     'primary_key' => 'id',
     'name_field' => 'name'
 ];

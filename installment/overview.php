@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/store_filter_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -23,12 +24,18 @@ $end_date = $_GET['end_date'] ?? '';
 
 // Statistics - using installment_payments for financial data
 $stats_query = "SELECT 
-    SUM(payable) as total_receivable, 
-    SUM(paid) as total_received, 
-    SUM(due) as total_due
-FROM installment_payments WHERE 1=1";
+    SUM(ip.payable) as total_receivable, 
+    SUM(ip.paid) as total_received, 
+    SUM(ip.due) as total_due
+FROM installment_payments ip 
+LEFT JOIN selling_info si ON ip.invoice_id = si.invoice_id
+WHERE 1=1";
 
-applyDateFilter($stats_query, 'payment_date', $date_filter, $start_date, $end_date);
+// Apply Store Filter (via selling_info)
+$store_sql = getStoreFilterDirect('si');
+$stats_query .= $store_sql;
+
+applyDateFilter($stats_query, 'ip.payment_date', $date_filter, $start_date, $end_date);
 $stat_q = mysqli_query($conn, $stats_query);
 $stats = [
     'total_receivable' => 0,
@@ -48,10 +55,17 @@ if($stat_q) {
 // Note: Date filter might apply to when order was Created?
 // For simplicity, total_count usually implies active orders, but here we can count all or filtered.
 // Let's count filtered installment_orders if date filter is active, else all.
-$count_query = "SELECT COUNT(*) as count FROM installment_orders WHERE 1=1";
+// Let's count filtered installment_orders if date filter is active, else all.
+$count_query = "SELECT COUNT(*) as count FROM installment_orders io 
+                LEFT JOIN selling_info si ON io.invoice_id = si.invoice_id
+                WHERE 1=1";
+
+// Apply Store Filter (via selling_info)
+$count_query .= $store_sql; // Reusing si.store_id filter
 // We don't have created_at in installment_orders used in previous loops, let's assume it exists or use invoice_id/date logic.
 // installment_orders structure from list query: created_at exists.
-applyDateFilter($count_query, 'created_at', $date_filter, $start_date, $end_date);
+// installment_orders structure from list query: created_at exists.
+applyDateFilter($count_query, 'io.created_at', $date_filter, $start_date, $end_date);
 $cnt_q = mysqli_query($conn, $count_query);
 if($cnt_q) {
     $stats['total_count'] = mysqli_fetch_assoc($cnt_q)['count'] ?? 0;
@@ -65,6 +79,9 @@ $payments_query = "SELECT ip.*, si.invoice_id, c.name as customer_name, u.name a
               LEFT JOIN customers c ON si.customer_id = c.id
               LEFT JOIN users u ON ip.created_by = u.id 
               WHERE ip.paid > 0 ";
+
+// Apply Store Filter (via selling_info)
+$payments_query .= $store_sql; // Reusing si.store_id filter
 
 applyDateFilter($payments_query, 'ip.payment_date', $date_filter, $start_date, $end_date);
 
@@ -228,7 +245,7 @@ $currency = ''; // As per user preference
                             <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_receivable'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Payable amount</div>
                         </div>
-                        <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">LOAN</div>
+                        <div class="absolute -right-6 -bottom-6 text-white opacity-10 text-5xl font-black italic group-hover:scale-110 transition-transform duration-500 select-none">LOAN</div>
                     </div>
 
                     <!-- Total Received Card (Green) -->
@@ -243,7 +260,7 @@ $currency = ''; // As per user preference
                             <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_received'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Amount collected</div>
                         </div>
-                        <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">PAID</div>
+                        <div class="absolute -right-6 -bottom-6 text-white opacity-10 text-5xl font-black italic group-hover:scale-110 transition-transform duration-500 select-none">PAID</div>
                     </div>
 
                     <!-- Total Due Card (Red) -->
@@ -258,7 +275,7 @@ $currency = ''; // As per user preference
                             <div class="text-2xl xl:text-3xl font-black mb-1 whitespace-nowrap tracking-tight"><?= $currency ?><?= number_format($stats['total_due'], 2) ?></div>
                             <div class="text-xs font-bold opacity-70">Remaining balance</div>
                         </div>
-                        <div class="absolute -right-4 -bottom-4 text-white/5 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">DUE</div>
+                        <div class="absolute -right-6 -bottom-6 text-white opacity-10 text-5xl font-black italic group-hover:scale-110 transition-transform duration-500 select-none">DUE</div>
                     </div>
 
                     <!-- Total Orders Card (White) -->
@@ -273,7 +290,8 @@ $currency = ''; // As per user preference
                             <div class="text-2xl lg:text-3xl font-black mb-1 text-slate-800 break-words leading-tight"><?= number_format($stats['total_count']) ?></div>
                             <div class="text-xs font-bold text-slate-400 italic">Active installment plans</div>
                         </div>
-                        <div class="absolute -right-4 -bottom-4 text-slate-50 text-8xl font-black italic group-hover:scale-110 transition-transform duration-500">COUNT</div>
+                        <!-- Use explicit slate color with low opacity for better dark/light mode compatibility -->
+                        <div class="absolute -right-6 -bottom-6 text-slate-400 opacity-10 text-5xl font-black italic group-hover:scale-110 transition-transform duration-500 select-none">COUNT</div>
                     </div>
                 </div>
 
