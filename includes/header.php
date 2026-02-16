@@ -8,6 +8,8 @@ if(!isset($_SESSION['auth'])){
 }
 
 $page_title = isset($page_title) ? $page_title : "Dashboard - Velocity POS";
+include_once __DIR__ . '/language_helper.php';
+include_once __DIR__ . '/permission_helper.php';
 
 // Global Currency Initialization for JavaScript
 $sess_store_id = isset($_SESSION['store_id']) ? intval($_SESSION['store_id']) : 0;

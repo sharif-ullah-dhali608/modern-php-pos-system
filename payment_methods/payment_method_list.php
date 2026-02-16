@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/signin"); // Clean URL for signin
@@ -12,23 +14,29 @@ $status = $_GET['status'] ?? '';
 $code = $_GET['code'] ?? '';
 $usage = $_GET['usage'] ?? '';
 
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('payment_methods', 'pm');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 // Build Query
 $where_clause = "WHERE 1=1";
+$where_clause .= $store_where; // Add store filtering
 if($status !== '') {
     $status = mysqli_real_escape_string($conn, $status);
-    $where_clause .= " AND status = '$status'";
+    $where_clause .= " AND pm.status = '$status'";
 }
 if($code !== '') {
     $code = mysqli_real_escape_string($conn, $code);
-    $where_clause .= " AND code = '$code'";
+    $where_clause .= " AND pm.code = '$code'";
 }
 if($usage === 'used') {
-    $where_clause .= " AND EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = payment_methods.id)";
+    $where_clause .= " AND EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = pm.id)";
 } elseif($usage === 'unused') {
-    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = payment_methods.id)";
+    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM sell_logs WHERE pmethod_id = pm.id)";
 }
 
-$query = "SELECT * FROM payment_methods $where_clause ORDER BY sort_order ASC, id DESC";
+$query = "SELECT pm.* FROM payment_methods pm {$store_join} $where_clause ORDER BY pm.sort_order ASC, pm.id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
@@ -73,9 +81,15 @@ $filters[] = [
     ]
 ];
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_payment_method_payment_method') ? '/pos/payment-methods/add' : '#';
+$edit_url = check_user_permission('update_payment_method_payment_method') ? '/pos/payment-methods/edit' : '#';
+$delete_url = check_user_permission('delete_payment_method_payment_method') ? '/pos/payment_methods/save_payment_method.php' : '#';
+$status_url = check_user_permission('update_payment_method_payment_method') ? '/pos/payment_methods/save_payment_method.php' : '#';
+
 $list_config = [
     'title' => 'Payment Method List',
-    'add_url' => '/pos/payment-methods/add', // Clean URL
+    'add_url' => $add_url,
     'table_id' => 'paymentTable',
     'filters' => $filters,
     'columns' => [
@@ -87,9 +101,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/payment-methods/edit', // Clean URL base for edit
-    'delete_url' => '/pos/payment_methods/save_payment_method.php', // Backend action paths usually keep .php or use a specific rewrite
-    'status_url' => '/pos/payment_methods/save_payment_method.php', 
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
+    'status_url' => $status_url, 
     'primary_key' => 'id',
     'name_field' => 'name'
 ];

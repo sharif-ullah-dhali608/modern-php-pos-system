@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -37,6 +39,9 @@ $query = "SELECT pi.*,
           LEFT JOIN users u ON pi.created_by = u.id
           WHERE 1=1";
 
+// Add store filtering using helper (purchase_info has direct store_id column)
+$query .= getStoreFilterDirect('pi');
+
 // Apply existing filters
 if($filter == 'today') {
     $query .= " AND DATE(pi.created_at) = CURDATE()";
@@ -61,6 +66,13 @@ $query .= " ORDER BY pi.created_at DESC";
 
 $query_run = mysqli_query($conn, $query);
 $items = [];
+
+// Permissions
+$can_create = check_user_permission('create_invoice_purchase');
+$can_pay = check_user_permission('payment_purchase');
+$can_return = check_user_permission('create_return_purchase');
+$can_edit = check_user_permission('update_info_purchase');
+$can_delete = check_user_permission('delete_invoice_purchase');
 
 // Reset totals for summary cards
 $total_amount = 0;
@@ -301,15 +313,19 @@ include('../includes/header.php');
                             </div>
                         </div>
 
+                        <?php if($can_create): ?>
                         <a href="/pos/purchases/add" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 group text-sm sm:text-base">
                             <i class="fas fa-plus transition-transform group-hover:rotate-90"></i>
                             <span>Add New</span>
                         </a>
+                        <?php endif; ?>
                         
+                        <?php if($can_pay): ?>
                         <button type="button" onclick="payAllSelected()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base">
                             <i class="fas fa-dollar-sign"></i>
                             <span>Pay All</span>
                         </button>
+                        <?php endif; ?>
                         
                         <div class="relative">
                             <button type="button" onclick="toggleFilterDropdown()" class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm sm:text-base min-w-[140px] justify-between">
@@ -396,7 +412,7 @@ include('../includes/header.php');
                                     <td class="p-4 text-sm text-slate-700 font-bold text-right whitespace-nowrap" style="text-align: right !important; padding-right: 25px !important;"><?= $row['due_display']; ?></td>
                                     <td class="p-4"><?= $row['status_badge']; ?></td>
                                     <td class="p-4 text-center">
-                                        <?php if($row['due_raw'] > 0): ?>
+                                        <?php if($row['due_raw'] > 0 && $can_pay): ?>
                                             <button type="button" onclick="openPaymentModal('<?= $row['invoice_id']; ?>')" class="p-2 text-green-500 hover:bg-green-50 rounded transition" title="Pay">
                                                 <i class="fas fa-dollar-sign"></i>
                                             </button>
@@ -405,9 +421,11 @@ include('../includes/header.php');
                                         <?php endif; ?>
                                     </td>
                                     <td class="p-4 text-center">
+                                        <?php if($can_return): ?>
                                         <button type="button" onclick="openReturnModal('<?= $row['invoice_id']; ?>')" class="p-2 text-orange-500 hover:bg-orange-50 rounded transition" title="Return">
                                             <i class="fas fa-arrow-left"></i>
                                         </button>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="p-4 text-center">
                                         <button type="button" onclick="viewPurchase('<?= $row['invoice_id']; ?>')" class="p-2 text-blue-500 hover:bg-blue-50 rounded transition" title="View">
@@ -415,14 +433,18 @@ include('../includes/header.php');
                                         </button>
                                     </td>
                                     <td class="p-4 text-center">
+                                        <?php if($can_edit): ?>
                                         <a href="/pos/purchases/add?invoice_id=<?= $row['invoice_id']; ?>" class="p-2 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="p-4 text-center">
+                                        <?php if($can_delete): ?>
                                         <button type="button" onclick="confirmDelete('<?= $row['invoice_id']; ?>', '<?= addslashes($row['invoice_id']); ?>', '/pos/purchases/save_purchase.php')" class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -271,7 +271,7 @@ function renderReusableList($config) {
                 </div>
 
                 <?php if($add_url !== '#'): ?>
-                <a href="<?= $add_url; ?>" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
+                <a href="<?= $add_url; ?>" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 btn-premium text-white font-bold rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
                     <i class="fas fa-plus"></i>
                     <span>Add New</span>
                 </a>
@@ -300,7 +300,7 @@ function renderReusableList($config) {
                     }
                 ?>
                     <div class="relative w-full md:w-auto">
-                        <button type="button" onclick="toggleFilterDropdown('<?= $filter['id']; ?>')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= $is_filter_active ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'; ?> hover:bg-teal-700 hover:text-white font-bold rounded-lg shadow transition-all w-full md:w-auto">
+                        <button type="button" onclick="toggleFilterDropdown('<?= $filter['id']; ?>')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= $is_filter_active ? 'btn-premium text-white' : 'bg-slate-100 text-slate-700'; ?> hover:opacity-90 font-bold rounded-lg shadow transition-all w-full md:w-auto">
                             <i class="fas fa-filter"></i>
                             <span><?= $filter_button_label; ?></span>
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -352,7 +352,7 @@ function renderReusableList($config) {
                     }
                 ?>
                     <div class="relative w-full md:w-auto">
-                        <button type="button" onclick="toggleFilterDropdown('filter_date')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= ($date_filter || ($start_date && $end_date)) ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'; ?> hover:bg-teal-700 hover:text-white font-bold rounded-lg shadow transition-all w-full md:min-w-[180px]">
+                        <button type="button" onclick="toggleFilterDropdown('filter_date')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= ($date_filter || ($start_date && $end_date)) ? 'btn-premium text-white' : 'bg-slate-100 text-slate-700'; ?> hover:opacity-90 font-bold rounded-lg shadow transition-all w-full md:min-w-[180px]">
                             <i class="fas fa-calendar-alt"></i>
                             <span><?= $filter_label; ?></span>
                             <i class="fas fa-chevron-down text-xs"></i>

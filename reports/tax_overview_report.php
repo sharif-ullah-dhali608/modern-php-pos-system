@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Tax Overview - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -19,8 +20,8 @@ $end_date = $_GET['end_date'] ?? '';
 
 // 1. Sell Tax Calculation
 // 1.1 Total Order Tax
-$order_tax_q = "SELECT SUM(tax_amount) as total FROM selling_info WHERE inv_type = 'sale' ";
-applyDateFilter($order_tax_q, 'created_at', $date_filter, $start_date, $end_date);
+$order_tax_q = "SELECT SUM(tax_amount) as total FROM selling_info si WHERE inv_type = 'sale' " . getStoreFilterDirect('si');
+applyDateFilter($order_tax_q, 'si.created_at', $date_filter, $start_date, $end_date);
 $res_o = mysqli_query($conn, $order_tax_q);
 $total_order_tax = mysqli_fetch_assoc($res_o)['total'] ?? 0;
 
@@ -31,7 +32,7 @@ $item_tax_q = "SELECT SUM(CASE
               END) as total 
               FROM selling_item si_item
               JOIN selling_info si ON si_item.invoice_id = si.invoice_id
-              WHERE si.inv_type = 'sale' ";
+              WHERE si.inv_type = 'sale' " . getStoreFilterDirect('si');
 applyDateFilter($item_tax_q, 'si.created_at', $date_filter, $start_date, $end_date);
 $res_i = mysqli_query($conn, $item_tax_q);
 $total_item_tax = mysqli_fetch_assoc($res_i)['total'] ?? 0;
@@ -40,7 +41,7 @@ $total_sell_tax = $total_order_tax + $total_item_tax;
 
 // 2. Purchase Tax Calculation
 // 2.1 Total Order Tax
-$pur_order_tax_q = "SELECT SUM((SELECT SUM(item_total) FROM purchase_item WHERE invoice_id = pin.invoice_id) * pin.order_tax / 100) as total FROM purchase_info pin ";
+$pur_order_tax_q = "SELECT SUM((SELECT SUM(item_total) FROM purchase_item WHERE invoice_id = pin.invoice_id) * pin.order_tax / 100) as total FROM purchase_info pin WHERE 1=1 " . getStoreFilterDirect('pin');
 applyDateFilter($pur_order_tax_q, 'created_at', $date_filter, $start_date, $end_date);
 $res_po = mysqli_query($conn, $pur_order_tax_q);
 $total_pur_order_tax = mysqli_fetch_assoc($res_po)['total'] ?? 0;
@@ -48,7 +49,7 @@ $total_pur_order_tax = mysqli_fetch_assoc($res_po)['total'] ?? 0;
 // 2.2 Total Item Tax (Summing item_tax from purchase_item joined with purchase_info for date)
 $pur_item_tax_q = "SELECT SUM(pi_item.item_tax) as total 
                   FROM purchase_item pi_item
-                  JOIN purchase_info pin ON pi_item.invoice_id = pin.invoice_id ";
+                  JOIN purchase_info pin ON pi_item.invoice_id = pin.invoice_id WHERE 1=1 " . getStoreFilterDirect('pin');
 applyDateFilter($pur_item_tax_q, 'pin.created_at', $date_filter, $start_date, $end_date);
 $res_pi = mysqli_query($conn, $pur_item_tax_q);
 $total_pur_item_tax = mysqli_fetch_assoc($res_pi)['total'] ?? 0;

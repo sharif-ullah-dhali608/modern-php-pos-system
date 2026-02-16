@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Purchase Tax Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -22,7 +23,7 @@ $query = "SELECT pin.invoice_id, pin.created_at, pin.order_tax as order_tax_rate
           (SELECT SUM(item_tax) FROM purchase_item WHERE invoice_id = pin.invoice_id) as item_tax,
           (SELECT SUM(item_total) FROM purchase_item WHERE invoice_id = pin.invoice_id) as subtotal
           FROM purchase_info pin
-          WHERE 1=1 ";
+          WHERE 1=1 " . getStoreFilterDirect('pin');
 
 applyDateFilter($query, 'pin.created_at', $date_filter, $start_date, $end_date);
 

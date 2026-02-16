@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -25,6 +26,9 @@ $query = "SELECT pi.*,
           LEFT JOIN users u ON pi.created_by = u.id
           LEFT JOIN purchase_item pi_item ON pi.invoice_id = pi_item.invoice_id
           WHERE pi_item.return_quantity > 0";
+
+// Add store filtering using helper (purchase_info has direct store_id column)
+$query .= getStoreFilterDirect('pi');
 
 if(!empty($supplier_id)){
     $sup_id = mysqli_real_escape_string($conn, $supplier_id);

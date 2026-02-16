@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -11,19 +13,25 @@ if(!isset($_SESSION['auth'])){
 $status = $_GET['status'] ?? '';
 $usage = $_GET['usage'] ?? '';
 
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('brands', 'b');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
 // Build Query
 $where_clause = "WHERE 1=1";
+$where_clause .= $store_where; // Add store filtering
 if($status !== '') {
     $status = mysqli_real_escape_string($conn, $status);
-    $where_clause .= " AND status = '$status'";
+    $where_clause .= " AND b.status = '$status'";
 }
 if($usage === 'used') {
-    $where_clause .= " AND EXISTS (SELECT 1 FROM products WHERE brand_id = brands.id)";
+    $where_clause .= " AND EXISTS (SELECT 1 FROM products WHERE brand_id = b.id)";
 } elseif($usage === 'unused') {
-    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM products WHERE brand_id = brands.id)";
+    $where_clause .= " AND NOT EXISTS (SELECT 1 FROM products WHERE brand_id = b.id)";
 }
 
-$query = "SELECT * FROM brands $where_clause ORDER BY sort_order ASC, id DESC";
+$query = "SELECT b.* FROM brands b {$store_join} $where_clause ORDER BY b.sort_order ASC, b.id DESC";
 $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
@@ -51,9 +59,14 @@ $filters[] = [
     ]
 ];
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_brand_brand') ? '/pos/brands/add' : '#';
+$edit_url = check_user_permission('update_brand_brand') ? '/pos/brands/edit' : '#';
+$delete_url = check_user_permission('delete_brand_brand') ? '/pos/brands/save_brand.php' : '#';
+
 $list_config = [
     'title' => 'Brand List',
-    'add_url' => '/pos/brands/add',
+    'add_url' => $add_url,
     'table_id' => 'brandTable',
     'filters' => $filters,
     'columns' => [
@@ -65,8 +78,8 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/brands/edit',
-    'delete_url' => '/pos/brands/save_brand.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'status_url' => '/pos/brands/save_brand.php',
     'primary_key' => 'id',
     'name_field' => 'name'

@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Invoices List";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 ?>
 <link rel="stylesheet" href="/pos/assets/css/pos.css">
 <?php
@@ -40,6 +41,10 @@ $query = "SELECT si.*, COALESCE(c.name, 'Walking Customer') as customer_name,
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           WHERE si.inv_type = 'sale' ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('si');
+
 
 // Apply filters
 if($filter_customer > 0) {

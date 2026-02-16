@@ -51,7 +51,7 @@ if(isset($conn)) {
 </style>
 
 <!-- Deposit Modal -->
-<div id="depositModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="depositModal" class="fixed inset-0 z-[50000] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 50000 !important;">
     <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal('depositModal')"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -155,7 +155,7 @@ if(isset($conn)) {
 </div>
 
 <!-- Withdraw Modal -->
-<div id="withdrawModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="withdrawModal" class="fixed inset-0 z-[50000] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 50000 !important;">
     <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal('withdrawModal')"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -259,7 +259,7 @@ if(isset($conn)) {
 </div>
 
 <!-- Transfer Modal -->
-<div id="transferModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="transferModal" class="fixed inset-0 z-[50000] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 50000 !important;">
     <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal('transferModal')"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">

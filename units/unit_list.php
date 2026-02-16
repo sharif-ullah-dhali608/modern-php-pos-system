@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/signin.php");
@@ -12,9 +13,14 @@ $query_run = mysqli_query($conn, $query);
 $items = [];
 while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_unit_unit') ? '/pos/units/add' : '#';
+$edit_url = check_user_permission('update_unit_unit') ? '/pos/units/edit' : '#';
+$delete_url = check_user_permission('delete_unit_unit') ? '/pos/units/save_unit.php' : '#';
+
 $list_config = [
     'title' => 'Unit List',
-    'add_url' => '/pos/units/add',
+    'add_url' => $add_url,
     'table_id' => 'unitTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -25,8 +31,8 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/units/edit',
-    'delete_url' => '/pos/units/save_unit.php',
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url,
     'status_url' => '/pos/units/save_unit.php',
     'primary_key' => 'id',
     'name_field' => 'unit_name'

@@ -1,5 +1,6 @@
 <?php
 session_start();
+include('../includes/permission_helper.php');
 include('../config/dbcon.php');
 
 // 1. SECURITY CHECK
@@ -62,9 +63,11 @@ $page_title = "Store List - Velocity POS";
                         </div>
 
                         <!-- Add Button (Icon + Text) -->
+                        <?php if(check_user_permission('create_store_store')): ?>
                         <a href="/pos/stores/add" class="flex items-center gap-2 px-6 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm shadow-md transition-all border border-teal-800" title="Add New Store">
                             <i class="fas fa-plus"></i> <span>Add Store</span>
                         </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -90,7 +93,9 @@ $page_title = "Store List - Velocity POS";
                                             <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-500 border border-slate-200">#<?= htmlspecialchars($row['store_code']); ?></span>
                                         </div>
                                     </div>
+                                    <?php if(check_user_permission('update_store_store')): ?>
                                     <a href="/pos/stores/edit?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-5 pt-4 border-t border-slate-100 border-dashed">
@@ -109,7 +114,9 @@ $page_title = "Store List - Velocity POS";
                 <?php else: ?>
                     <div class="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 shadow-inner">
                         <h2 class="text-xl font-bold text-slate-800">No Stores Found</h2>
+                        <?php if(check_user_permission('create_store_store')): ?>
                         <a href="add_store.php" class="mt-4 px-6 py-2.5 rounded-lg bg-teal-600 text-white font-bold hover:bg-teal-700 transition">Create First Store</a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -183,11 +190,17 @@ $page_title = "Store List - Velocity POS";
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 sm:gap-0 rounded-b-2xl">
-                <button onclick="confirmDeleteFromModal()" class="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-2 transition"><i class="fas fa-trash"></i> Delete Store</button>
+                <div>
+                     <?php if(check_user_permission('delete_store_store')): ?>
+                    <button onclick="confirmDeleteFromModal()" class="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-2 transition"><i class="fas fa-trash"></i> Delete Store</button>
+                     <?php endif; ?>
+                </div>
                 <div class="flex gap-3">
+                    <?php if(check_user_permission('update_store_store')): ?>
                     <a href="#" id="m_editBtn" class="px-6 py-2 rounded-lg bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold text-sm shadow-lg transition flex items-center gap-2">
                         <span>Edit Details</span> <i class="fas fa-arrow-right text-xs"></i>
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

@@ -23,14 +23,18 @@ while($c = mysqli_fetch_assoc($cust_result)) $customers_list[] = $c;
 $page_title = "Sell Return List";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Fetch Data
 // Assuming inv_type 'return' indicates a return
-$query = "SELECT si.*, c.name as customer_name, u.name as return_by 
+$query = "SELECT si.*, c.name as customer_name, c.image as customer_image, u.name as return_by 
           FROM selling_info si 
           LEFT JOIN customers c ON si.customer_id = c.id 
           LEFT JOIN users u ON si.created_by = u.id 
           WHERE si.inv_type = 'return' ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('si');
 
 // Apply Customer Filter
 if($filter_customer > 0) {
@@ -81,6 +85,7 @@ $config = [
     ],
     'columns' => [
         ['label' => 'Date Time', 'key' => 'created_at'],
+        ['label' => 'Photo', 'key' => 'customer_image', 'type' => 'image', 'path' => '/pos/uploads/customers/'],
         ['label' => 'Customer Name', 'key' => 'customer_name'],
         ['label' => 'Old Invoice Id', 'key' => 'ref_invoice_id'],
         ['label' => 'Return Note', 'key' => 'invoice_note'],

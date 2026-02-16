@@ -51,7 +51,7 @@ if(isset($_POST['login_btn']))
     }
     
     // 3. CHECK EMAIL & PASSWORD
-    $query = "SELECT u.*, g.slug as group_slug FROM users u 
+    $query = "SELECT u.*, g.slug as group_slug, g.permission FROM users u 
               LEFT JOIN user_groups g ON u.group_id = g.id 
               WHERE u.email='$email' LIMIT 1";
     $result = mysqli_query($conn, $query);
@@ -83,13 +83,18 @@ if(isset($_POST['login_btn']))
                 $role = $group_slug; // e.g., admin, salesman, cashier, etc.
             }
 
+            // Unserialize Permissions
+            $perms_data = unserialize($data['permission'] ?? '') ?: [];
+            $user_permissions = $perms_data['access'] ?? [];
+
             // Store user info in session including image so navbar can show avatar
             $_SESSION['auth_user'] = [
                 'user_id' => $data['id'],
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'role_as' => $role,
-                'image' => isset($data['user_image']) ? $data['user_image'] : ''
+                'image' => isset($data['user_image']) ? $data['user_image'] : '',
+                'permissions' => $user_permissions
             ];
 
             // --- STORE VISIBILITY LOGIC ---

@@ -2,6 +2,7 @@
 session_start();
 include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -26,6 +27,9 @@ $query = "SELECT pl.*,
           LEFT JOIN payment_methods pm ON pl.pmethod_id = pm.id
           LEFT JOIN users u ON pl.created_by = u.id
           WHERE 1=1";
+
+// Add store filtering using helper (purchase_logs has direct store_id column)
+$query .= getStoreFilterDirect('pl');
 
 if(!empty($supplier_id)) {
     $sup = mysqli_real_escape_string($conn, $supplier_id);

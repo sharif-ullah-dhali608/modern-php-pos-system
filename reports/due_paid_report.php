@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Supplier Due Paid - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -24,7 +25,7 @@ $query = "SELECT pl.*, u.name as user_name, pm.name as payment_method_name
           FROM purchase_logs pl
           JOIN users u ON pl.created_by = u.id
           LEFT JOIN payment_methods pm ON pl.pmethod_id = pm.id
-          WHERE pl.type = 'purchase' ";
+          WHERE pl.type = 'purchase' " . getStoreFilterDirect('pl');
 
 applyDateFilter($query, 'pl.created_at', $date_filter, $start_date, $end_date);
 

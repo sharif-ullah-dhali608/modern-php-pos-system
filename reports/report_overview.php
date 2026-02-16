@@ -9,6 +9,7 @@ if(!isset($_SESSION['auth'])){
 
 $page_title = "Overview Report - Velocity POS";
 include('../includes/header.php');
+include('../includes/store_filter_helper.php');
 
 // --- 1. FILTER LOGIC & TAB SELECTION ---
 
@@ -56,6 +57,23 @@ if ($date_filter) {
 }
 
 $store_filter = isset($_GET['store_id']) ? intval($_GET['store_id']) : 0;
+
+// Mandatory Store Filtering based on Permissions
+$is_store_restricted = !canViewAllStores();
+if ($is_store_restricted) {
+    $store_filter = $_SESSION['store_id'] ?? 0;
+}
+
+// --- PERMISSION CHECK & OVERRIDE ---
+$module_for_tab = ($current_tab == 'purchase') ? 'purchase' : 'sell';
+$is_store_restricted = false;
+// specific module permission override global permission? 
+// Logic: If user has 'view_all_stores_data_{module}' OR 'view_all_stores_data_settings', they can see all.
+if(!hasPermission("view_all_stores_data_$module_for_tab") && !hasPermission("view_all_stores_data_settings")) {
+    // RESTRICTED: Force store_filter to current store
+    $store_filter = $_SESSION['store_id'];
+    $is_store_restricted = true;
+}
 
 // Calculate number of days for the trend loop
 $date1 = new DateTime($start_date);
@@ -133,13 +151,16 @@ function getHourlyTrend($conn, $table, $dateCol, $sumCol, $date, $store_id = 0) 
 }
 
 // Special case for Selling Item Tax Trend (Calculated)
+// Refactored to JOIN selling_info for safer store filtering
 function getItemTaxTrend($conn, $start, $end, $store_id = 0) {
     if ($start === $end) {
         $data = [];
-        $storeSql = ($store_id > 0) ? "AND store_id = '$store_id'" : "";
+        $storeSql = ($store_id > 0) ? "AND sinfo.store_id = '$store_id'" : "";
         for ($hour = 0; $hour < 24; $hour++) {
-            $q = "SELECT price_sold, qty_sold, tax_rate, tax_type FROM selling_item 
-                  WHERE DATE(created_at) = '$start' AND HOUR(created_at) = $hour $storeSql";
+            $q = "SELECT si.price_sold, si.qty_sold, si.tax_rate, si.tax_type 
+                  FROM selling_item si
+                  JOIN selling_info sinfo ON si.invoice_id = sinfo.invoice_id
+                  WHERE DATE(si.created_at) = '$start' AND HOUR(si.created_at) = $hour $storeSql";
             $res = mysqli_query($conn, $q);
             $hrTax = 0;
             while($row = mysqli_fetch_assoc($res)){
@@ -158,11 +179,14 @@ function getItemTaxTrend($conn, $start, $end, $store_id = 0) {
              (new DateTime($end))->modify('+1 day')
         );
         
-        $storeSql = ($store_id > 0) ? "AND store_id = '$store_id'" : "";
+        $storeSql = ($store_id > 0) ? "AND sinfo.store_id = '$store_id'" : "";
 
         foreach ($period as $date) {
             $currentDate = $date->format('Y-m-d');
-            $q = "SELECT price_sold, qty_sold, tax_rate, tax_type FROM selling_item WHERE DATE(created_at) = '$currentDate' $storeSql";
+            $q = "SELECT si.price_sold, si.qty_sold, si.tax_rate, si.tax_type 
+                  FROM selling_item si
+                  JOIN selling_info sinfo ON si.invoice_id = sinfo.invoice_id
+                  WHERE DATE(si.created_at) = '$currentDate' $storeSql";
             $res = mysqli_query($conn, $q);
             $dailyTax = 0;
             while($row = mysqli_fetch_assoc($res)){
@@ -231,33 +255,34 @@ $dynamic_range_label = getDynamicRangeText($start_date, $end_date);
 if ($current_tab == 'sell') {
     // === SELL OVERVIEW METRICS ===
     
-    $date_sql_selling = "WHERE DATE(created_at) BETWEEN '$start_date' AND '$end_date'";
-    $date_sql_logs    = "WHERE DATE(created_at) BETWEEN '$start_date' AND '$end_date'";
+    // Define Filters with Explicit Aliases
+    $date_sql_selling = "WHERE DATE(si.created_at) BETWEEN '$start_date' AND '$end_date'";
+    $date_sql_logs    = "WHERE DATE(sl.created_at) BETWEEN '$start_date' AND '$end_date'";
     
-    $prev_date_sql_selling = "WHERE DATE(created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
-    $prev_date_sql_logs    = "WHERE DATE(created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
+    $prev_date_sql_selling = "WHERE DATE(si.created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
+    $prev_date_sql_logs    = "WHERE DATE(sl.created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
 
     if($store_filter > 0) {
-        $date_sql_selling .= " AND store_id = '$store_filter'";
-        $date_sql_logs    .= " AND store_id = '$store_filter'";
-        $prev_date_sql_selling .= " AND store_id = '$store_filter'";
-        $prev_date_sql_logs    .= " AND store_id = '$store_filter'";
+        $date_sql_selling .= " AND si.store_id = '$store_filter'";
+        $date_sql_logs    .= " AND sl.store_id = '$store_filter'";
+        $prev_date_sql_selling .= " AND si.store_id = '$store_filter'";
+        $prev_date_sql_logs    .= " AND sl.store_id = '$store_filter'";
     }
 
-    // Metric Totals
-    $invoiceAmount = getMetricTotal($conn, "SELECT SUM(grand_total) as total FROM selling_info $date_sql_selling");
-    $prevInvoiceAmount = getMetricTotal($conn, "SELECT SUM(grand_total) as total FROM selling_info $prev_date_sql_selling");
-    $discountAmount = getMetricTotal($conn, "SELECT SUM(discount_amount) as total FROM selling_info $date_sql_selling");
-    $prevDiscountAmount = getMetricTotal($conn, "SELECT SUM(discount_amount) as total FROM selling_info $prev_date_sql_selling");
-    $shippingCharge = getMetricTotal($conn, "SELECT SUM(shipping_charge) as total FROM selling_info $date_sql_selling");
-    $prevShippingCharge = getMetricTotal($conn, "SELECT SUM(shipping_charge) as total FROM selling_info $prev_date_sql_selling");
-    $othersCharge = getMetricTotal($conn, "SELECT SUM(other_charge) as total FROM selling_info $date_sql_selling");
-    $prevOthersCharge = getMetricTotal($conn, "SELECT SUM(other_charge) as total FROM selling_info $prev_date_sql_selling");
-    $orderTax = getMetricTotal($conn, "SELECT SUM(tax_amount) as total FROM selling_info $date_sql_selling");
-    $prevOrderTax = getMetricTotal($conn, "SELECT SUM(tax_amount) as total FROM selling_info $prev_date_sql_selling");
+    // Metric Totals (Aliased Tables)
+    $invoiceAmount = getMetricTotal($conn, "SELECT SUM(si.grand_total) as total FROM selling_info si $date_sql_selling");
+    $prevInvoiceAmount = getMetricTotal($conn, "SELECT SUM(si.grand_total) as total FROM selling_info si $prev_date_sql_selling");
+    $discountAmount = getMetricTotal($conn, "SELECT SUM(si.discount_amount) as total FROM selling_info si $date_sql_selling");
+    $prevDiscountAmount = getMetricTotal($conn, "SELECT SUM(si.discount_amount) as total FROM selling_info si $prev_date_sql_selling");
+    $shippingCharge = getMetricTotal($conn, "SELECT SUM(si.shipping_charge) as total FROM selling_info si $date_sql_selling");
+    $prevShippingCharge = getMetricTotal($conn, "SELECT SUM(si.shipping_charge) as total FROM selling_info si $prev_date_sql_selling");
+    $othersCharge = getMetricTotal($conn, "SELECT SUM(si.other_charge) as total FROM selling_info si $date_sql_selling");
+    $prevOthersCharge = getMetricTotal($conn, "SELECT SUM(si.other_charge) as total FROM selling_info si $prev_date_sql_selling");
+    $orderTax = getMetricTotal($conn, "SELECT SUM(si.tax_amount) as total FROM selling_info si $date_sql_selling");
+    $prevOrderTax = getMetricTotal($conn, "SELECT SUM(si.tax_amount) as total FROM selling_info si $prev_date_sql_selling");
 
-    $totalCollectedVal = getMetricTotal($conn, "SELECT SUM(amount) as total FROM sell_logs $date_sql_logs"); 
-    $prevTotalCollectedVal = getMetricTotal($conn, "SELECT SUM(amount) as total FROM sell_logs $prev_date_sql_logs");
+    $totalCollectedVal = getMetricTotal($conn, "SELECT SUM(sl.amount) as total FROM sell_logs sl $date_sql_logs"); 
+    $prevTotalCollectedVal = getMetricTotal($conn, "SELECT SUM(sl.amount) as total FROM sell_logs sl $prev_date_sql_logs");
     $dueCollection = $totalCollectedVal;
     $prevDueCollection = $prevTotalCollectedVal;
 
@@ -265,14 +290,21 @@ if ($current_tab == 'sell') {
     $prevDueGiven = max(0, $prevInvoiceAmount - $prevTotalCollectedVal);
 
     $itemTax = 0;
-    $qIT = mysqli_query($conn, "SELECT price_sold, qty_sold, tax_rate, tax_type FROM selling_item $date_sql_selling");
+    // JOINing selling_info to enable robust filtering by date and store
+    $qIT = mysqli_query($conn, "SELECT s_item.price_sold, s_item.qty_sold, s_item.tax_rate, s_item.tax_type 
+                                FROM selling_item s_item 
+                                JOIN selling_info si ON s_item.invoice_id = si.invoice_id 
+                                $date_sql_selling");
     while($r = mysqli_fetch_assoc($qIT)) {
         $amt = $r['price_sold'] * $r['qty_sold'];
         if($r['tax_type'] == 'inclusive') $itemTax += $amt - ($amt / (1 + ($r['tax_rate'] / 100)));
         else $itemTax += $amt * ($r['tax_rate'] / 100);
     }
     $prevItemTax = 0;
-    $pqIT = mysqli_query($conn, "SELECT price_sold, qty_sold, tax_rate, tax_type FROM selling_item $prev_date_sql_selling");
+    $pqIT = mysqli_query($conn, "SELECT s_item.price_sold, s_item.qty_sold, s_item.tax_rate, s_item.tax_type 
+                                 FROM selling_item s_item 
+                                 JOIN selling_info si ON s_item.invoice_id = si.invoice_id 
+                                 $prev_date_sql_selling");
     while($r = mysqli_fetch_assoc($pqIT)) {
         $amt = $r['price_sold'] * $r['qty_sold'];
         if($r['tax_type'] == 'inclusive') $prevItemTax += $amt - ($amt / (1 + ($r['tax_rate'] / 100)));
@@ -281,8 +313,7 @@ if ($current_tab == 'sell') {
 
     // Trends
     if ($days_count <= 2) {
-        // Hourly (If 2 days, use just the last selected day for cleaner visual or concat? Let's use current selection)
-        // Usually, Today/Yesterday means single day focus.
+        // Hourly
         $target_date = $end_date; 
         $invoiceTrend = getHourlyTrend($conn, 'selling_info', 'created_at', 'grand_total', $target_date, $store_filter);
         $discountTrend = getHourlyTrend($conn, 'selling_info', 'created_at', 'discount_amount', $target_date, $store_filter);
@@ -306,7 +337,7 @@ if ($current_tab == 'sell') {
 
     $totalOrdersCount = array_sum($ordersCountTrend);
     // Prev period for count comparison
-    $prev_orders_count_val = getMetricTotal($conn, "SELECT COUNT(*) as total FROM selling_info $prev_date_sql_selling");
+    $prev_orders_count_val = getMetricTotal($conn, "SELECT COUNT(*) as total FROM selling_info si $prev_date_sql_selling");
     $prevTotalOrdersCount = $prev_orders_count_val;
 
     // Calculate Due Trend
@@ -318,28 +349,28 @@ if ($current_tab == 'sell') {
 } else {
     // === PURCHASE OVERVIEW METRICS ===
 
-    $date_sql_purch = "WHERE DATE(created_at) BETWEEN '$start_date' AND '$end_date'";
-    $date_sql_logs  = "WHERE DATE(created_at) BETWEEN '$start_date' AND '$end_date' AND type='purchase'";
+    $date_sql_purch = "WHERE DATE(pin.created_at) BETWEEN '$start_date' AND '$end_date'";
+    $date_sql_logs  = "WHERE DATE(pl.created_at) BETWEEN '$start_date' AND '$end_date' AND pl.type='purchase'";
     
-    $prev_date_sql_purch = "WHERE DATE(created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
-    $prev_date_sql_logs  = "WHERE DATE(created_at) BETWEEN '$prev_start_date' AND '$prev_end_date' AND type='purchase'";
+    $prev_date_sql_purch = "WHERE DATE(pin.created_at) BETWEEN '$prev_start_date' AND '$prev_end_date'";
+    $prev_date_sql_logs  = "WHERE DATE(pl.created_at) BETWEEN '$prev_start_date' AND '$prev_end_date' AND pl.type='purchase'";
 
     if($store_filter > 0) {
-        $date_sql_purch .= " AND store_id = '$store_filter'";
-        $date_sql_logs  .= " AND store_id = '$store_filter'";
-        $prev_date_sql_purch .= " AND store_id = '$store_filter'";
-        $prev_date_sql_logs  .= " AND store_id = '$store_filter'";
+        $date_sql_purch .= " AND pin.store_id = '$store_filter'";
+        $date_sql_logs  .= " AND pl.store_id = '$store_filter'";
+        $prev_date_sql_purch .= " AND pin.store_id = '$store_filter'";
+        $prev_date_sql_logs  .= " AND pl.store_id = '$store_filter'";
     }
 
-    // Metric Totals
-    $purchaseAmount = getMetricTotal($conn, "SELECT SUM(total_sell) as total FROM purchase_info $date_sql_purch");
-    $prevPurchaseAmount = getMetricTotal($conn, "SELECT SUM(total_sell) as total FROM purchase_info $prev_date_sql_purch");
-    $pDiscountAmount = getMetricTotal($conn, "SELECT SUM(discount_amount) as total FROM purchase_info $date_sql_purch");
-    $prevPDiscountAmount = getMetricTotal($conn, "SELECT SUM(discount_amount) as total FROM purchase_info $prev_date_sql_purch");
-    $pPaidAmount = getMetricTotal($conn, "SELECT SUM(amount) as total FROM purchase_logs $date_sql_logs");
-    $prevPPaidAmount = getMetricTotal($conn, "SELECT SUM(amount) as total FROM purchase_logs $prev_date_sql_logs");
-    $pShippingCharge = getMetricTotal($conn, "SELECT SUM(shipping_charge) as total FROM purchase_info $date_sql_purch");
-    $prevPShippingCharge = getMetricTotal($conn, "SELECT SUM(shipping_charge) as total FROM purchase_info $prev_date_sql_purch");
+    // Metric Totals (Aliased)
+    $purchaseAmount = getMetricTotal($conn, "SELECT SUM(pin.total_sell) as total FROM purchase_info pin $date_sql_purch");
+    $prevPurchaseAmount = getMetricTotal($conn, "SELECT SUM(pin.total_sell) as total FROM purchase_info pin $prev_date_sql_purch");
+    $pDiscountAmount = getMetricTotal($conn, "SELECT SUM(pin.discount_amount) as total FROM purchase_info pin $date_sql_purch");
+    $prevPDiscountAmount = getMetricTotal($conn, "SELECT SUM(pin.discount_amount) as total FROM purchase_info pin $prev_date_sql_purch");
+    $pPaidAmount = getMetricTotal($conn, "SELECT SUM(pl.amount) as total FROM purchase_logs pl $date_sql_logs");
+    $prevPPaidAmount = getMetricTotal($conn, "SELECT SUM(pl.amount) as total FROM purchase_logs pl $prev_date_sql_logs");
+    $pShippingCharge = getMetricTotal($conn, "SELECT SUM(pin.shipping_charge) as total FROM purchase_info pin $date_sql_purch");
+    $prevPShippingCharge = getMetricTotal($conn, "SELECT SUM(pin.shipping_charge) as total FROM purchase_info pin $prev_date_sql_purch");
     
     // Others Charge (not available in purchase_info table, set to 0)
     $pOthersCharge = 0;
@@ -402,7 +433,7 @@ if ($current_tab == 'sell') {
     }
 
     $totalPOrdersCount = array_sum($pOrdersCountTrend);
-    $prevPOrdersCountTrendSql = getMetricTotal($conn, "SELECT COUNT(*) as total FROM purchase_info $prev_date_sql_purch");
+    $prevPOrdersCountTrendSql = getMetricTotal($conn, "SELECT COUNT(*) as total FROM purchase_info pin $prev_date_sql_purch");
     $prevPTotalOrdersCount = $prevPOrdersCountTrendSql;
 
     $pDueTakenTrend = [];
@@ -520,7 +551,7 @@ if($current_tab == 'sell') {
                              // Correction: if ID > 0, it is active
                              if($store_filter > 0) $is_store_active = true;
                              ?>
-                             <div class="relative w-full md:w-auto">
+                             <div class="relative w-full md:w-auto <?= $is_store_restricted ? 'hidden' : ''; ?>">
                                  <button type="button" onclick="toggleFilterDropdown('store_filter')" class="inline-flex items-center justify-center gap-2 px-5 py-3 <?= $is_store_active ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'; ?> hover:bg-teal-700 hover:text-white font-bold rounded-lg shadow transition-all w-full md:w-auto">
                                      <i class="fas fa-store"></i>
                                      <span><?= $active_store_label; ?></span>
@@ -670,18 +701,20 @@ if($current_tab == 'sell') {
                 <?php
                 ?>
 
-                <!-- Tabs -->
-                <div class="mb-8 border-b border-slate-200 mt-6">
-                    <nav class="-mb-px flex space-x-8">
+                <!-- Premium Segmented Tabs -->
+                <div class="report-tabs-container mb-8 mt-6">
+                    <div class="report-tabs-wrapper">
                         <a href="<?= buildUrl(['tab' => 'sell']); ?>" 
-                           class="<?= ($current_tab == 'sell') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-semibold text-sm transition-colors">
-                            Sell Overview
+                           class="report-tab-pill <?= ($current_tab == 'sell') ? 'active' : ''; ?>">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Sell Overview</span>
                         </a>
                         <a href="<?= buildUrl(['tab' => 'purchase']); ?>" 
-                           class="<?= ($current_tab == 'purchase') ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> whitespace-nowrap pb-4 px-1 border-b-2 font-semibold text-sm transition-colors">
-                            Purchase Overview
+                           class="report-tab-pill <?= ($current_tab == 'purchase') ? 'active' : ''; ?>">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Purchase Overview</span>
                         </a>
-                    </nav>
+                    </div>
                 </div>
 
                 <!-- Stats Grid -->

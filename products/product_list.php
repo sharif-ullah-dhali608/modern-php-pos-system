@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/store_filter_helper.php'); // Store filtering helper
+include('../includes/permission_helper.php'); // Permission helper
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -16,6 +18,13 @@ $status      = $_GET['status'] ?? '';
 
 // Build Query
 $where_clause = "WHERE 1=1";
+
+// Get store filter (JOIN + WHERE)
+$store_filter = getStoreFilterWithJoin('products', 'p');
+$store_join = $store_filter['join'];
+$store_where = $store_filter['where'];
+
+$where_clause .= $store_where; // Add store WHERE clause
 if(!empty($category_id)) { $category_id = mysqli_real_escape_string($conn, $category_id); $where_clause .= " AND p.category_id = '$category_id'"; }
 if(!empty($brand_id))    { $brand_id = mysqli_real_escape_string($conn, $brand_id);       $where_clause .= " AND p.brand_id = '$brand_id'"; }
 if(!empty($supplier_id)) { $supplier_id = mysqli_real_escape_string($conn, $supplier_id); $where_clause .= " AND p.supplier_id = '$supplier_id'"; }
@@ -30,6 +39,7 @@ $query = "SELECT p.*,
                  cr.currency_name,
                  s.name as supplier_name
           FROM products p
+          {$store_join}
           LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN brands b ON p.brand_id = b.id
           LEFT JOIN units u ON p.unit_id = u.id
@@ -124,9 +134,17 @@ $filters[] = [
     ]
 ];
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_product_product') ? '/pos/products/add' : '#';
+$edit_url = check_user_permission('update_product_product') ? '/pos/products/edit' : '#';
+$delete_url = check_user_permission('delete_product_product') ? '/pos/products/save' : '#';
+
+// Also restrict status toggle if update is not allowed (optional, but good practice)
+$status_url = check_user_permission('update_product_product') ? '/pos/products/save' : '#';
+
 $list_config = [
     'title' => 'Product List',
-    'add_url' => '/pos/products/add',
+    'add_url' => $add_url,
     'table_id' => 'productTable',
     'filters' => $filters,
     'columns' => [
@@ -147,9 +165,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => '/pos/products/edit',
-    'delete_url' => '/pos/products/save', 
-    'status_url' => '/pos/products/save', 
+    'edit_url' => $edit_url,
+    'delete_url' => $delete_url, 
+    'status_url' => $status_url, 
     'primary_key' => 'id',
     'name_field' => 'product_name'
 ];

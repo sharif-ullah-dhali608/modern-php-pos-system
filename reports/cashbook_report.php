@@ -10,24 +10,28 @@ if(!isset($_SESSION['auth'])){
 
 $page_title = "Cashbook - Velocity POS";
 include('../includes/header.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
+$sl_filter = getStoreFilterDirect('sl');
+$pl_filter = getStoreFilterDirect('pl');
+
 // Fetch Data - Union of cash sell and purchase logs
 $query = "(SELECT sl.created_at, sl.ref_invoice_id as invoice_id, 'Cash In (Sale/Collection)' as type, sl.amount as credit, 0 as debit, u.name as user_name
            FROM sell_logs sl
            JOIN payment_methods pm ON sl.pmethod_id = pm.id
            JOIN users u ON sl.created_by = u.id
-           WHERE pm.code = 'cash')
+           WHERE pm.code = 'cash' $sl_filter)
           UNION ALL
           (SELECT pl.created_at, pl.ref_invoice_id as invoice_id, 'Cash Out (Purchase/Payment)' as type, 0 as credit, pl.amount as debit, u.name as user_name
            FROM purchase_logs pl
            JOIN payment_methods pm ON pl.pmethod_id = pm.id
            JOIN users u ON pl.created_by = u.id
-           WHERE pm.code = 'cash')
+           WHERE pm.code = 'cash' $pl_filter)
           ORDER BY created_at DESC";
 
 $wrapped_query = "SELECT * FROM ($query) as combined WHERE 1=1 ";

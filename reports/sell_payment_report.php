@@ -11,6 +11,7 @@ if(!isset($_SESSION['auth'])){
 $page_title = "Sell Payment Report - Velocity POS";
 include('../includes/header.php');
 include('../includes/reusable_list.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
@@ -18,13 +19,16 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
 // Fetch Data
-$query = "SELECT sl.*, u.name as user_name, pm.name as payment_method_name, c.name as customer_name
+$query = "SELECT sl.*, u.name as user_name, pm.name as payment_method_name, c.name as customer_name, c.image as customer_image
           FROM sell_logs sl
           JOIN users u ON sl.created_by = u.id
           LEFT JOIN payment_methods pm ON sl.pmethod_id = pm.id
           LEFT JOIN selling_info si ON sl.ref_invoice_id = si.invoice_id
           LEFT JOIN customers c ON si.customer_id = c.id
           WHERE 1=1 ";
+
+// Apply Store Filter
+$query .= getStoreFilterDirect('sl');
 
 applyDateFilter($query, 'sl.created_at', $date_filter, $start_date, $end_date);
 
@@ -55,6 +59,7 @@ $config = [
     'columns' => [
         ['label' => 'Date', 'key' => 'created_at'],
         ['label' => 'Invoice Id', 'key' => 'ref_invoice_id'],
+        ['label' => 'Photo', 'key' => 'customer_image', 'type' => 'image', 'path' => '/pos/uploads/customers/'],
         ['label' => 'Customer', 'key' => 'customer_display'],
         ['label' => 'Payment Method', 'key' => 'payment_method_name'],
         ['label' => 'Collector', 'key' => 'user_name'],

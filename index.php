@@ -515,50 +515,66 @@ include('includes/header.php');
                 <!-- Quick Actions Row -->
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-4">
                     <!-- POS -->
+                    <?php if(check_user_permission('view_pos_shortcut_dashboard')): ?>
                     <a href="/pos/pos/" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-shopping-cart text-blue-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Pos</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Sell List -->
+                    <?php if(check_user_permission('view_sell_list_shortcut_dashboard')): ?>
                     <a href="/pos/sell/list" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-file-invoice text-slate-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Sell List</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Overview -->
+                    <?php if(check_user_permission('view_overview_shortcut_dashboard')): ?>
                     <a href="/pos/reports/overview" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-flag text-cyan-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Overview</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Sell Rep -->
+                    <?php if(check_user_permission('view_sell_rep_shortcut_dashboard')): ?>
                     <a href="/pos/reports/sell" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-money-bill-wave text-emerald-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Sell Rep</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Purchase -->
+                    <?php if(check_user_permission('view_purchase_shortcut_dashboard')): ?>
                     <a href="/pos/purchases/list" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-file-invoice-dollar text-orange-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Purchase</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Stock -->
+                    <?php if(check_user_permission('view_stock_shortcut_dashboard')): ?>
                     <a href="/pos/reports/stock" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-square text-red-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Stock</span>
                     </a>
+                    <?php endif; ?>
                     <!-- Expired (Mapped to Stock Alert) -->
-                    <a href="/pos/products/stock_alert" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
-                        <i class="fas fa-bell text-amber-500 text-xl group-hover:scale-110 transition-transform"></i>
-                        <span class="text-xs font-bold text-slate-600">Expired</span>
-                    </a>
+<?php if(check_user_permission('view_stock_alert_widget_dashboard')): ?>
+<a href="/pos/products/stock_alert" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
+    <i class="fas fa-bell text-amber-500 text-xl group-hover:scale-110 transition-transform"></i>
+    <span class="text-xs font-bold text-slate-600">Expired</span>
+</a>
+<?php endif; ?>
                     <!-- Backup -->
                     <!-- <a href="/pos/system/backup" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-database text-purple-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Backup</span>
                     </a> -->
                     <!-- Stores -->
+                    <?php if(check_user_permission('view_stores_shortcut_dashboard')): ?>
                     <a href="/pos/stores/list" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-store text-lime-500 text-xl group-hover:scale-110 transition-transform"></i>
                         <span class="text-xs font-bold text-slate-600">Stores</span>
                     </a>
+                    <?php endif; ?>
                 </div>
 
                   <!-- Congratulations Card & Stats Row -->
@@ -567,6 +583,7 @@ include('includes/header.php');
                     <div class="lg:col-span-2 flex flex-col gap-6">
                         
                             <!-- 1. Congratulations Card (Image 1 Style) -->
+                        <?php if(check_user_permission('view_monthly_goals_dashboard')): ?>
                         <div class="relative overflow-hidden rounded-2xl shadow-sm border border-slate-100 p-8 bg-white flex items-center justify-between">
                             <div class="relative z-10 max-w-lg">
                                 <?php
@@ -622,10 +639,12 @@ include('includes/header.php');
                                 </div>
                             </div>
                         </div>
+                        <?php endif; // End Monthly Goals / Target Card Check ?>
 
                         <!-- 2. Stats Grid (Image 2 Style) -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <!-- Revenue -->
+                            <?php if(check_user_permission('view_revenue_card_dashboard')): ?>
                             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all">
                                 <div class="flex justify-between items-start w-full mb-3">
                                     <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -638,8 +657,11 @@ include('includes/header.php');
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
                                 <h3 class="text-2xl font-black text-slate-800 mb-2"><?= $currency; ?><?= number_format($totalSalesAll, 2); ?></h3>
                             </div>
+                            <?php endif; ?>
 
                             <!-- Orders -->
+                            <!-- Assuming visibility linked to Dashboard or Sales -->
+                            <?php if(check_user_permission('view_total_orders_dashboard')): ?>
                             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all">
                                 <div class="flex justify-between items-start w-full mb-3">
                                     <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -652,8 +674,10 @@ include('includes/header.php');
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Orders</p>
                                 <h3 class="text-2xl font-black text-slate-800 mb-2"><?= number_format($totalOrders); ?></h3>
                             </div>
+                            <?php endif; ?>
 
                             <!-- Customers -->
+                            <?php if(check_user_permission('view_total_customers_dashboard')): ?>
                             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all">
                                 <div class="flex justify-between items-start w-full mb-3">
                                     <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -666,8 +690,10 @@ include('includes/header.php');
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Customers</p>
                                 <h3 class="text-2xl font-black text-slate-800 mb-2"><?= number_format($totalCustomers); ?></h3>
                             </div>
+                            <?php endif; ?>
 
                             <!-- Products -->
+                            <?php if(check_user_permission('view_total_products_dashboard')): ?>
                             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all">
                                 <div class="flex justify-between items-start w-full mb-3">
                                     <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
@@ -680,10 +706,12 @@ include('includes/header.php');
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Products Sold</p>
                                 <h3 class="text-2xl font-black text-slate-800 mb-2"><?= number_format($totalProducts); ?></h3>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <!-- Right Column: Financial Report Card (Height Match) -->
+                    <?php if(check_user_permission('view_revenue_card_dashboard') || check_user_permission('view_profit_card_dashboard')): ?>
                     <div class="bg-white rounded-2xl shadow-sm border border-teal-100 flex flex-col justify-between relative overflow-hidden h-full">
                         <!-- Header / Tabs -->
                         <div class="p-6 pb-0">
@@ -733,13 +761,17 @@ include('includes/header.php');
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
+                <?php if(check_user_permission('view_recent_activities_dashboard')): ?>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 mb-6 overflow-hidden recent-activities-card flex flex-col">
                     <div class="p-6 pb-0 border-b border-slate-50">
                         <h3 class="text-base font-bold text-slate-700 mb-6">Recent Activities</h3>
+                        <!-- ... (Rest of content) -->
                         <div class="flex items-center justify-between relative" id="activityTabs">
-                            <div class="tab-trigger flex-1 text-center pb-4 text-xs font-bold active-tab group" onclick="switchActTab('sales', this)">
+                            <!-- Tabs content logic can remain -->
+                             <div class="tab-trigger flex-1 text-center pb-4 text-xs font-bold active-tab group" onclick="switchActTab('sales', this)">
                                 <span>Sales</span>
                                 <div class="absolute bottom-0 left-0 w-full h-0.5 bg-teal-500/10 transition-all group-hover:bg-teal-500/20"></div>
                             </div>
@@ -768,8 +800,9 @@ include('includes/header.php');
                     </div>
                     
                     <div class="flex-grow p-6 relative">
+                        <!-- Activity Tabs Content -->
                         <!-- SALES TAB -->
-                        <div id="act-sales" class="act-content grid grid-cols-1 lg:grid-cols-12 gap-6">
+                         <div id="act-sales" class="act-content grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <div class="lg:col-span-8">
                                 <div class="overflow-x-auto rounded-xl border border-slate-50">
                                     <table class="w-full text-left">
@@ -798,7 +831,7 @@ include('includes/header.php');
                                     </table>
                                 </div>
                                 <div class="mt-8 flex items-center gap-4">
-                                    <a href="pos" class="px-8 py-3 btn-premium btn-teal text-white text-[11px] font-black rounded-2xl group relative overflow-hidden">
+                                     <a href="pos" class="px-8 py-3 btn-premium btn-teal text-white text-[11px] font-black rounded-2xl group relative overflow-hidden">
                                         <div class="btn-overlay"></div>
                                         <i class="fas fa-plus relative z-10 transition-transform group-hover:rotate-90"></i> <span class="relative z-10">Add Sale</span>
                                     </a>
@@ -835,7 +868,7 @@ include('includes/header.php');
                             </div>
                         </div>
 
-                        <!-- QUOTATIONS TAB -->
+                         <!-- QUOTATIONS TAB -->
                         <div id="act-quotations" class="act-content hidden">
                             <div class="overflow-x-auto rounded-xl border border-slate-50">
                                 <table class="w-full text-left">
@@ -876,8 +909,8 @@ include('includes/header.php');
                                 </a>
                             </div>
                         </div>
-
-                        <!-- PURCHASES TAB -->
+                        
+                         <!-- PURCHASES TAB -->
                         <div id="act-purchases" class="act-content hidden">
                             <div class="overflow-x-auto rounded-xl border border-slate-50">
                                 <table class="w-full text-left">
@@ -918,8 +951,8 @@ include('includes/header.php');
                                 </a>
                             </div>
                         </div>
-
-                        <!-- TRANSFERS TAB -->
+                        
+                         <!-- TRANSFERS TAB -->
                         <div id="act-transfers" class="act-content hidden">
                             <div class="overflow-x-auto rounded-xl border border-slate-50">
                                 <table class="w-full text-left">
@@ -960,8 +993,8 @@ include('includes/header.php');
                                 </a>
                             </div>
                         </div>
-
-                        <!-- CUSTOMERS TAB -->
+                        
+                         <!-- CUSTOMERS TAB -->
                         <div id="act-customers" class="act-content hidden">
                             <div class="overflow-x-auto rounded-xl border border-slate-50">
                                 <table class="w-full text-left">
@@ -998,8 +1031,8 @@ include('includes/header.php');
                                 </a>
                             </div>
                         </div>
-
-                        <!-- SUPPLIERS TAB -->
+                        
+                         <!-- SUPPLIERS TAB -->
                         <div id="act-suppliers" class="act-content hidden">
                             <div class="overflow-x-auto rounded-xl border border-slate-50">
                                 <table class="w-full text-left">
@@ -1026,7 +1059,7 @@ include('includes/header.php');
                                         <?php endforeach; endif; ?>
                                     </tbody>
                                 </table>
-                            </div>
+                    </div>
                             <div class="mt-8 flex items-center gap-4">
                                 <a href="suppliers/add_supplier.php" class="px-8 py-3 btn-premium btn-teal text-white text-[11px] font-black rounded-2xl group relative overflow-hidden">
                                     <div class="btn-overlay"></div>
@@ -1036,14 +1069,16 @@ include('includes/header.php');
                                     <div class="btn-overlay"></div>
                                     <i class="fas fa-list relative z-10"></i> <span class="relative z-10">List Suppliers</span>
                                 </a>
-                            </div>
+                </div>
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- Dashboard Extended Grid (Charts) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- 1. Sales Overview (Split Layout: Chart + Growth) -->
+                    <?php if(check_user_permission('view_revenue_card_dashboard')): ?>
                     <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row overflow-hidden relative group/chart">
                         
                         <!-- Left Stats & Chart (65%) -->
@@ -1105,8 +1140,10 @@ include('includes/header.php');
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <!-- 2. Sells This Week (Bar Chart) -->
+                    <?php if(check_user_permission('view_revenue_card_dashboard')): ?>
                     <div class="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
                         <div class="p-6 pb-2 flex items-center justify-between">
                             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Sells This Week</h3>
@@ -1114,11 +1151,13 @@ include('includes/header.php');
                         </div>
                         <div id="weeklySellsChart" class="w-full h-64"></div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Dashboard Lower Grid (Recent Sell & Top Products) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- 3. Recent Sell (Table) -->
+                    <?php if(check_user_permission('view_recent_sales_dashboard')): ?>
                     <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Recent Sell</h3>
@@ -1167,8 +1206,10 @@ include('includes/header.php');
                             </table>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <!-- 4. Top Products (List) -->
+                    <?php if(check_user_permission('view_best_selling_product_dashboard')): ?>
                     <div class="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
                          <div class="flex items-center justify-between mb-6">
                             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Top Products</h3>
@@ -1216,6 +1257,7 @@ include('includes/header.php');
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

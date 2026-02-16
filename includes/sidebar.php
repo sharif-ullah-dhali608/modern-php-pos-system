@@ -85,292 +85,310 @@ $menu_items = [
         'title' => 'Dashboards',
         'icon' => 'fa-tachometer-alt', 
         'link' => '/pos',
-        'active' => ($current_page == 'index.php' || $current_uri == '/pos') 
+        'active' => ($current_page == 'index.php' || $current_uri == '/pos'),
+        'permission' => 'view_dashboard_dashboard' // Required Permission
     ],
     [
         'title' => 'Point of Sale',
         'icon' => 'fa-cash-register',
         'link' => '/pos/pos/',
-        'active' => (uri_has('/pos/pos', $current_uri))
+        'active' => (uri_has('/pos/pos', $current_uri)),
+        'permission' => 'create_sell_sell' // POS links to creating a sell
     ],
     [
         'title' => 'Sell',
         'icon' => 'fa-cash-register',
         'link' => '#',
         'submenu' => [ 
-            ['title' => 'Sell List', 'link' => '/pos/sell/list'],
-            ['title' => 'Return List', 'link' => '/pos/sell/return'],
-            ['title' => 'Sell Log', 'link' => '/pos/sell/log'],
+            ['title' => 'Sell List', 'link' => '/pos/sell/list', 'permission' => 'view_sell_list_sell'],
+            ['title' => 'Return List', 'link' => '/pos/sell/return', 'permission' => 'view_return_list_sell'],
+            ['title' => 'Sell Log', 'link' => '/pos/sell/log', 'permission' => 'read_sell_log_sell'],
         ],
-        'active' => (uri_has('/sell/', $current_uri))
+        'active' => (uri_has('/sell/', $current_uri)),
+        'permission' => 'view_sell_list_sell' // Base permission for parent (can be adjusted)
     ],
     [
         'title' => 'Giftcard',
         'icon' => 'fa-credit-card',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Giftcard', 'link' => '/pos/giftcard/add'],
-            ['title' => 'Giftcard List', 'link' => '/pos/giftcard/list'],
-            ['title' => 'Giftcard Topup', 'link' => '/pos/giftcard/topup'],
+            ['title' => 'Add Giftcard', 'link' => '/pos/giftcard/add', 'permission' => 'add_giftcard_giftcard'],
+            ['title' => 'Giftcard List', 'link' => '/pos/giftcard/list', 'permission' => 'read_giftcard_giftcard'],
+            ['title' => 'Giftcard Topup', 'link' => '/pos/giftcard/topup', 'permission' => 'giftcard_topup_giftcard'],
         ],
-        'active' => (uri_has('/giftcard/', $current_uri))
+        'active' => (uri_has('/giftcard/', $current_uri)),
+        'permission' => 'read_giftcard_giftcard'
     ],
     [
         'title' => 'Installment',
         'icon' => 'fa-calendar-alt text-teal-400',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Installment List', 'link' => '/pos/installment/list'],
-            ['title' => 'Payment List', 'link' => '/pos/installment/payments'],
-            ['title' => 'Payment Due Today', 'link' => '/pos/installment/due_today'],
-            ['title' => 'Payment Due All', 'link' => '/pos/installment/due_all'],
-            ['title' => 'Payment Due Exp.', 'link' => '/pos/installment/due_expired'],
-            ['title' => 'Overview Report', 'link' => '/pos/installment/overview'],
+            ['title' => 'Installment List', 'link' => '/pos/installment/list', 'permission' => 'read_installment_list_installment'],
+            ['title' => 'Payment List', 'link' => '/pos/installment/payments', 'permission' => 'read_installment_list_installment'],
+            ['title' => 'Payment Due Today', 'link' => '/pos/installment/due_today', 'permission' => 'read_installment_list_installment'],
+            ['title' => 'Payment Due All', 'link' => '/pos/installment/due_all', 'permission' => 'read_installment_list_installment'],
+            ['title' => 'Payment Due Exp.', 'link' => '/pos/installment/due_expired', 'permission' => 'read_installment_list_installment'],
+            ['title' => 'Overview Report', 'link' => '/pos/installment/overview', 'permission' => 'installment_overview_installment'],
         ],
-        'active' => (uri_has('/installment/', $current_uri))
+        'active' => (uri_has('/installment/', $current_uri)),
+        'permission' => 'read_installment_list_installment'
     ],
     [
         'title' => 'Products',
         'icon' => 'fa-box',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Product', 'link' => '/pos/products/add'],
-            ['title' => 'Product List', 'link' => '/pos/products/list'],
-            ['title' => 'Barcode Print', 'link' => '/pos/products/barcode-print'],
-            ['title' => 'Stock Alert', 'link' => '/pos/products/stock_alert', 'badge' => $alert_count]
+            ['title' => 'Add Product', 'link' => '/pos/products/add', 'permission' => 'create_product_product'],
+            ['title' => 'Product List', 'link' => '/pos/products/list', 'permission' => 'read_product_list_product'],
+            ['title' => 'Barcode Print', 'link' => '/pos/products/barcode-print', 'permission' => 'barcode_print_product'],
+            ['title' => 'Stock Alert', 'link' => '/pos/products/stock_alert', 'badge' => $alert_count, 'permission' => 'read_stock_alert_product']
         ],
-        'active' => (uri_has('/products/', $current_uri))
+        'active' => (uri_has('/products/', $current_uri)),
+        'permission' => 'read_product_list_product'
     ],
     [
         'title' => 'Quotations',
         'icon' => 'fa-file-alt',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Quotation', 'link' => '/pos/quotations/add'],
-            ['title' => 'Quotation List', 'link' => '/pos/quotations/list']
+            ['title' => 'Add Quotation', 'link' => '/pos/quotations/add', 'permission' => 'create_quotation_quotation'],
+            ['title' => 'Quotation List', 'link' => '/pos/quotations/list', 'permission' => 'read_quotation_list_quotation']
         ],
-        'active' => (uri_has('/quotations/', $current_uri))
+        'active' => (uri_has('/quotations/', $current_uri)),
+        'permission' => 'read_quotation_list_quotation'
     ],
     [
         'title' => 'Purchases',
         'icon' => 'fa-shopping-cart',
         'link' => '#',
-        // Around lines 44-49 - Change submenu:
         'submenu' => [
-            ['title' => 'Add Purchase', 'link' => '/pos/purchases/add'],
-            ['title' => 'Purchase List', 'link' => '/pos/purchases/list'],
-            ['title' => 'Due Invoice', 'link' => '/pos/purchases/list?filter=due'],
-            ['title' => 'Return List', 'link' => '/pos/purchases/return-list'],
-            ['title' => 'Purchase Logs', 'link' => '/pos/purchases/purchase-logs'],
+            ['title' => 'Add Purchase', 'link' => '/pos/purchases/add', 'permission' => 'create_invoice_purchase'],
+            ['title' => 'Purchase List', 'link' => '/pos/purchases/list', 'permission' => 'view_invoice_list_purchase'],
+            ['title' => 'Due Invoice', 'link' => '/pos/purchases/list?filter=due', 'permission' => 'view_invoice_list_purchase'],
+            ['title' => 'Return List', 'link' => '/pos/purchases/return-list', 'permission' => 'view_return_list_purchase'],
+            ['title' => 'Purchase Logs', 'link' => '/pos/purchases/purchase-logs', 'permission' => 'read_purchase_log_purchase'],
         ],
-        'active' => (uri_has('/purchases/', $current_uri))
+        'active' => (uri_has('/purchases/', $current_uri)),
+        'permission' => 'view_invoice_list_purchase'
     ],
     [
         'title' => 'Transfer',
         'icon' => 'fa-exchange-alt',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Transfer', 'link' => '/pos/transfer/stock_transfer'],
-            ['title' => 'Transfer List', 'link' => '/pos/transfer/transfer_list'],
-            ['title' => 'Receive List', 'link' => '/pos/transfer/receive_list'],
+            ['title' => 'Add Transfer', 'link' => '/pos/transfer/stock_transfer', 'permission' => 'add_transfer_transfer'],
+            ['title' => 'Transfer List', 'link' => '/pos/transfer/transfer_list', 'permission' => 'read_transfer_transfer'],
+            ['title' => 'Receive List', 'link' => '/pos/transfer/receive_list', 'permission' => 'read_receive_list_transfer'],
         ],
-        'active' => (uri_has('/transfer/', $current_uri))
+        'active' => (uri_has('/transfer/', $current_uri)),
+        'permission' => 'read_transfer_transfer'
     ],
     [
         'title' => 'Stores',
         'icon' => 'fa-store',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Store', 'link' => '/pos/stores/add'],
-            ['title' => 'Store List', 'link' => '/pos/stores/list'],
-            ['title' => 'Store Settings', 'link' => '/pos/stores/settings']
+            ['title' => 'Add Store', 'link' => '/pos/stores/add', 'permission' => 'create_store_store'],
+            ['title' => 'Store List', 'link' => '/pos/stores/list', 'permission' => 'read_store_list_store'],
+            ['title' => 'Store Settings', 'link' => '/pos/stores/settings', 'permission' => 'view_store_settings_settings']
         ],
-        'active' => (uri_has('/stores/', $current_uri))
+        'active' => (uri_has('/stores/', $current_uri)),
+        'permission' => 'read_store_list_store'
     ],
     [
         'title' => 'Categories',
         'icon' => 'fa-th-list', 
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Category', 'link' => '/pos/categories/add'],
-            ['title' => 'Category List', 'link' => '/pos/categories/list']
+            ['title' => 'Add Category', 'link' => '/pos/categories/add', 'permission' => 'create_category_category'],
+            ['title' => 'Category List', 'link' => '/pos/categories/list', 'permission' => 'read_category_list_category']
         ],
-        'active' => (uri_has('/categories/', $current_uri))
+        'active' => (uri_has('/categories/', $current_uri)),
+        'permission' => 'read_category_list_category'
     ],
     [
         'title' => 'Currency',
         'icon' => 'fa-dollar-sign',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Currency', 'link' => '/pos/currency/add'],
-            ['title' => 'Currency List', 'link' => '/pos/currency/list']
+            ['title' => 'Add Currency', 'link' => '/pos/currency/add', 'permission' => 'add_currency_currency'],
+            ['title' => 'Currency List', 'link' => '/pos/currency/list', 'permission' => 'read_currency_currency']
         ],
-        'active' => (uri_has('/currency/', $current_uri))
+        'active' => (uri_has('/currency/', $current_uri)),
+        'permission' => 'read_currency_currency'
     ],
     [
         'title' => 'Payment Methods',
         'icon' => 'fa-credit-card',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Payment', 'link' => '/pos/payment-methods/add'],
-            ['title' => 'Payment List', 'link' => '/pos/payment-methods/list']
+            ['title' => 'Add Payment', 'link' => '/pos/payment-methods/add', 'permission' => 'create_payment_method_payment_method'],
+            ['title' => 'Payment List', 'link' => '/pos/payment-methods/list', 'permission' => 'read_payment_method_list_payment_method']
         ],
-        'active' => (uri_has('/payment-methods/', $current_uri) || uri_has('/payment_methods/', $current_uri))
+        'active' => (uri_has('/payment-methods/', $current_uri) || uri_has('/payment_methods/', $current_uri)),
+        'permission' => 'read_payment_method_list_payment_method'
     ],
     [
         'title' => 'Units',
         'icon' => 'fa-balance-scale',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Unit', 'link' => '/pos/units/add'],
-            ['title' => 'Unit List', 'link' => '/pos/units/list']
+            ['title' => 'Add Unit', 'link' => '/pos/units/add', 'permission' => 'create_unit_unit'],
+            ['title' => 'Unit List', 'link' => '/pos/units/list', 'permission' => 'read_unit_unit']
         ],
-        'active' => (uri_has('/units/', $current_uri))
+        'active' => (uri_has('/units/', $current_uri)),
+        'permission' => 'read_unit_unit'
     ],
     [
         'title' => 'Brands',
         'icon' => 'fa-tags',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Brand', 'link' => '/pos/brands/add'],
-            ['title' => 'Brand List', 'link' => '/pos/brands/list']
+            ['title' => 'Add Brand', 'link' => '/pos/brands/add', 'permission' => 'create_brand_brand'],
+            ['title' => 'Brand List', 'link' => '/pos/brands/list', 'permission' => 'read_brand_list_brand']
         ],
-        'active' => (uri_has('/brands/', $current_uri))
+        'active' => (uri_has('/brands/', $current_uri)),
+        'permission' => 'read_brand_list_brand'
     ],
     [
         'title' => 'Tax Rates',
         'icon' => 'fa-percent',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Taxrate', 'link' => '/pos/taxrates/add'],
-            ['title' => 'Taxrate List', 'link' => '/pos/taxrates/list']
+            ['title' => 'Add Taxrate', 'link' => '/pos/taxrates/add', 'permission' => 'create_taxrate_taxrate'],
+            ['title' => 'Taxrate List', 'link' => '/pos/taxrates/list', 'permission' => 'read_taxrate_taxrate']
         ],
-        'active' => (uri_has('/taxrates/', $current_uri))
+        'active' => (uri_has('/taxrates/', $current_uri)),
+        'permission' => 'read_taxrate_taxrate'
     ],
     [
         'title' => 'Boxes',
         'icon' => 'fa-box', 
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Box', 'link' => '/pos/boxes/add'],
-            ['title' => 'Box List', 'link' => '/pos/boxes/list']
+            ['title' => 'Add Box', 'link' => '/pos/boxes/add', 'permission' => 'create_box_storebox'],
+            ['title' => 'Box List', 'link' => '/pos/boxes/list', 'permission' => 'read_box_storebox']
         ],
-        'active' => (uri_has('/boxes/', $current_uri))
+        'active' => (uri_has('/boxes/', $current_uri)),
+        'permission' => 'read_box_storebox'
     ],
     [
         'title' => 'Suppliers',
         'icon' => 'fa-truck',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Supplier', 'link' => '/pos/suppliers/add'],
-            ['title' => 'Supplier List', 'link' => '/pos/suppliers/list']
+            ['title' => 'Add Supplier', 'link' => '/pos/suppliers/add', 'permission' => 'create_supplier_supplier'],
+            ['title' => 'Supplier List', 'link' => '/pos/suppliers/list', 'permission' => 'read_supplier_list_supplier']
         ],
-        'active' => (uri_has('/suppliers/', $current_uri))
+        'active' => (uri_has('/suppliers/', $current_uri)),
+        'permission' => 'read_supplier_list_supplier'
     ],
     [
         'title' => 'Customers',
         'icon' => 'fa-user-friends', 
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Customer', 'link' => '/pos/customers/add'],
-            ['title' => 'Customer List', 'link' => '/pos/customers/list']
+            ['title' => 'Add Customer', 'link' => '/pos/customers/add', 'permission' => 'create_customer_customer'],
+            ['title' => 'Customer List', 'link' => '/pos/customers/list', 'permission' => 'read_customer_list_customer']
         ],
-        'active' => (uri_has('/customers/', $current_uri))
+        'active' => (uri_has('/customers/', $current_uri)),
+        'permission' => 'read_customer_list_customer'
     ],
     [
         'title' => 'Users',
         'icon' => 'fa-users',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add User', 'link' => '/pos/users/add'],
-            ['title' => 'User List', 'link' => '/pos/users/list'],
-            ['title' => 'User Groups', 'link' => '/pos/users/groups'],
-            // ['title' => 'Verify Email', 'link' => '/pos/users/verify'],
-            // ['title' => 'Reset Password', 'link' => '/pos/users/reset'],
-            // ['title' => 'Forgot Password', 'link' => '/pos/users/forgot'],
-            // ['title' => 'Two Steps', 'link' => '/pos/users/two-steps'],
+            ['title' => 'Add User', 'link' => '/pos/users/add', 'permission' => 'create_user_user'],
+            ['title' => 'User List', 'link' => '/pos/users/list', 'permission' => 'read_user_list_user'],
+            ['title' => 'User Groups', 'link' => '/pos/users/groups', 'permission' => 'read_usergroup_list_usergroup'],
         ],
-        'active' => (uri_has('/users/', $current_uri))
+        'active' => (uri_has('/users/', $current_uri)),
+        'permission' => 'read_user_list_user'
     ],
     [
         'title' => 'Accounting',
         'icon' => 'fa-university',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Bank List', 'link' => '/pos/accounting/bank/list'],
-            ['title' => 'Bank Transaction', 'link' => '/pos/accounting/bank/transaction-list'],
-            ['title' => 'Bank Transfer', 'link' => '/pos/accounting/bank/transfer-list'],
-            ['title' => 'Balance Sheet', 'link' => '/pos/accounting/bank/balance-sheet'],
-            ['title' => 'Add Bank', 'link' => '/pos/accounting/bank/add'],
-            ['title' => 'Income Source List', 'link' => '/pos/accounting/income-source/list'],
-            ['title' => 'Add Income Source', 'link' => '/pos/accounting/income-source/add'],
-            ['title' => 'Deposit', 'link' => '#', 'onclick' => "openModal('depositModal'); return false;"],
-            ['title' => 'Withdraw', 'link' => '#', 'onclick' => "openModal('withdrawModal'); return false;"],
-            ['title' => 'Add Transfer', 'link' => '#', 'onclick' => "openModal('transferModal'); return false;"],
-            ['title' => 'Income Monthwise', 'link' => '/pos/accounting/income-monthwise'],
-            ['title' => 'Expense Monthwise', 'link' => '/pos/accounting/expense-monthwise'],
-            ['title' => 'Income vs Expense', 'link' => '/pos/accounting/income-vs-expense'],
-            ['title' => 'Profit vs Loss', 'link' => '/pos/accounting/profit-loss'],
-            ['title' => 'Cashbook', 'link' => '/pos/accounting/cashbook'],
+            ['title' => 'Bank List', 'link' => '/pos/accounting/bank/list', 'permission' => 'view_bank_account_accounting'],
+            ['title' => 'Bank Transaction', 'link' => '/pos/accounting/bank/transaction-list', 'permission' => 'view_bank_transactions_accounting'],
+            ['title' => 'Bank Transfer', 'link' => '/pos/accounting/bank/transfer-list', 'permission' => 'view_bank_transfer_accounting'],
+            ['title' => 'Balance Sheet', 'link' => '/pos/accounting/bank/balance-sheet', 'permission' => 'view_bank_account_sheet_accounting'],
+            ['title' => 'Add Bank', 'link' => '/pos/accounting/bank/add', 'permission' => 'create_bank_account_accounting'],
+            ['title' => 'Income Source List', 'link' => '/pos/accounting/income-source/list', 'permission' => 'view_income_source_accounting'],
+            ['title' => 'Add Income Source', 'link' => '/pos/accounting/income-source/add', 'permission' => 'create_income_source_accounting'],
+            ['title' => 'Deposit', 'link' => '#', 'onclick' => "openModal('depositModal'); return false;", 'permission' => 'deposit_accounting'],
+            ['title' => 'Withdraw', 'link' => '#', 'onclick' => "openModal('withdrawModal'); return false;", 'permission' => 'withdraw_accounting'],
+            ['title' => 'Add Transfer', 'link' => '#', 'onclick' => "openModal('transferModal'); return false;", 'permission' => 'transfer_accounting'],
+            ['title' => 'Income Monthwise', 'link' => '/pos/accounting/income-monthwise', 'permission' => 'income_monthwise_accounting'],
+            ['title' => 'Expense Monthwise', 'link' => '/pos/accounting/expense-monthwise', 'permission' => 'expense_monthwise_expenditure'],
+            ['title' => 'Income vs Expense', 'link' => '/pos/accounting/income-vs-expense', 'permission' => 'income_&_expense_accounting'],
+            ['title' => 'Profit vs Loss', 'link' => '/pos/accounting/profit-loss', 'permission' => 'profit_&_loss_accounting'],
+            ['title' => 'Cashbook', 'link' => '/pos/accounting/cashbook', 'permission' => 'cashbook_accounting'],
         ],
-        'active' => (uri_has('/Accounting/', $current_uri))
+        'active' => (uri_has('/Accounting/', $current_uri)),
+        'permission' => 'view_bank_account_accounting'
     ],
     [
         'title' => 'Loan',
         'icon' => 'fa-hand-holding-usd',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Take Loan', 'link' => '/pos/loan/add'],
-            ['title' => 'Loan List', 'link' => '/pos/loan/list'],
-            ['title' => 'Loan Summary', 'link' => '/pos/loan/summary'],
+            ['title' => 'Take Loan', 'link' => '/pos/loan/add', 'permission' => 'take_loan_loan'],
+            ['title' => 'Loan List', 'link' => '/pos/loan/list', 'permission' => 'read_loan_loan'],
+            ['title' => 'Loan Summary', 'link' => '/pos/loan/summary', 'permission' => 'read_loan_summary_loan'],
         ],
-        'active' => (uri_has('/loan/', $current_uri))
+        'active' => (uri_has('/loan/', $current_uri)),
+        'permission' => 'read_loan_loan'
     ],
     [
         'title' => 'Expenditure',
         'icon' => 'fa-wallet',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Add Category', 'link' => '/pos/expenditure/category_add'],
-            ['title' => 'Category List', 'link' => '/pos/expenditure/category_list'],
-            ['title' => 'Add Expense', 'link' => '/pos/expenditure/expense_add'],
-            ['title' => 'Expense List', 'link' => '/pos/expenditure/expense_list'],
-            ['title' => 'Monthwise Report', 'link' => '/pos/expenditure/monthwise'],
+            ['title' => 'Add Category', 'link' => '/pos/expenditure/category_add', 'permission' => 'create_expense_category_expenditure'],
+            ['title' => 'Category List', 'link' => '/pos/expenditure/category_list', 'permission' => 'read_expense_category_expenditure'],
+            ['title' => 'Add Expense', 'link' => '/pos/expenditure/expense_add', 'permission' => 'create_expense_expenditure'],
+            ['title' => 'Expense List', 'link' => '/pos/expenditure/expense_list', 'permission' => 'read_expense_expenditure'],
+            ['title' => 'Monthwise Report', 'link' => '/pos/expenditure/monthwise', 'permission' => 'expense_monthwise_expenditure'],
         ],
-        'active' => (uri_has('/expenditure/', $current_uri))
+        'active' => (uri_has('/expenditure/', $current_uri)),
+        'permission' => 'read_expense_expenditure'
     ],
     [
         'title' => 'Reports',
         'icon' => 'fa-chart-pie',
         'link' => '#',
         'submenu' => [
-            ['title' => 'Overview Report', 'link' => '/pos/reports/overview'],
-            ['title' => 'Collection Report', 'link' => '/pos/reports/collection'],
-            ['title' => 'Due Collection Rpt', 'link' => '/pos/reports/due-collection'],
-            ['title' => 'Due Paid Rpt', 'link' => '/pos/reports/due-paid'],
-            ['title' => 'Sell Report', 'link' => '/pos/reports/sell'],
-            ['title' => 'Purchase Report', 'link' => '/pos/reports/purchase'],
-            ['title' => 'Sell Payment Report', 'link' => '/pos/reports/sell-payment'],
-            ['title' => 'Pur. Payment Rpt.', 'link' => '/pos/reports/purchase-payment'],
-            ['title' => 'Sell Tax Report', 'link' => '/pos/reports/sell-tax'],
-            ['title' => 'Purchase Tax Report', 'link' => '/pos/reports/purchase-tax'],
-            ['title' => 'Tax Overview Rpt.', 'link' => '/pos/reports/tax-overview'],
-            ['title' => 'Stock Report', 'link' => '/pos/reports/stock'],
+            ['title' => 'Overview Report', 'link' => '/pos/reports/overview', 'permission' => 'overview_report_report'],
+            ['title' => 'Collection Report', 'link' => '/pos/reports/collection', 'permission' => 'collection_report_report'],
+            ['title' => 'Due Collection Rpt', 'link' => '/pos/reports/due-collection', 'permission' => 'due_collection_report_report'],
+            ['title' => 'Due Paid Rpt', 'link' => '/pos/reports/due-paid', 'permission' => 'due_paid_report_report'],
+            ['title' => 'Sell Report', 'link' => '/pos/reports/sell', 'permission' => 'sell_report_report'],
+            ['title' => 'Purchase Report', 'link' => '/pos/reports/purchase', 'permission' => 'purchase_report_report'],
+            ['title' => 'Sell Payment Report', 'link' => '/pos/reports/sell-payment', 'permission' => 'sell_payment_report_report'],
+            ['title' => 'Pur. Payment Rpt.', 'link' => '/pos/reports/purchase-payment', 'permission' => 'purchase_payment_report_report'],
+            ['title' => 'Sell Tax Report', 'link' => '/pos/reports/sell-tax', 'permission' => 'sell_tax_report_report'],
+            ['title' => 'Purchase Tax Report', 'link' => '/pos/reports/purchase-tax', 'permission' => 'purchase_tax_report_report'],
+            ['title' => 'Tax Overview Rpt.', 'link' => '/pos/reports/tax-overview', 'permission' => 'tax_overview_report_report'],
+            ['title' => 'Stock Report', 'link' => '/pos/reports/stock', 'permission' => 'stock_report_report'],
         ],
-        'active' => (uri_has('/reports/', $current_uri))
+        'active' => (uri_has('/reports/', $current_uri)),
+        'permission' => 'overview_report_report'
     ],
     [
         'title' => 'System',
         'icon' => 'fa-cog',
         'link' => '#',
         'submenu' => [
-            // ['title' => 'Settings', 'link' => '/pos/system/settings'],
-            ['title' => 'Add Printer', 'link' => '/pos/printer/add'],
-            ['title' => 'Printer List', 'link' => '/pos/printer/list'],
-            ['title' => 'Receipt Templates', 'link' => '/pos/printer/receipt_templates'],
-            // ['title' => 'Backup', 'link' => '/pos/system/backup']
+            ['title' => 'Add Printer', 'link' => '/pos/printer/add', 'permission' => 'add_printer_printer'],
+            ['title' => 'Printer List', 'link' => '/pos/printer/list', 'permission' => 'view_printer_printer'],
+            ['title' => 'Receipt Templates', 'link' => '/pos/printer/receipt_templates', 'permission' => 'receipt_template_settings'],
         ],
-        'active' => (uri_has('/system/', $current_uri))
+        'active' => (uri_has('/system/', $current_uri)),
+        'permission' => 'view_general_settings_settings' // Default to general settings permission
     ]
 ];
 ?>
@@ -384,11 +402,12 @@ $menu_items = [
     transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 300ms ease-in-out;
     background-color: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(8px);
-    z-index: 1000; 
+    z-index: 30000; 
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
+    overflow: visible !important; /* Allow toggle button to stick out */
 }
 
 .sidebar.collapsed { width: 80px; }
@@ -443,7 +462,7 @@ $menu_items = [
 }
 #sidebar-overlay.active { display: block !important; }
 
-#sidebar-toggle-container { position: absolute; right: -12px; top: 25px; }
+#sidebar-toggle-container { position: absolute; right: -12px; top: 25px; z-index: 50; }
 
 .active-submenu-bg {
     background-color: rgba(13, 148, 136, 0.3); 
@@ -486,6 +505,11 @@ $menu_items = [
     <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)] custom-scroll">
         <?php foreach($menu_items as $item): ?>
             <?php 
+            // 1. Check Main Module Permission
+            if(isset($item['permission']) && !check_user_permission($item['permission'])) {
+                continue; // Skip if user doesn't have the main module permission
+            }
+
             $has_submenu = isset($item['submenu']);
             $link_classes = $item['active'] ? 'active-submenu-bg text-white shadow-lg' : 'text-white/70 hover:bg-white/10 hover:text-white';
             ?>
@@ -527,9 +551,15 @@ $menu_items = [
                     ?>
                     <div class="submenu ml-4 mt-1 space-y-1 <?= $submenu_active ? '' : 'hidden'; ?>">
                         <?php foreach($item['submenu'] as $sub): ?>
+                            <?php 
+                            // 2. Check Submenu Item Permission
+                            if(isset($sub['permission']) && !check_user_permission($sub['permission'])) {
+                                continue; 
+                            }
+                            ?>
                             <a href="<?= $sub['link']; ?>" 
-       <?= isset($sub['onclick']) ? 'onclick="' . $sub['onclick'] . '"' : ''; ?>
-       class="flex items-center justify-between px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
+                               <?= isset($sub['onclick']) ? 'onclick="' . $sub['onclick'] . '"' : ''; ?>
+                               class="flex items-center justify-between px-4 py-2 rounded-lg text-xs transition-all duration-200 <?= (uri_has($sub['link'], $current_uri)) ? 'text-teal-400 font-bold' : 'text-white/50 hover:text-white'; ?>">
                                 <div class="flex items-center gap-3">
                                     <i class="fas fa-circle text-[4px] shrink-0"></i>
                                     <span class="link-text"><?= $sub['title']; ?></span>

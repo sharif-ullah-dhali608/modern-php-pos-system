@@ -10,24 +10,29 @@ if(!isset($_SESSION['auth'])){
 
 $page_title = "Bank Transactions - Velocity POS";
 include('../includes/header.php');
+include('../includes/store_filter_helper.php');
 
 // Filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
+// Store Filters
+$sl_filter = getStoreFilterDirect('sl');
+$pl_filter = getStoreFilterDirect('pl');
+
 // Fetch Data - Union of non-cash sell and purchase logs
 $query = "(SELECT sl.created_at, sl.ref_invoice_id as invoice_id, 'Credit (Sale)' as type, pm.name as method, sl.transaction_id, sl.amount, u.name as user_name
            FROM sell_logs sl
            JOIN payment_methods pm ON sl.pmethod_id = pm.id
            JOIN users u ON sl.created_by = u.id
-           WHERE pm.code != 'cash' AND sl.transaction_id IS NOT NULL AND sl.transaction_id != '')
+           WHERE pm.code != 'cash' AND sl.transaction_id IS NOT NULL AND sl.transaction_id != '' $sl_filter)
           UNION ALL
           (SELECT pl.created_at, pl.ref_invoice_id as invoice_id, 'Debit (Purchase)' as type, pm.name as method, '' as transaction_id, pl.amount, u.name as user_name
            FROM purchase_logs pl
            JOIN payment_methods pm ON pl.pmethod_id = pm.id
            JOIN users u ON pl.created_by = u.id
-           WHERE pm.code != 'cash')
+           WHERE pm.code != 'cash' $pl_filter)
           ORDER BY created_at DESC";
 
 // Note: applyDateFilter might need complex handling for UNION, so I'll wrap it

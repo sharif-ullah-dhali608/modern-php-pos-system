@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
     header("Location: /pos/login");
@@ -26,27 +27,48 @@ if($query_run) {
         // Joined Date Column
         $row['joined_date'] = '<div class="flex flex-col"><span class="text-xs font-bold text-slate-600">'.date('d M, Y', strtotime($row['created_at'])).'</span><span class="text-[10px] text-slate-400">'.date('h:i A', strtotime($row['created_at'])).'</span></div>';
 
+        // Check permissions for buttons
+        $can_view = check_user_permission('view_user_user');
+        $can_edit = check_user_permission('update_user_user');
+        $can_delete = check_user_permission('delete_user_user');
+
         // Custom Actions (Eye icon added)
-        $row['custom_actions'] = '<div class="flex items-center gap-2">
-                                <button onclick="viewUser('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-indigo-500 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all" title="Quick View">
+        $actions_html = '<div class="flex items-center gap-2">';
+        
+        if($can_view) {
+             $actions_html .= '<button onclick="viewUser('.$row['id'].')" class="w-8 h-8 inline-flex items-center justify-center text-indigo-500 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all" title="Quick View">
                                     <i class="fas fa-eye text-xs"></i>
-                                </button>
-                                <a href="/pos/users/edit/'.$row['id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
+                               </button>';
+        }
+        
+        if($can_edit) {
+            $actions_html .= '<a href="/pos/users/edit/'.$row['id'].'" class="w-8 h-8 inline-flex items-center justify-center text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-600 hover:text-white transition-all" title="Edit">
                                     <i class="fas fa-edit text-xs"></i>
-                                </a>
-                                <button type="button" onclick="confirmDelete('.$row['id'].', \''.addslashes($row['name']).'\', \'/pos/users/save\')" 
+                              </a>';
+        }
+
+        if($can_delete) {
+            $actions_html .= '<button type="button" onclick="confirmDelete('.$row['id'].', \''.addslashes($row['name']).'\', \'/pos/users/save\')" 
                                         class="w-8 h-8 inline-flex items-center justify-center text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="Delete">
                                     <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
-                           </div>';
+                              </button>';
+        }
+
+        $actions_html .= '</div>';
+        $row['custom_actions'] = $actions_html;
 
         $items[] = $row;
     }
 }
 
+// Determine Action URLs based on Permissions
+$add_url = check_user_permission('create_user_user') ? '/pos/users/add' : '#';
+$delete_url = check_user_permission('delete_user_user') ? '/pos/users/save' : '#';
+$status_url = check_user_permission('update_user_user') ? '/pos/users/save' : '#'; // Assuming status toggle needs update permission
+
 $list_config = [
     'title' => 'User Management',
-    'add_url' => '/pos/users/add',
+    'add_url' => $add_url,
     'table_id' => 'userTable',
     'columns' => [
         ['key' => 'id', 'label' => 'ID', 'sortable' => true],
@@ -58,15 +80,9 @@ $list_config = [
         ['key' => 'custom_actions', 'label' => 'Actions', 'type' => 'html']
     ],
     'data' => $items,
-    'delete_url' => '/pos/users/save',
-    'status_url' => '/pos/users/save',
-    'primary_key' => 'id',
-    'permissions' => [
-        'add' => 'user_add',
-        'view' => 'user_view',
-        'edit' => 'user_edit',
-        'delete' => 'user_delete'
-    ]
+    'delete_url' => $delete_url,
+    'status_url' => $status_url,
+    'primary_key' => 'id'
 ];
 
 $page_title = "User List - Velocity POS";

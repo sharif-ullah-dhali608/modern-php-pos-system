@@ -3,6 +3,7 @@ session_start();
 $base_path = '../'; 
 include($base_path . 'config/dbcon.php');
 include($base_path . 'includes/date_filter_helper.php');
+include($base_path . 'includes/store_filter_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -17,15 +18,21 @@ $payment_status_filter = $_GET['payment_status'] ?? 'all';
 $title = "Installment Payments";
 $where = "WHERE 1=1";
 
-// Fetch Customers for filter dropdown
+// Fetch Customers for filter dropdown (Filtered by store)
 $customers_list = [];
-$cust_result = mysqli_query($conn, "SELECT id, name FROM customers WHERE status = 1 ORDER BY name ASC");
+$cust_store_filter = getStoreFilterWithJoin('customers', 'c');
+$cust_query = "SELECT c.id, c.name FROM customers c {$cust_store_filter['join']} WHERE c.status = 1 {$cust_store_filter['where']} ORDER BY c.name ASC";
+$cust_result = mysqli_query($conn, $cust_query);
 while($c = mysqli_fetch_assoc($cust_result)) $customers_list[] = $c;
 
 // Date filter parameters
 $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
+
+// Apply store filter to Payments (Filtered by selling_info store_id)
+$store_sql = getStoreFilterDirect('si');
+$where .= $store_sql;
 
 if($filter === 'today') {
     $where .= " AND DATE(ip.payment_date) = CURDATE() AND ip.payment_status = 'due'";

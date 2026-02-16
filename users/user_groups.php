@@ -120,7 +120,7 @@ include('../includes/header.php');
     </main>
 </div>
 
-<div id="permissionModal" class="fixed inset-0 z-[9999] hidden" role="dialog">
+<div id="permissionModal" class="fixed inset-0 z-[50000] hidden" role="dialog" style="z-index: 50000 !important;">
     <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closePermissionModal()"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
@@ -147,12 +147,54 @@ include('../includes/header.php');
     </div>
 </div>
 
+<!-- Copy Permission Modal -->
+<div id="copyPermissionModal" class="fixed inset-0 z-[50000] hidden" role="dialog" style="z-index: 50000 !important;">
+    <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeCopyModal()"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border transform transition-all">
+                <div class="bg-teal-600 px-6 py-4 flex justify-between items-center text-white">
+                    <h3 class="text-sm font-black uppercase tracking-widest flex items-center gap-3">
+                        <i class="fas fa-copy"></i> Copy Permissions
+                    </h3>
+                    <button onclick="closeCopyModal()" class="w-8 h-8 rounded-full bg-teal-500/50 flex items-center justify-center hover:bg-red-500 transition-all">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <form id="copyPermissionForm" class="p-6">
+                    <input type="hidden" name="target_group_id" id="copy_target_group_id">
+                    
+                    <div class="mb-6">
+                        <label class="block text-xs font-black text-slate-500 uppercase mb-2">Target Group (To)</label>
+                        <input type="text" id="copy_target_group_name" readonly class="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-xs font-black text-slate-500 uppercase mb-2">Source Group (From)</label>
+                        <select name="source_group_id" id="source_group_select" required class="w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-4 focus:ring-teal-50 outline-none font-semibold text-slate-700">
+                            <option value="">Select Source Group...</option>
+                            <!-- Options populated via AJAX -->
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-2 italic"> * Permissions will be copied FROM this group TO the target group.</p>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="px-8 py-3 bg-teal-600 text-white font-black rounded-xl shadow-lg hover:bg-teal-700 transition-all">
+                            Copy Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    /* JavaScript logic stays the same to ensure reload-free updates and pagination */
+    /* JavaScript logic */
     $(document).ready(function() {
         loadGroups();
         $('#group_name').on('input', function() {
@@ -179,6 +221,42 @@ include('../includes/header.php');
                 }
             });
         });
+        
+        // Copy Permission Form Submit
+        $('#copyPermissionForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Existing permissions of the target group will be replaced!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0d9488',
+                confirmButtonText: 'Yes, Copy Permissions'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'save_user_group.php',
+                        type: 'POST',
+                        data: $(this).serialize() + '&copy_permission_btn=1',
+                        success: function(res) {
+                            try {
+                                let data = JSON.parse(res);
+                                if(data.status == 200) {
+                                    Swal.fire({ icon: 'success', title: 'Copied!', text: data.message, timer: 1500, showConfirmButton: false });
+                                    closeCopyModal();
+                                } else {
+                                    Swal.fire('Error', data.message, 'error');
+                                }
+                            } catch(e) {
+                                console.error(res);
+                                Swal.fire('Error', 'Invalid server response', 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
     });
 
     function loadGroups() {
@@ -187,38 +265,29 @@ include('../includes/header.php');
             type: 'POST',
             data: { fetch_groups: 1 },
             success: function(res) {
-            
                 if ($.fn.DataTable.isDataTable('#userGroupTable')) {
                     $('#userGroupTable').DataTable().clear().destroy();
                 }
                 
                 $('#groupListBody').html(res);
-
             
                 var table = $('#userGroupTable').DataTable({
                     pageLength: 10, 
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                
                     dom: 'lrt<"flex flex-col md:flex-row justify-between items-center gap-4 mt-4"i p>', 
                     language: { 
                         paginate: { next: 'Next', previous: 'Previous' },
                         lengthMenu: "_MENU_" 
                     },
                     initComplete: function() {
-                        
                         $('#pagination_container').empty();
                         $('.dataTables_info, .dataTables_paginate').appendTo('#pagination_container');
-
-                        
                         $('#custom_length').empty();
                         $('.dataTables_length select').appendTo('#custom_length');
-                        
-                        
                         $('.dataTables_length select').addClass('px-2 py-1 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500');
                     }
                 });
 
-            
                 $('#groupSearch').off('keyup').on('keyup', function() {
                     table.search(this.value).draw();
                 });
@@ -251,6 +320,17 @@ include('../includes/header.php');
 
     // Modal helpers (openPermission, closePermissionModal, etc.) remain as before
     function openPermission(groupId, groupName) {
+        // Prevent opening for Admin/Super Admin
+        if(groupName.toLowerCase() === 'admin' || groupName.toLowerCase() === 'super admin') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Full Access',
+                text: 'This role has full system access automatically. Permission settings are not applicable.',
+                confirmButtonColor: '#4f46e5'
+            });
+            return;
+        }
+
         $('#perm_group_id').val(groupId);
         $('#modalGroupName').text(groupName);
         $('#permissionModal').removeClass('hidden');
@@ -272,6 +352,29 @@ include('../includes/header.php');
 
     function closePermissionModal() { $('#permissionModal').addClass('hidden'); }
     
+    // Copy Permission Logic
+    function openCopyModal(groupId, groupName) {
+        // Prevent opening for Admin/Super Admin if strictly needed, but Copy TO Admin should be blocked by backend/frontend
+        // But user might want to copy FROM Admin (which technically has all permissions, but might not be stored in DB... wait. Admin bypasses DB checks. So copying FROM Admin might result in 0 permissions if table is empty. Better to copy from other groups.)
+        
+        // Let's allow opening but handle source loading
+        $('#copy_target_group_id').val(groupId);
+        $('#copy_target_group_name').val(groupName);
+        $('#copyPermissionModal').removeClass('hidden');
+        
+        // Load Source Groups (All groups except current target)
+        $.ajax({
+            url: 'save_user_group.php',
+            type: 'POST',
+            data: { fetch_source_groups: 1, target_id: groupId }, 
+            success: function(res) {
+                $('#source_group_select').html(res);
+            }
+        });
+    }
+    
+    function closeCopyModal() { $('#copyPermissionModal').addClass('hidden'); }
+
     $(document).on('change', '.select-all-mod', function() {
         let targetId = $(this).data('target');
         $('#' + targetId).find('.perm-check').prop('checked', $(this).prop('checked'));
