@@ -126,15 +126,62 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Map Store
             if($current_store_id > 0) {
-                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id) VALUES ('$current_store_id', '$product_id')");
+                mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) VALUES ('$current_store_id', '$product_id', '$opening_stock')");
             } else {
-                // Determine logic? Maybe map to all active stores if none selected?
-                // Default: Map to all stores to be safe if no store context
+                // Default: Map to all stores (only first store gets the opening stock to avoid duplication)
                 $stores_q = mysqli_query($conn, "SELECT id FROM stores WHERE status=1");
+                $first = true;
                 while($s = mysqli_fetch_assoc($stores_q)){
                     $sid = $s['id'];
-                    mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id) VALUES ('$sid', '$product_id')");
+                    $initial_stock = $first ? $opening_stock : 0;
+                    mysqli_query($conn, "INSERT INTO product_store_map (store_id, product_id, stock) VALUES ('$sid', '$product_id', '$initial_stock')");
+                    $first = false;
                 }
+            }
+
+            // --- AUTO-GENERATE PURCHASE ENTRY IF OPENING STOCK > 0 ---
+            if((float)$opening_stock > 0) {
+                $store_for_purchase = ($current_store_id > 0) ? $current_store_id : 1; 
+                // If current_store_id is 0, we use 1 as fallback for purchase record
+                if($current_store_id == 0) {
+                    $st_q = mysqli_query($conn, "SELECT id FROM stores WHERE status=1 LIMIT 1");
+                    if($st_data = mysqli_fetch_assoc($st_q)) $store_for_purchase = $st_data['id'];
+                }
+
+                $total_amount = (float)$purchase_price * (float)$opening_stock;
+                $user_id = $_SESSION['auth_user']['user_id'] ?? $_SESSION['auth_user']['id'] ?? 1;
+                $invoice_id = 'OP-' . strtoupper(substr(md5(time() . $product_id), 0, 7));
+                $purchase_date = date('Y-m-d');
+                
+                // Get a supplier (Default to 1 or any available)
+                $sup_q = mysqli_query($conn, "SELECT id FROM suppliers LIMIT 1");
+                $sup_data = mysqli_fetch_assoc($sup_q);
+                $supplier_id = $sup_data['id'] ?? 1;
+
+                // 1. Insert into purchase_info
+                $insert_info = "INSERT INTO purchase_info (invoice_id, store_id, sup_id, total_item, total_sell, purchase_note, payment_status, created_by, purchase_date) 
+                                VALUES ('$invoice_id', '$store_for_purchase', '$supplier_id', '$opening_stock', '$total_amount', 'Opening Stock Entry (POS Quick Add)', 'paid', '$user_id', '$purchase_date')";
+                mysqli_query($conn, $insert_info);
+
+                // 2. Insert into purchase_item
+                $brand_id_val = ($brand_id == "NULL") ? "NULL" : $brand_id;
+                mysqli_query($conn, "INSERT INTO purchase_item (
+                    invoice_id, store_id, item_id, category_id, brand_id, item_name, 
+                    item_purchase_price, item_selling_price, item_quantity, item_total
+                ) VALUES (
+                    '$invoice_id', '$store_for_purchase', '$product_id', '$category_id', 
+                    $brand_id_val, '".mysqli_real_escape_string($conn, $product_name)."', 
+                    '$purchase_price', '$selling_price', '$opening_stock', '$total_amount'
+                )");
+
+                // 3. Insert into purchase_logs (Marked as Paid)
+                $pay_ref = 'PAY-' . strtoupper(substr(md5(microtime()), 0, 6));
+                $pm_q = mysqli_query($conn, "SELECT id FROM payment_methods WHERE status = 1 ORDER BY sort_order ASC LIMIT 1");
+                $pm_data = mysqli_fetch_assoc($pm_q);
+                $pm_id = $pm_data['id'] ?? 1;
+
+                mysqli_query($conn, "INSERT INTO purchase_logs (sup_id, reference_no, ref_invoice_id, type, pmethod_id, description, amount, store_id, created_by) 
+                                     VALUES ('$supplier_id', '$pay_ref', '$invoice_id', 'purchase', '$pm_id', 'Initial stock payment', '$total_amount', '$store_for_purchase', '$user_id')");
             }
 
             echo json_encode(['status' => 'success', 'message' => 'Product added successfully!', 'product_id' => $product_id, 'product_name' => $product_name]);

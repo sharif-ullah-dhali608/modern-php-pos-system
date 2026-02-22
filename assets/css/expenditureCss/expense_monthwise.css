@@ -10,6 +10,21 @@
     color: #be123c;
 }
 
+/* Breadcrumb / Header Clean Up & Background Removal */
+.header-controls nav,
+.header-controls nav a,
+.header-controls h1,
+.header-controls p,
+.header-controls {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    outline: none !important;
+}
+
 @media print {
     .no-print {
         display: none !important;
@@ -27,4 +42,188 @@
         background: white;
         box-shadow: none;
     }
+}
+
+/* --- Dark Theme Support --- */
+[data-theme="dark"] .glass-card {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .glass-card table thead tr th {
+    color: white !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .glass-card table tbody td {
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .glass-card table tbody td.sticky {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .glass-card table tbody tr:hover td {
+    background-color: #1e293b !important;
+}
+
+/* Fix for specific cell active states in dark mode */
+[data-theme="dark"] .cell-active {
+    background-color: rgba(244, 63, 94, 0.1) !important;
+    color: #fda4af !important;
+}
+
+[data-theme="dark"] .glass-card table tfoot tr {
+    background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .glass-card table tfoot td {
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* --- Gradient Theme Support (Login Style) --- */
+/* --- Gradient Theme Support (Login Style) --- */
+[data-theme="login-style"] .glass-card {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+}
+
+[data-theme="login-style"] .glass-card table thead tr th {
+    color: #0f172a !important;
+    /* Dark Text for headers */
+}
+
+/* Force Dark Text for Table Body in Gradient Theme */
+[data-theme="login-style"] .glass-card table tbody td {
+    color: #334155 !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Fix Sticky Column Background to be Light */
+[data-theme="login-style"] .glass-card table tbody td.sticky,
+[data-theme="login-style"] .glass-card table thead tr th.sticky {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    color: #1e293b !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Fix Controls (Calendar, Arrows) in Gradient Theme */
+[data-theme="login-style"] .report-controls-container button {
+    background-color: rgba(255, 255, 255, 1) !important;
+    /* Solid White */
+    color: #0f172a !important;
+    /* Dark Slate */
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="login-style"] .report-controls-container button:hover {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    /* Black on Hover */
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Fix Store Selector Container in Gradient Theme */
+[data-theme="login-style"] #store_selector_container,
+[data-theme="login-style"] .selects-container {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: white !important;
+}
+
+/* Hover state */
+[data-theme="login-style"] .glass-card table tbody tr:hover td {
+    background-color: #f8fafc !important;
+    /* Very light slate */
+}
+
+/* --- Dark Theme Controls Fix --- */
+[data-theme="dark"] .report-controls-container {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .report-controls-container .bg-slate-100 {
+    background-color: #0f172a !important;
+    /* Darker inner container */
+}
+
+/* Fix Inputs, Selects, Buttons inside controls */
+[data-theme="dark"] .report-controls-container input,
+[data-theme="dark"] .report-controls-container select,
+[data-theme="dark"] .report-controls-container .bg-white,
+[data-theme="dark"] .report-controls-container .selects-container {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .report-controls-container .text-slate-800,
+[data-theme="dark"] .report-controls-container .text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .report-controls-container .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+/* Fix Dropdowns */
+[data-theme="dark"] #store_dropdown,
+[data-theme="dark"] #custom-date-picker-modal {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .store-option:hover {
+    background-color: #334155 !important;
+}
+
+/* --- Dark Theme Select2 Fixes (Aggressive) --- */
+[data-theme="dark"] .select2-container--default .select2-selection--single {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .select2-dropdown {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .select2-search--dropdown {
+    background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .select2-search--dropdown .select2-search__field {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .select2-results__option {
+    color: #f1f5f9 !important;
+    background-color: #1e293b !important;
+}
+
+/* Hover/Highlight state */
+[data-theme="dark"] .select2-results__option--highlighted[aria-selected] {
+    background-color: #334155 !important;
+    color: #2dd4bf !important;
+    /* Teal */
+}
+
+/* Selected state */
+[data-theme="dark"] .select2-results__option[aria-selected=true] {
+    background-color: #0f766e !important;
+    color: white !important;
 }

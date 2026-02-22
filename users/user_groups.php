@@ -125,22 +125,29 @@ include('../includes/header.php');
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden border transform transition-all">
-                <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
+                <div class="bg-indigo-600 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 text-white">
                     <h3 class="text-sm font-black uppercase tracking-widest flex items-center gap-3">
                         <i class="fas fa-user-shield"></i> Manage Permissions: <span id="modalGroupName"></span>
                     </h3>
-                    <button onclick="closePermissionModal()" class="w-8 h-8 rounded-full bg-indigo-500/50 flex items-center justify-center hover:bg-red-500 transition-all">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
+                    
+                    <div class="flex-1 w-full md:max-w-md relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-xs"></i>
+                        <input type="text" id="globalPermSearch" placeholder="Global search permissions..." 
+                               class="w-full h-9 pl-9 pr-4 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:outline-none transition-all text-sm font-medium">
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button type="submit" form="permissionForm" class="px-6 py-2 bg-white text-indigo-600 font-bold rounded-lg shadow hover:bg-indigo-50 transition-all text-xs uppercase tracking-wider" style="background-color: white !important; color: #4f46e5 !important;">
+                            Update Permissions
+                        </button>
+                        <button onclick="closePermissionModal()" class="w-8 h-8 rounded-full bg-indigo-500/50 flex items-center justify-center hover:bg-red-500 transition-all">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
                 </div>
                 <form id="permissionForm" class="p-6 md:p-8 bg-white max-h-[85vh] overflow-y-auto custom-scroll">
                     <input type="hidden" name="group_id" id="perm_group_id">
                     <div id="permissionContainer" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                    <div class="mt-8 border-t pt-6 flex justify-end">
-                        <button type="submit" class="px-10 py-3 bg-indigo-600 text-white font-black rounded-xl shadow-lg hover:bg-indigo-700 transition-all">
-                            Update Permissions
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>
@@ -385,6 +392,28 @@ include('../includes/header.php');
         $(this).closest('.permission-card').find('.perm-item').filter(function() {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
+    });
+
+    // Global Permission Search Logic (Search by Title Only)
+    $(document).on('keyup', '#globalPermSearch', function() {
+        let value = $(this).val().toLowerCase();
+        
+        $('.permission-card').each(function() {
+            let card = $(this);
+            let title = card.find('h4').text().toLowerCase();
+            
+            if(title.indexOf(value) > -1) {
+                card.show();
+                card.find('.perm-item').show(); // Show all items if title matches
+            } else {
+                card.hide();
+            }
+        });
+        
+        // Reset individual search inputs if global search is used
+        if(value !== "") {
+            $('.perm-search').val('');
+        }
     });
 
     $('#permissionForm').on('submit', function(e) {

@@ -463,7 +463,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                                 <th class="p-4 text-xs font-black uppercase tracking-widest text-center border-r border-slate-800/50"><?= htmlspecialchars($cat['source_name']) ?></th>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        <th class="p-6 text-xs font-black uppercase tracking-widest text-right bg-slate-950">Total</th>
+                        <th class="p-6 text-xs font-red uppercase tracking-widest text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
@@ -582,7 +582,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
 }
 ?>
 
-<link rel="stylesheet" href="/pos/assets/css/expenditureCss/expense_monthwiseCss.css">
+<link rel="stylesheet" href="/pos/assets/css/expenditureCss/expense_monthwise.css?v=1.1">
 
 <div class="app-wrapper">
     <div class="no-print"><?php include('../includes/sidebar.php'); ?></div>
@@ -611,11 +611,11 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                 <div class="mb-8 header-controls no-print">
                     <div class="flex flex-col justify-between gap-6">
                         <div class="space-y-2">
-                            <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
-                                <a href="javascript:void(0)" onclick="loadReport('/pos/accounting/income-monthwise/<?= $year ?>')" class="hover:text-teal-600 transition-colors">Income</a>
+                            <nav class="flex items-center gap-2 text-xs font-bold tracking-widest text-teal-600">
+                                <a href="javascript:void(0)" onclick="loadReport('/pos/accounting/income-monthwise/<?= $year ?>')" class="hover:text-teal-800 transition-colors uppercase">Income</a>
                                 <?php if($is_month_view): ?>
-                                    <i class="fas fa-chevron-right text-[8px]"></i>
-                                    <span class="text-slate-800"><?= $month_names[$month-1] ?></span>
+                                    <i class="fas fa-chevron-right text-[8px] text-slate-400"></i>
+                                    <span class="text-slate-800 uppercase"><?= $month_names[$month-1] ?></span>
                                 <?php endif; ?>
                             </nav>
                             <h1 class="text-4xl font-black text-slate-900 tracking-tight">
@@ -626,8 +626,8 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                             </p>
                         </div>
                         
-                        <div class="controls-wrapper relative z-50 flex justify-center">
-                            <div class="flex items-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/50 shadow-sm">
+                        <div class="controls-wrapper relative z-30 flex justify-center">
+                            <div class="report-controls-container flex items-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/50 shadow-sm">
                                 <!-- Main Report Navigation Controls -->
                                 <div class="flex flex-nowrap items-center bg-slate-100 rounded-xl p-1 gap-2">
                                     <button onclick="navigateReport('prev')" class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:text-teal-600 transition-all text-slate-500"><i class="fas fa-chevron-left"></i></button>
@@ -681,7 +681,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
 
                                     <div class="relative">
                                         <button onclick="toggleCustomCalendar()" class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:text-teal-600 transition-all text-slate-500" title="Custom Date Range">
-                                            <i class="far fa-calendar-alt"></i>
+                                            <i class="fas fa-calendar-alt"></i>
                                         </button>
 
                                         <!-- Custom Calendar Picker Modal -->
@@ -787,7 +787,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                                             <th class="p-4 text-xs font-black uppercase tracking-widest text-center border-r border-slate-800/50"><?= htmlspecialchars($cat['source_name']) ?></th>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
-                                    <th class="p-6 text-xs font-black uppercase tracking-widest text-right bg-slate-950">Total</th>
+                                    <th class="p-6 text-xs font-black uppercase tracking-widest text-right">Total</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">

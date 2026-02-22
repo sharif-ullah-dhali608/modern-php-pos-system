@@ -108,25 +108,50 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    $(document).on('input', '#store_search_input', function () {
-        const val = $(this).val().toLowerCase();
+    // --- Store Selector Logic with Limit ---
+    function filterStores(searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const options = $('.store-option');
         let hasMatch = false;
-        $('.store-option').each(function () {
-            const name = $(this).data('name').toLowerCase();
-            if (name.includes(val)) {
-                $(this).removeClass('hidden');
+        const LIMIT = 6; // Show "All Stores" + 5 others by default
+
+        options.each(function (index) {
+            const name = $(this).data('name').toString().toLowerCase();
+
+            if (term === '') {
+                // Empty search: Show top items, hide others
+                if (index < LIMIT) {
+                    $(this).removeClass('hidden');
+                } else {
+                    $(this).addClass('hidden');
+                }
                 hasMatch = true;
             } else {
-                $(this).addClass('hidden');
+                // Active search: Show matches
+                if (name.includes(term)) {
+                    $(this).removeClass('hidden');
+                    hasMatch = true;
+                } else {
+                    $(this).addClass('hidden');
+                }
             }
         });
+
+        // Handle No Match
         if (!hasMatch) {
-            if ($('.no-match').length === 0) {
+            if ($('#store_results_container .no-match').length === 0) {
                 $('#store_results_container').append('<div class="no-match p-2 text-center text-xs text-slate-400 font-bold">No match found</div>');
             }
         } else {
-            $('.no-match').remove();
+            $('#store_results_container .no-match').remove();
         }
+    }
+
+    // Initialize: Show default limited list
+    filterStores('');
+
+    $(document).on('input', '#store_search_input', function () {
+        filterStores($(this).val());
     });
 
     $(document).on('click', '.store-option', function () {

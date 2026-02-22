@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+include('../includes/permission_helper.php'); // Include Permission Helper
 
 // Security Check
 if(!isset($_SESSION['auth'])){
@@ -76,6 +77,17 @@ if (mysqli_num_rows($checkTable) > 0) {
 // -----------------------------------------------------------
 $show_images = isset($pos_settings['show_images']) ? $pos_settings['show_images'] : '1';
 $enable_sound = isset($pos_settings['enable_sound']) ? $pos_settings['enable_sound'] : '1';
+
+// --- Permissions ---
+$can_add_product = check_user_permission('create_product_product');
+$can_add_customer = check_user_permission('create_customer_customer');
+$can_sell = check_user_permission('create_sell_sell');
+$can_due = check_user_permission('create_due_sell');
+$can_discount = check_user_permission('discount_sell');
+$can_tax = check_user_permission('tax_payment_sell');
+$can_shipping = check_user_permission('shipping_charge_sell');
+$can_other_charge = check_user_permission('other_charge_sell');
+// -------------------
 // ---------------------------------
 
 // Pagination settings
@@ -124,6 +136,25 @@ $customers_result = mysqli_query($conn, $customers_query);
 // Fetch payment methods
 $payment_methods_query = "SELECT id, name, code FROM payment_methods WHERE status=1 ORDER BY sort_order ASC";
 $payment_methods_result = mysqli_query($conn, $payment_methods_query);
+
+// Fetch payment method store mappings
+$pm_map_query = "SELECT payment_method_id, GROUP_CONCAT(store_id) as store_ids FROM payment_store_map GROUP BY payment_method_id";
+$pm_map_result = mysqli_query($conn, $pm_map_query);
+$pm_map = [];
+$pm_code_to_id = [];
+if ($pm_map_result) {
+    while($row = mysqli_fetch_assoc($pm_map_result)) {
+        $pm_map[$row['payment_method_id']] = $row['store_ids'];
+    }
+}
+
+// Fetch codes to map hardcoded IDs if they exist in DB
+$pm_codes_q = mysqli_query($conn, "SELECT id, code FROM payment_methods WHERE status=1");
+if($pm_codes_q) {
+    while($row = mysqli_fetch_assoc($pm_codes_q)) {
+        $pm_code_to_id[strtolower($row['code'])] = $row['id'];
+    }
+}
 
 // Fetch additional data for Quick Add Product Modal
 $brands = mysqli_query($conn, "SELECT id, name FROM brands WHERE status='1' ORDER BY name ASC");
@@ -294,9 +325,15 @@ include('../includes/header.php');
                 <a href="/pos/accounting/cashbook"><i class="fas fa-book"></i> CASHBOOK</a>
                 <a href="/pos/invoice/list"><i class="fas fa-file-invoice"></i> INVOICE</a>
                 <a href="#" onclick="openHeldOrdersModal()"><i class="fas fa-pause-circle"></i> HOLD ORDER</a>
+                <?php if($can_add_product): ?>
                 <a href="#" onclick="openModal('addProductModal')"><i class="fas fa-plus"></i> Product</a>
+                <?php endif; ?>
+                <?php if($can_add_customer): ?>
                 <a href="#" onclick="openModal('addCustomerModal')"><i class="fas fa-user-plus"></i> Customer</a>
+                <?php endif; ?>
+                <?php if(check_user_permission('add_giftcard_giftcard')): ?>
                 <a href="#" onclick="openModal('giftcardModal')"><i class="fas fa-gift"></i> Giftcard</a>
+                <?php endif; ?>
                 <a href="/pos/products/stock_alert" class="relative group">
                     <i class="fas fa-exclamation-triangle"></i> Stock Alert
                     <?php if($alert_count > 0): ?>
@@ -457,15 +494,17 @@ include('../includes/header.php');
                         <div class="avatar"><i class="fas fa-user"></i></div>
                         <div class="details">
                             <div class="name" id="selected-customer-name">Walking Customer</div>
-                            <div class="phone" id="selected-customer-phone">0170000000000</div>
+                            <div class="phone" id="selected-customer-phone">01700-000000</div>
                         </div>
                         <div id="selected-customer-due-display" style="margin-left: auto; margin-right: 10px; display: none;">
                             <span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #fecaca;">Due: <span id="selected-customer-due-amount">0.00</span></span>
                         </div>
                         <i class="fas fa-pen" style="color: #10b981; cursor: pointer; padding: 4px;" onclick="event.stopPropagation(); openWalkingCustomerModal()"></i>
+                        <?php if($can_add_customer): ?>
                         <button type="button" onclick="event.stopPropagation(); openModal('addCustomerModal')" style="background: #10b981; color: white; border: none; padding: 4px 6px; border-radius: 6px; cursor: pointer;">
                             <i class="fas fa-plus"></i>
                         </button>
+                        <?php endif; ?>
                     </div>
                     <input type="hidden" id="selected_customer_id" value="">
                     <input type="hidden" id="customer_total_balance" value="0">
@@ -502,21 +541,21 @@ include('../includes/header.php');
                     <div class="totals-row split-row">
                         <div class="input-group">
                             <label>DISCOUNT</label>
-                            <input type="number" id="discount-input" value="0" min="0" step="0.01">
+                            <input type="number" id="discount-input" value="0" min="0" step="0.01" <?= $can_discount ? '' : 'readonly title="Permission Required" style="background-color: #f3f4f6; cursor: not-allowed;"'; ?>>
                         </div>
                         <div class="input-group">
                             <label>TAX AMOUNT (%)</label>
-                            <input type="number" id="tax-input" value="0" min="0" step="0.01">
+                            <input type="number" id="tax-input" value="0" min="0" step="0.01" <?= $can_tax ? '' : 'readonly title="Permission Required" style="background-color: #f3f4f6; cursor: not-allowed;"'; ?>>
                         </div>
                     </div>
                     <div class="totals-row split-row">
                         <div class="input-group">
                             <label>SHIPPING CHARGE</label>
-                            <input type="number" id="shipping-input" value="0" min="0" step="0.01">
+                            <input type="number" id="shipping-input" value="0" min="0" step="0.01" <?= $can_shipping ? '' : 'readonly title="Permission Required" style="background-color: #f3f4f6; cursor: not-allowed;"'; ?>>
                         </div>
                         <div class="input-group">
                             <label>OTHER CHARGE</label>
-                            <input type="number" id="other-input" value="0" min="0" step="0.01">
+                            <input type="number" id="other-input" value="0" min="0" step="0.01" <?= $can_other_charge ? '' : 'readonly title="Permission Required" style="background-color: #f3f4f6; cursor: not-allowed;"'; ?>>
                         </div>
                     </div>
                     <div class="totals-row total">
@@ -533,12 +572,16 @@ include('../includes/header.php');
                     </div>
                     <div class="footer-controls">
                         <input type="date" class="date-input" id="sale-date" value="<?= date('Y-m-d'); ?>">
+                        <?php if($can_due): ?>
                         <button class="hold-btn" onclick="prepareHoldModal()">
                             <i class="fas fa-pause"></i> HOLD
                         </button>
+                        <?php endif; ?>
+                        <?php if($can_sell): ?>
                         <button class="pay-btn" onclick="prepareAndOpenPaymentModal()">
                             <i class="fas fa-credit-card"></i> PAY NOW
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -728,54 +771,25 @@ include('../includes/header.php');
                        onblur="this.style.borderColor='#e2e8f0'; this.style.backgroundColor='#f8fafc'; this.style.boxShadow='none';">
             </div>
             <div id="customer-list" style="max-height: 380px; overflow-y: auto; padding-right: 4px;" class="custom-scrollbar">
-                <div class="customer-option" onclick="selectCustomer(0, 'Walking Customer', '0170000000000', 0, 0, 0)" 
+                <!-- Walking Customer Option -->
+                <div class="customer-option" onclick="selectCustomer(0, 'Walking Customer', '01700-000000', 0, 0, 0)" 
                      style="padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s;"
-                     onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';">
+                     onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';" id="walking-customer-option">
                     <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #64748b;">
                         <i class="fas fa-user-clock"></i>
                     </div>
                     <div>
                         <strong style="display: block; color: #1e293b; font-size: 14px;">Walking Customer</strong>
-                        <span style="color: #64748b; font-size: 12px;">0170000000000</span>
+                        <span style="color: #64748b; font-size: 12px;">01700-000000</span>
                     </div>
                 </div>
-                <?php 
-                mysqli_data_seek($customers_result, 0);
-                while($customer = mysqli_fetch_assoc($customers_result)): 
-                    $credit = floatval($customer['credit']);
-                    $gc_balance = floatval($customer['giftcard_balance']);
-                    $opening_bal = floatval($customer['opening_balance']);
-                    $has_installment = intval($customer['has_installment'] ?? 0);
-                    $installment_due = floatval($customer['installment_due'] ?? 0);
-                ?>
-                    <div class="customer-option" onclick="selectCustomer(<?= $customer['id']; ?>, '<?= htmlspecialchars($customer['name'], ENT_QUOTES); ?>', '<?= $customer['mobile']; ?>', <?= $credit; ?>, <?= $gc_balance; ?>, <?= $opening_bal; ?>, <?= $has_installment; ?>)" 
-                         style="padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;"
-                         onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #10b981;">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div>
-                                <strong style="display: block; color: #1e293b; font-size: 14px;"><?= htmlspecialchars($customer['name']); ?></strong>
-                                <span style="color: #64748b; font-size: 12px;"><?= $customer['mobile']; ?></span>
-                            </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                            <?php if($opening_bal > 0): ?>
-                                <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #bae6fd;">Wallet: <?= number_format($opening_bal, 2); ?></span>
-                            <?php endif; ?>
-                            <?php if($has_installment == 1 && $installment_due > 0): ?>
-                                <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fde68a;">Installment: <?= number_format($installment_due, 2); ?></span>
-                            <?php endif; ?>
-                            <?php if($credit > 0): ?>
-                                <span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fecaca;">Due: <?= number_format($credit, 2); ?></span>
-                            <?php endif; ?>
-                            <?php if($gc_balance > 0): ?>
-                                <span style="background: #f0fdf4; color: #10b981; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #d1fae5;">GiftCard: <?= number_format($gc_balance, 2); ?></span>
-                            <?php endif; ?>
-                        </div>
+
+                <!-- Dynamic Customer List Container -->
+                <div id="dynamic-customer-list">
+                    <div style="text-align: center; padding: 20px; color: #64748b;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading customers...
                     </div>
-                <?php endwhile; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -791,7 +805,7 @@ include('../includes/header.php');
         <div class="pos-modal-header">
             <h3>
                 <i class="fas fa-edit"></i> 
-                Walking Customer <span>( <span id="walking-display-phone">0170000000000</span> )</span>
+                Walking Customer <span>( <span id="walking-display-phone">01700-000000</span> )</span>
             </h3>
             <button class="close-btn" onclick="closeModal('walkingCustomerModal')">
                 <i class="fas fa-times"></i>
@@ -1466,9 +1480,11 @@ include('../includes/header.php');
                 </div>
 
                 <div style="margin-top: 10px; text-align: center;">
+                    <?php if(check_user_permission('view_store_settings_settings')): ?>
                     <a href="#" onclick="openSettings(event)" style="color: #2dd4bf; font-size: 13px; text-decoration: none; font-weight: 600;">
                         <i class="fas fa-external-link-alt"></i> Advanced Store Settings
                     </a>
+                    <?php endif; ?>
                 </div>
 
             </div>

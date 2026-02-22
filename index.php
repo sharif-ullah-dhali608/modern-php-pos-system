@@ -487,11 +487,27 @@ include('includes/header.php');
                     <!-- Card 3: Duration -->
                     <div class="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
                          <div class="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
-                        <h4 class="text-slate-500 font-bold text-sm mb-1 relative z-10">Duration</h4>
+                        <div class="flex items-center justify-between mb-2 relative z-10">
+                            <h4 class="text-slate-500 font-bold text-sm">Duration</h4>
+                            <span class="px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-bold rounded">Today</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 relative z-10 items-center">
+                            <!-- Regular -->
+                            <div class="text-center border-r border-slate-100">
+                                <h3 id="live_duration_counter" class="text-purple-600 font-black text-lg lg:text-xl leading-tight">00:00:00</h3>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Regular</p>
+                            </div>
+
+                            <!-- Overtime -->
+                            <div class="text-center">
+                                <h3 id="live_overtime_counter" class="text-slate-300 font-bold text-lg lg:text-xl leading-tight transition-colors duration-300">00:00:00</h3>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Overtime</p>
+                            </div>
+                        </div>
+                        
                         <div class="text-center relative z-10">
-                            <h3 id="live_duration_counter" class="text-purple-600 font-black text-2xl mb-1">00:00:00</h3>
-                            <p class="text-xs font-bold text-purple-400 uppercase tracking-wider">Today Spent</p>
-                             <span class="inline-block mt-2 px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-bold rounded">Active Since Open</span>
+                             <span class="inline-block mt-6 px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-bold rounded">Active Since Open</span>
                         </div>
                     </div>
 
@@ -557,12 +573,12 @@ include('includes/header.php');
                     </a>
                     <?php endif; ?>
                     <!-- Expired (Mapped to Stock Alert) -->
-<?php if(check_user_permission('view_stock_alert_widget_dashboard')): ?>
-<a href="/pos/products/stock_alert" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
-    <i class="fas fa-bell text-amber-500 text-xl group-hover:scale-110 transition-transform"></i>
-    <span class="text-xs font-bold text-slate-600">Expired</span>
-</a>
-<?php endif; ?>
+                    <?php if(check_user_permission('view_stock_alert_widget_dashboard')): ?>
+                    <a href="/pos/products/stock_alert" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
+                        <i class="fas fa-bell text-amber-500 text-xl group-hover:scale-110 transition-transform"></i>
+                        <span class="text-xs font-bold text-slate-600">Expired</span>
+                    </a>
+                    <?php endif; ?>
                     <!-- Backup -->
                     <!-- <a href="/pos/system/backup" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all group">
                         <i class="fas fa-database text-purple-500 text-xl group-hover:scale-110 transition-transform"></i>
@@ -642,10 +658,10 @@ include('includes/header.php');
                         <?php endif; // End Monthly Goals / Target Card Check ?>
 
                         <!-- 2. Stats Grid (Image 2 Style) -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                             <!-- Revenue -->
                             <?php if(check_user_permission('view_revenue_card_dashboard')): ?>
-                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all">
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start hover:shadow-md transition-all min-w-0">
                                 <div class="flex justify-between items-start w-full mb-3">
                                     <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                                         <i class="fas fa-dollar-sign text-lg"></i>
@@ -655,7 +671,14 @@ include('includes/header.php');
                                     </div>
                                 </div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
-                                <h3 class="text-2xl font-black text-slate-800 mb-2"><?= $currency; ?><?= number_format($totalSalesAll, 2); ?></h3>
+                                <?php 
+                                    $revStr = $currency . number_format($totalSalesAll, 2);
+                                    $revLen = strlen($revStr);
+                                    $revFont = 'text-2xl';
+                                    if($revLen > 14) $revFont = 'text-lg';
+                                    elseif($revLen > 11) $revFont = 'text-xl';
+                                ?>
+                                <h3 class="<?= $revFont; ?> font-black text-slate-800 mb-2 w-full break-all" title="<?= $revStr; ?>"><?= $revStr; ?></h3>
                             </div>
                             <?php endif; ?>
 
@@ -817,7 +840,7 @@ include('includes/header.php');
                                         </thead>
                                         <tbody class="divide-y divide-slate-50 text-[11px]">
                                             <?php foreach($recentSells as $s): ?>
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td class="py-3 px-4 font-bold text-slate-700">#<?= $s['invoice_id']; ?></td>
                                                 <td class="py-3 px-4 text-slate-500"><?= timeAgo($s['created_at']); ?></td>
                                                 <td class="py-3 px-4 font-medium text-slate-600"><?= $s['customer_name'] ?: 'Walk-in'; ?></td>
@@ -885,7 +908,7 @@ include('includes/header.php');
                                         <?php if(empty($recentQuotations)): ?>
                                         <tr><td colspan="5" class="py-10 text-center text-slate-400">No Quotations Found</td></tr>
                                         <?php else: foreach($recentQuotations as $q): ?>
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td class="py-3 px-4 font-bold text-slate-700">#<?= $q['ref_no']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= date('d M, Y', strtotime($q['date'])); ?></td>
                                             <td class="py-3 px-4 font-medium text-slate-600"><?= $q['related_party'] ?: 'N/A'; ?></td>
@@ -927,7 +950,7 @@ include('includes/header.php');
                                         <?php if(empty($recentPurchases)): ?>
                                         <tr><td colspan="5" class="py-10 text-center text-slate-400">No Purchases Found</td></tr>
                                         <?php else: foreach($recentPurchases as $p): ?>
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td class="py-3 px-4 font-bold text-slate-700">#<?= $p['invoice_id']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= date('d M, Y', strtotime($p['purchase_date'])); ?></td>
                                             <td class="py-3 px-4 font-medium text-slate-600"><?= $p['supplier_name'] ?: 'N/A'; ?></td>
@@ -970,7 +993,7 @@ include('includes/header.php');
                                         <?php if(empty($recentTransfers)): ?>
                                         <tr><td colspan="6" class="py-10 text-center text-slate-400">No Transfers Found</td></tr>
                                         <?php else: foreach($recentTransfers as $t): ?>
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td class="py-3 px-4 text-slate-500"><?= date('d M, Y', strtotime($t['created_at'])); ?></td>
                                             <td class="py-3 px-4 font-bold text-slate-700">#<?= $t['ref_no']; ?></td>
                                             <td class="py-3 px-4 font-medium"><?= $t['from_store']; ?></td>
@@ -1009,7 +1032,7 @@ include('includes/header.php');
                                     </thead>
                                     <tbody class="divide-y divide-slate-50 text-[11px]">
                                         <?php foreach($recentCustomers as $c): ?>
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td class="py-3 px-4 font-bold text-slate-700"><?= $c['name']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= $c['mobile']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= $c['email']; ?></td>
@@ -1049,7 +1072,7 @@ include('includes/header.php');
                                         <?php if(empty($recentSuppliers)): ?>
                                         <tr><td colspan="5" class="py-10 text-center text-slate-400">No Supplier Found</td></tr>
                                         <?php else: foreach($recentSuppliers as $sup): ?>
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td class="py-3 px-4 font-bold text-slate-700 text-indigo-500"><?= $sup['name']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= $sup['mobile']; ?></td>
                                             <td class="py-3 px-4 text-slate-500"><?= $sup['email']; ?></td>
@@ -1179,7 +1202,7 @@ include('includes/header.php');
                                         <tr><td colspan="5" class="py-8 text-center text-xs text-slate-400">No recent transactions found</td></tr>
                                     <?php else: ?>
                                         <?php foreach(array_slice($recentSells, 0, 5) as $sale): ?>
-                                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td class="py-4 px-2 text-xs font-bold text-slate-700">#<?= $sale['invoice_id']; ?></td>
                                                 <td class="py-4 px-2 text-xs text-slate-600"><?= !empty($sale['customer_name']) ? htmlspecialchars($sale['customer_name']) : 'Walking Customer'; ?></td>
                                                 <td class="py-4 px-2 text-xs font-black text-slate-800"><?= $currency . number_format($sale['grand_total'], 2); ?></td>
@@ -1249,7 +1272,7 @@ include('includes/header.php');
                                         <div class="flex flex-col items-end">
                                             <p class="text-[11px] font-black text-slate-800"><?= $currency; ?><?= number_format($prod['selling_price'], 2); ?></p>
                                             <div class="text-[10px] font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                                <i class="fas fa-arrow-right"></i>
+                                                <!-- <i class="fas fa-arrow-right"></i> -->
                                 </div>
                                         </div>
                                     </div>
@@ -1428,7 +1451,13 @@ include('includes/header.php');
                                 },
                                 dataLabels: {
                                     name: { show: false },
-                                    value: { offsetY: -2, fontSize: '22px', fontWeight: 700, color: '#1e293b', formatter: function(val) { return val + "%"; } }
+                                    value: { 
+                                        offsetY: -2, 
+                                        fontSize: '22px', 
+                                        fontWeight: 700, 
+                                        color: (document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.getAttribute('data-theme') === 'login-style') ? '#f1f5f9' : '#1e293b', 
+                                        formatter: function(val) { return val + "%"; } 
+                                    }
                                 }
                             }
                         },
@@ -1486,7 +1515,6 @@ include('includes/header.php');
                     };
                 });
                 </script>
-                </div>
 
 
                 <!-- Stats merged into Congratulations Card above -->
@@ -1658,42 +1686,75 @@ include('includes/header.php');
 
                     // 2. Live Duration Counter
                     const openTimeStr = "<?= date('H:i:s', strtotime($open_time)); ?>"; 
+                    const closeTimeStr = "<?= date('H:i:s', strtotime($close_time)); ?>";
+                    
                     function updateDuration() {
                         const now = new Date();
-                        const [hours, minutes, seconds] = openTimeStr.split(':');
+                        
+                        // Parse Open Time
+                        const [openH, openM, openS] = openTimeStr.split(':');
                         const openDate = new Date();
-                        openDate.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds), 0);
+                        openDate.setHours(parseInt(openH), parseInt(openM), parseInt(openS), 0);
                         
-                        let diff = now - openDate;
+                        // Parse Close Time
+                        const [closeH, closeM, closeS] = closeTimeStr.split(':');
+                        const closeDate = new Date();
+                        closeDate.setHours(parseInt(closeH), parseInt(closeM), parseInt(closeS), 0);
                         
-                        // Handle Midnight Crossing (Night Shift)
-                        // If now (e.g. 5 AM) is less than openDate (e.g. 9 PM today), it means we likely opened yesterday.
-                        if (diff < 0) {
-                            const yesterdayOpen = new Date(openDate);
-                            yesterdayOpen.setDate(yesterdayOpen.getDate() - 1);
-                            diff = now - yesterdayOpen;
+                        // Handle Midnight Crossing cases if needed (basic assumption: shift is within same day or active session handles it)
+                        // If 'now' is much earlier than 'open', assume previous day session
+                        let diffOpen = now - openDate;
+                        if (diffOpen < -12 * 3600 * 1000) { // If > 12h early, maybe it's late night prev shift
+                             // Not handling complex shifts here, assuming standard day shift for POS dashboard
                         }
 
-                        if (diff < 0) diff = 0; // Fallback
+                        // 1. Calculate Regular Duration (Capped at Close Time)
+                        // Effective End Time for Regular Duration is MIN(Now, CloseDate)
+                        let effectiveEndDate = (now > closeDate) ? closeDate : now;
+                        let regularDiff = effectiveEndDate - openDate;
+                        
+                        if(regularDiff < 0) regularDiff = 0;
 
-                        const totalSeconds = Math.floor(diff / 1000);
-                        const h = Math.floor(totalSeconds / 3600);
-                        const m = Math.floor((totalSeconds % 3600) / 60);
-                        const s = totalSeconds % 60;
-
-                        const hDisplay = h < 10 ? "0" + h : h;
-                        const mDisplay = m < 10 ? "0" + m : m;
-                        const sDisplay = s < 10 ? "0" + s : s;
+                        // Format Helper
+                        const formatTime = (ms) => {
+                            const totalSeconds = Math.floor(ms / 1000);
+                            const h = Math.floor(totalSeconds / 3600);
+                            const m = Math.floor((totalSeconds % 3600) / 60);
+                            const s = totalSeconds % 60;
+                            return `${h < 10 ? "0" + h : h}:${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
+                        };
 
                         const durationEl = document.getElementById('live_duration_counter');
-                        if(durationEl) durationEl.textContent = `${hDisplay}:${mDisplay}:${sDisplay}`;
+                        if(durationEl) durationEl.textContent = formatTime(regularDiff);
+
+                        // 2. Calculate Overtime (Now - CloseDate, if Now > CloseDate)
+                        let overtimeDiff = 0;
+                        if(now > closeDate) {
+                            overtimeDiff = now - closeDate;
+                        }
+
+                        const overtimeEl = document.getElementById('live_overtime_counter');
+                        
+                        if(overtimeDiff > 0) {
+                            if(overtimeEl) {
+                                overtimeEl.textContent = formatTime(overtimeDiff);
+                                overtimeEl.classList.remove('text-slate-300');
+                                overtimeEl.classList.add('text-rose-500'); // Active Overtime Color
+                            }
+                        } else {
+                            if(overtimeEl) {
+                                overtimeEl.textContent = "00:00:00";
+                                overtimeEl.classList.remove('text-rose-500');
+                                overtimeEl.classList.add('text-slate-300'); // Inactive Color
+                            }
+                        }
                     }
                     setInterval(updateDuration, 1000);
                     updateDuration();
                 });
                 </script>
-            </div> 
+            </div> <!-- Close p-6 -->
             <?php include('includes/footer.php'); ?>
-        </div> 
+        </div> <!-- Close content-scroll-area -->
     </main>
 </div>

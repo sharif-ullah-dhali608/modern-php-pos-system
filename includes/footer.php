@@ -1,14 +1,44 @@
-<footer class="bg-white border-t border-slate-200 mt-auto shadow-inner">
+<footer class="site-footer mt-auto">
     <div class="px-6 py-4">
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="text-slate-500 text-sm">
                 &copy; <?php echo date("Y"); ?>, Developed <span class="text-red-500"> ❤️ </span> by STS
             </div>
-            <div class="flex items-center gap-6 text-sm">
-                <a href="#" class="text-slate-600 hover:text-slate-800 transition-colors">License</a>
-                <a href="#" class="text-slate-600 hover:text-slate-800 transition-colors">More Projects</a>
-                <a href="#" class="text-slate-600 hover:text-slate-800 transition-colors">Documentation</a>
-                <a href="#" class="text-slate-600 hover:text-slate-800 transition-colors">Support</a>
+            <div class="flex items-center gap-2 md:gap-4 text-[11px] md:text-xs">
+                <?php if(check_user_permission('documentation_help_support')): ?>
+                <a href="/pos/documentation" title="View System Documentation" 
+                   class="footer-link text-slate-500 hover:text-indigo-600 transition-all duration-300 hover:scale-105 flex items-center gap-2 font-bold whitespace-nowrap">
+                    Documentation
+                </a>
+                <?php endif; ?>
+                
+                <?php if(check_user_permission('privacy_policy_help_support')): ?>
+                <a href="/pos/privacy" title="Privacy Policy" 
+                   class="footer-link text-slate-500 hover:text-indigo-600 transition-all duration-300 hover:scale-105 flex items-center gap-2 font-bold whitespace-nowrap">
+                    Privacy Policy
+                </a>
+                <?php endif; ?>
+                
+                <?php if(check_user_permission('terms_of_service_help_support')): ?>
+                <a href="/pos/terms" title="Terms of Service" 
+                   class="footer-link text-slate-500 hover:text-indigo-600 transition-all duration-300 hover:scale-105 flex items-center gap-2 font-bold whitespace-nowrap">
+                    Terms of Service
+                </a>
+                <?php endif; ?>
+                
+                <?php if(check_user_permission('user_guide_help_support')): ?>
+                <a href="/pos/guide" title="User Guide & Tutorials" 
+                   class="footer-link text-slate-500 hover:text-indigo-600 transition-all duration-300 hover:scale-105 flex items-center gap-2 font-bold whitespace-nowrap">
+                    User Guide
+                </a>
+                <?php endif; ?>
+                
+                <?php if(check_user_permission('support_help_support')): ?>
+                <a href="/pos/support" title="Contact Support" 
+                   class="footer-link text-slate-500 hover:text-indigo-600 transition-all duration-300 hover:scale-105 flex items-center gap-2 font-bold whitespace-nowrap">
+                    Support
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
