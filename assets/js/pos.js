@@ -150,6 +150,7 @@ function openModal(id) {
 
     if (id === 'paymentModal') {
         updatePaymentSummary();
+
         // Focus paid amount field
         setTimeout(() => {
             const paidInput = document.getElementById('paid_amount');
@@ -159,7 +160,9 @@ function openModal(id) {
         const searchInput = document.getElementById('customer-search-input');
         if (searchInput) {
             searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
+            // Load customers for current store
+            const storeId = document.getElementById('store_select').value;
+            loadCustomers(storeId);
             setTimeout(() => searchInput.focus(), 100);
         }
     } else {
@@ -2528,7 +2531,7 @@ function clearCartAndReset() {
     document.getElementById('other-input').value = '';
 
     // Reset customer to walking customer
-    selectCustomer(0, 'Walking Customer', '0170000000000', 0, 0, 0);
+    selectCustomer(0, 'Walking Customer', '01700-000000', 0, 0, 0);
 
     // Update totals
     updateTotals();
@@ -2567,73 +2570,12 @@ function resetCart() {
     });
 
     // Reset customer to default (Walking Customer)
-    selectCustomer(0, 'Walking Customer', '0170000000000', 0, 0);
+    selectCustomer(0, 'Walking Customer', '01700-000000', 0, 0);
 
     updateTotals();
 }
 
-// Quick Select Customer Search Logic
-// Quick Select Customer Search Logic
-const searchInput = document.getElementById('customer-search-input');
-if (searchInput) {
-    searchInput.setAttribute('autocomplete', 'off'); // Unique design req: no auto suggestion
-
-    function filterCustomers() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const customerList = document.getElementById('customer-list');
-        if (!customerList) return;
-
-        const options = customerList.querySelectorAll('.customer-option');
-        let visibleCount = 0;
-        let hasResults = false;
-
-        // Remove existing no-results msg
-        const existingMsg = document.getElementById('customer-no-results');
-        if (existingMsg) existingMsg.remove();
-
-        options.forEach((option, index) => {
-            const text = option.textContent.toLowerCase();
-
-            // Special case: Walking Customer (always first) - usually we want to keep it or treat as normal?
-            // Assuming normal list processing
-
-            if (searchTerm === '') {
-                // Show only first 5
-                if (visibleCount < 5) {
-                    option.style.display = 'flex';
-                    visibleCount++;
-                    hasResults = true;
-                } else {
-                    option.style.display = 'none';
-                }
-            } else {
-                if (text.includes(searchTerm)) {
-                    option.style.display = 'flex';
-                    hasResults = true;
-                } else {
-                    option.style.display = 'none';
-                }
-            }
-        });
-
-        // Handle no results
-        if (!hasResults && searchTerm !== '') {
-            const noResultsEl = document.createElement('div');
-            noResultsEl.id = 'customer-no-results';
-            noResultsEl.style.padding = '20px';
-            noResultsEl.style.textAlign = 'center';
-            noResultsEl.style.color = '#94a3b8';
-            noResultsEl.innerHTML = '<i class="fas fa-user-slash" style="font-size: 24px; display: block; margin-bottom: 8px;"></i> No customers found';
-            customerList.appendChild(noResultsEl);
-        }
-    }
-
-    searchInput.addEventListener('input', filterCustomers);
-    searchInput.addEventListener('focus', filterCustomers);
-
-    // Trigger once to set initial state
-    setTimeout(filterCustomers, 500);
-}
+// Quick Select Customer Search handled via AJAX in loadCustomers function at the end of file
 
 
 // ===========================================
@@ -3467,3 +3409,95 @@ window.togglePosSetting = function (key, isChecked) {
         })
         .catch(err => console.error(err));
 };
+// Load Customers via AJAX
+window.customerSearchTimeout = null;
+function loadCustomers(storeId, search = '') {
+    const listContainer = document.getElementById('dynamic-customer-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    fetch(`../customers/fetch_customers_by_store.php?store_id=${storeId}&search=${encodeURIComponent(search)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.customers.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;">No customers found</div>';
+                    return;
+                }
+                let html = '';
+                let visibleCount = 0;
+                data.customers.forEach((c, index) => {
+                    const credit = parseFloat(c.credit || 0);
+                    const gcBalance = parseFloat(c.giftcard_balance || 0);
+                    const openingBal = parseFloat(c.opening_balance || 0);
+                    const hasInstallment = parseInt(c.has_installment || 0);
+                    const installmentDue = parseFloat(c.installment_due || 0);
+                    const nameSafe = c.name.replace(/'/g, "\\'");
+
+                    let displayStyle = 'flex';
+                    if (search === '') {
+                        if (visibleCount >= 5) {
+                            displayStyle = 'none';
+                        } else {
+                            visibleCount++;
+                        }
+                    }
+
+                    // Render badges
+                    let badges = '';
+                    if (openingBal > 0) badges += `<span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #bae6fd;">Wallet: ${openingBal.toFixed(2)}</span>`;
+                    if (hasInstallment == 1 && installmentDue > 0) badges += `<span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fde68a;">Installment: ${installmentDue.toFixed(2)}</span>`;
+                    if (credit > 0) badges += `<span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #fecaca;">Due: ${credit.toFixed(2)}</span>`;
+                    if (gcBalance > 0) badges += `<span style="background: #f0fdf4; color: #10b981; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid #d1fae5;">GiftCard: ${gcBalance.toFixed(2)}</span>`;
+
+                    html += `
+                        <div class="customer-option" onclick="selectCustomer(${c.id}, '${nameSafe}', '${c.mobile}', ${credit}, ${gcBalance}, ${openingBal}, ${hasInstallment})" 
+                             style="padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: ${displayStyle}; justify-content: space-between; align-items: center; transition: all 0.2s;"
+                             onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white';">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #10b981;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong style="display: block; color: #1e293b; font-size: 14px;">${c.name}</strong>
+                                    <span style="color: #64748b; font-size: 12px;">${c.mobile}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                ${badges}
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            } else {
+                listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #ef4444;">Error loading customers</div>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #ef4444;">Connection error</div>';
+        });
+}
+
+// Customer Search Listener
+document.getElementById('customer-search-input')?.addEventListener('input', function (e) {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    const walkingOption = document.getElementById('walking-customer-option');
+
+    // Filter Walking Customer visibility
+    if (walkingOption) {
+        if (searchTerm === '' || 'walking customer'.includes(searchTerm) || '01700-000000'.includes(searchTerm)) {
+            walkingOption.style.display = 'flex';
+        } else {
+            walkingOption.style.display = 'none';
+        }
+    }
+
+    clearTimeout(window.customerSearchTimeout);
+    window.customerSearchTimeout = setTimeout(() => {
+        const storeId = document.getElementById('store_select').value;
+        loadCustomers(storeId, searchTerm);
+    }, 300);
+});

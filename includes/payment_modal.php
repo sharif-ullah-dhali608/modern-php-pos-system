@@ -6,7 +6,7 @@
 <div class="pos-modal" id="paymentModal">
     <div class="pos-modal-content">
         <div class="pos-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-            <h3><i class="fas fa-credit-card"></i> Payment - <span id="payment-customer-name">Walking Customer</span> (<span id="payment-customer-id">0170000000000</span>)</h3>
+            <h3><i class="fas fa-credit-card"></i> Payment - <span id="payment-customer-name">Walking Customer</span> (<span id="payment-customer-id">01700-000000</span>)</h3>
             <button class="close-btn" onclick="closeModal('paymentModal')" style="display: flex; align-items: center; justify-content: center;">
                 <i class="fas fa-times" style="font-size: 16px;"></i>
             </button>        
@@ -17,8 +17,15 @@
                 <div style="background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 20px;">
                     <h4 style="display: flex; align-items: center; justify-content: center; margin: 0 0 15px 0; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Payment Method</h4>
                     <div class="payment-methods-grid">
-                        <!-- Special Payment Methods (Hidden by default) -->
-                        <div id="pm-opening-balance" class="sidebar-payment-method" data-id="opening_balance" onclick="selectPaymentMethod(this, 'opening_balance')" style="display: none;">
+                        <?php 
+                        // Map hardcoded IDs to DB store assignments
+                        $pm_credit_stores = isset($pm_code_to_id['credit']) ? ($pm_map[$pm_code_to_id['credit']] ?? '') : (isset($pm_code_to_id['pay later']) ? ($pm_map[$pm_code_to_id['pay later']] ?? '') : '');
+                        $pm_giftcard_stores = isset($pm_code_to_id['giftcard']) ? ($pm_map[$pm_code_to_id['giftcard']] ?? '') : (isset($pm_code_to_id['gift card']) ? ($pm_map[$pm_code_to_id['gift card']] ?? '') : '');
+                        $pm_opening_stores = isset($pm_code_to_id['opening_balance']) ? ($pm_map[$pm_code_to_id['opening_balance']] ?? '') : (isset($pm_code_to_id['wallet']) ? ($pm_map[$pm_code_to_id['wallet']] ?? '') : '');
+                        ?>
+
+                        <!-- Special Payment Methods (Filtered by Store just like dynamic ones) -->
+                        <div id="pm-opening-balance" class="sidebar-payment-method" data-id="opening_balance" data-stores="<?= $pm_opening_stores; ?>" onclick="selectPaymentMethod(this, 'opening_balance')" style="display: none;">
                             <div class="pm-content">
                                 <i class="fas fa-wallet"></i>
                                 <span class="pm-name">Opening Balance</span>
@@ -26,7 +33,7 @@
                             </div>
                         </div>
 
-                        <div id="pm-giftcard" class="sidebar-payment-method" data-id="giftcard" onclick="selectPaymentMethod(this, 'giftcard')" style="display: none;">
+                        <div id="pm-giftcard" class="sidebar-payment-method" data-id="giftcard" data-stores="<?= $pm_giftcard_stores; ?>" onclick="selectPaymentMethod(this, 'giftcard')" style="display: none;">
                             <div class="pm-content">
                                 <i class="fas fa-gift"></i>
                                 <span class="pm-name">Gift Card</span>
@@ -34,7 +41,7 @@
                             </div>
                         </div>
 
-                        <div id="pm-credit" class="sidebar-payment-method" data-id="credit" onclick="selectPaymentMethod(this, 'credit')">
+                        <div id="pm-credit" class="sidebar-payment-method" data-id="credit" data-stores="<?= $pm_credit_stores; ?>" onclick="selectPaymentMethod(this, 'credit')">
                              <div class="pm-content">
                                 <i class="fas fa-hand-holding-usd"></i>
                                 <span class="pm-name">Pay Later</span>
@@ -50,8 +57,10 @@
                             elseif(strtolower($pm['code']) == 'bank') $icon = 'fa-university';
                             elseif(strtolower($pm['code']) == 'bkash' || strtolower($pm['code']) == 'mobile') $icon = 'fa-mobile-alt';
                             elseif(strtolower($pm['code']) == 'giftcard') $icon = 'fa-gift';
+                            
+                            $assigned_stores = $pm_map[$pm['id']] ?? '';
                         ?>
-                            <div class="sidebar-payment-method" data-id="<?= $pm['id']; ?>" onclick="selectPaymentMethod(this, <?= $pm['id']; ?>)">
+                            <div class="sidebar-payment-method" data-id="<?= $pm['id']; ?>" data-stores="<?= $assigned_stores; ?>" onclick="selectPaymentMethod(this, <?= $pm['id']; ?>)">
                                 <div class="pm-content">
                                     <i class="fas <?= $icon; ?>"></i>
                                     <span class="pm-name"><?= htmlspecialchars($pm['name']); ?></span>

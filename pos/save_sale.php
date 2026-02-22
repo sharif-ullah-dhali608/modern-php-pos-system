@@ -537,7 +537,7 @@ function holdOrder($conn, $user_id) {
     
     // Get Customer Mobile and Name
     $customer_name = 'Walking Customer';
-    $customer_mobile = '0170000000000';
+    $customer_mobile = '01700-000000';
     if($customer_id) {
         $c_res = mysqli_query($conn, "SELECT name, mobile FROM customers WHERE id = $customer_id");
         if($row = mysqli_fetch_assoc($c_res)) {
@@ -800,7 +800,7 @@ function getHeldOrders($conn) {
     
     $sql = "SELECT hi.*, hp.*, 
                    COALESCE(c.name, 'Walking Customer') as customer_name,
-                   COALESCE(c.mobile, '0170000000000') as customer_phone,
+                   COALESCE(c.mobile, '01700-000000') as customer_phone,
                    COALESCE(c.current_due, 0) as customer_balance
             FROM holding_info hi 
             JOIN holding_price hp ON hi.ref_no = hp.ref_no
@@ -846,7 +846,7 @@ function resumeHeldOrder($conn) {
     // Get order info
     $sql = "SELECT hi.*, hp.*, 
                    COALESCE(c.name, 'Walking Customer') as customer_name,
-                   COALESCE(c.mobile, '0170000000000') as customer_phone,
+                   COALESCE(c.mobile, '01700-000000') as customer_phone,
                    COALESCE(c.current_due, 0) as customer_balance
             FROM holding_info hi 
             JOIN holding_price hp ON hi.ref_no = hp.ref_no

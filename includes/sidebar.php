@@ -389,6 +389,20 @@ $menu_items = [
         ],
         'active' => (uri_has('/system/', $current_uri)),
         'permission' => 'view_general_settings_settings' // Default to general settings permission
+    ],
+    [
+        'title' => 'Help & Support',
+        'icon' => 'fa-question-circle',
+        'link' => '#',
+        'submenu' => [
+            ['title' => 'Documentation', 'link' => '/pos/documentation', 'permission' => 'documentation_help_support'],
+            ['title' => 'User Guide', 'link' => '/pos/guide', 'permission' => 'user_guide_help_support'],
+            ['title' => 'Support', 'link' => '/pos/support', 'permission' => 'support_help_support'],
+            ['title' => 'Terms of Service', 'link' => '/pos/terms', 'permission' => 'terms_of_service_help_support'],
+            ['title' => 'Privacy Policy', 'link' => '/pos/privacy', 'permission' => 'privacy_policy_help_support'],
+        ],
+        'active' => (uri_has('/guide', $current_uri) || uri_has('/support', $current_uri) || uri_has('/terms', $current_uri) || uri_has('/privacy', $current_uri)),
+        'permission' => 'read_help_support_help_support'
     ]
 ];
 ?>
@@ -399,7 +413,7 @@ $menu_items = [
 /* --- Sidebar Base Styles --- */
 .sidebar {
     width: 256px;
-    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 300ms ease-in-out;
+    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
     background-color: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(8px);
     z-index: 30000; 
@@ -479,7 +493,7 @@ $menu_items = [
 
 <div id="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
 
-<aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-all duration-300">
+<aside id="sidebar" class="sidebar min-h-screen fixed left-0 top-0 lg:translate-x-0 transition-transform duration-300 ease-in-out">
     <div class="flex items-center gap-3 px-4 py-4 h-[81px] border-b border-white/5 relative group">
     <div class="w-10 h-10 rounded-xl shrink-0 bg-gradient-to-br from-teal-900 via-teal-800 from-white/10 to-white/5 border border-white/20 shadow-inner flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
         <img src="<?= $sidebar_logo; ?>" onerror="this.src='/pos/assets/images/logo.png'" alt="Logo" class="w-full h-full object-contain" />

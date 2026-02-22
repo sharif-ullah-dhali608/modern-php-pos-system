@@ -29,6 +29,13 @@ RewriteRule ^(.*)/$ /pos/$1 [R=301,L]
 # Login route
 RewriteRule ^login$ signin.php [L]
 
+# Footer Pages Rewrite Rules
+RewriteRule ^documentation$ footer_pages/documentation.php [L]
+RewriteRule ^privacy$ footer_pages/privacy.php [L]
+RewriteRule ^terms$ footer_pages/terms.php [L]
+RewriteRule ^guide$ footer_pages/guide.php [L]
+RewriteRule ^support$ footer_pages/support.php [L]
+
 # Clean URLs - List pages
 RewriteRule ^stores/list$ stores/store_list.php [L]
 RewriteRule ^stores/add$ stores/add_store.php [L]

@@ -156,6 +156,58 @@ window.openPaymentModal = function (config) {
         modal.removeAttribute('style');
         modal.style.display = 'flex';
         modal.classList.add('active');
+
+        // --- Store-wise Payment Method Filtering ---
+        const currentStoreId = document.getElementById('store_select')?.value || 'all';
+        const methods = modal.querySelectorAll('.sidebar-payment-method');
+        let firstVisible = null;
+        let activeVisible = false;
+
+        methods.forEach(method => {
+            const allowedStores = method.getAttribute('data-stores') || '';
+            const dataId = method.getAttribute('data-id');
+
+            // 1. Determine if assigned to current store OR is Global (no assignments)
+            let isAssigned = (currentStoreId === 'all');
+            if (!isAssigned) {
+                if (allowedStores === '') {
+                    // No store assignments = GLOBAL (Visible to everything)
+                    isAssigned = true;
+                } else {
+                    const storeList = allowedStores.split(',');
+                    if (storeList.includes(currentStoreId)) {
+                        isAssigned = true;
+                    }
+                }
+            }
+
+            // 2. Apply filtering
+            if (!isAssigned) {
+                // If not assigned to this store, force hide it
+                method.style.setProperty('display', 'none', 'important');
+            } else {
+                // If assigned, we show it UNLESS it's a special method that was hidden due to no balance
+                // Opening Balance and Gift Card are hidden by prepareAndOpenPaymentModal if balance <= 0
+                if (dataId === 'opening_balance' || dataId === 'giftcard') {
+                    // Check if it was already hidden (due to no balance) by prepareAndOpenPaymentModal
+                    // We don't use !important here so we respect the previous 'none' if it exists.
+                    if (method.style.display !== 'none') {
+                        method.style.display = 'flex';
+                    }
+                } else {
+                    // Regular methods and 'Pay Later': Show if assigned
+                    method.style.display = 'flex';
+                }
+            }
+
+            if (isAssigned && method.style.display !== 'none') {
+                if (!firstVisible) firstVisible = method;
+                if (method.classList.contains('selected')) activeVisible = true;
+            }
+        });
+
+        // If currently active method is hidden, switch to first visible
+        // However, selectPaymentMethod might be called later by setPaymentType
     }
 
     // Update applied payments UI
@@ -579,10 +631,11 @@ function setPaymentType(type, keepInput = false, skipAutoSelect = false) {
 
 // Helper: Auto-select Cash payment method
 function autoSelectCashMethod() {
-    // Find Cash method (look for method with 'cash' in name or code)
+    // Find Cash method (look for method with 'cash' in name or code) that is VISIBLE
     const cashMethod = Array.from(document.querySelectorAll('.sidebar-payment-method')).find(el => {
         const nameEl = el.querySelector('.pm-name');
-        return nameEl && nameEl.textContent.toLowerCase().includes('cash');
+        const isVisible = el.style.display !== 'none';
+        return isVisible && nameEl && nameEl.textContent.toLowerCase().includes('cash');
     });
 
     if (cashMethod && cashMethod.dataset.id) {
@@ -601,7 +654,8 @@ function autoSelectCashMethod() {
 // Helper: Auto-select Pay Later method
 function autoSelectPayLaterMethod() {
     const payLaterMethod = document.getElementById('pm-credit');
-    if (payLaterMethod) {
+    // Only select if it exists AND is visible
+    if (payLaterMethod && payLaterMethod.style.display !== 'none') {
         // Clear all selections
         document.querySelectorAll('.sidebar-payment-method').forEach(pm => {
             pm.style.background = 'white';
@@ -691,7 +745,7 @@ window.updatePaymentSummary = function () {
 
     // Update customer info in header
     const customerName = document.getElementById('selected-customer-name')?.textContent || 'Walking Customer';
-    const customerPhone = document.getElementById('selected-customer-phone')?.textContent || '0170000000000';
+    const customerPhone = document.getElementById('selected-customer-phone')?.textContent || '01700-000000';
     if (document.getElementById('payment-customer-name')) document.getElementById('payment-customer-name').textContent = customerName;
     if (document.getElementById('payment-customer-id')) document.getElementById('payment-customer-id').textContent = customerPhone;
 

@@ -43,7 +43,8 @@ if(isset($_POST['user_id'])) {
             'store' => ['label' => 'Stores', 'icon' => 'fa-store', 'perms' => ['Read Store List', 'Create Store', 'Update Store', 'Delete Store', 'Active Store', 'Upload Favicon', 'Upload Logo', 'View All Stores Data']],
             'printer' => ['label' => 'Printers', 'icon' => 'fa-print', 'perms' => ['View Printer', 'Add Printer', 'Update Printer', 'Delete Printer', 'View All Stores Data']],
             'sms' => ['label' => 'SMS/Email', 'icon' => 'fa-envelope-open-text', 'perms' => ['Send SMS', 'View SMS Report', 'View SMS Setting', 'Update SMS Setting', 'Send Email']],
-            'settings' => ['label' => 'Settings', 'icon' => 'fa-cogs', 'perms' => ['Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset', 'View All Stores Data']]
+            'settings' => ['label' => 'Settings', 'icon' => 'fa-cogs', 'perms' => ['Receipt Template', 'Read User Preference', 'Update User Preference', 'Filtering', 'Language Sync', 'Database Backup', 'Database Restore', 'Reset', 'View All Stores Data']],
+            'help_support' => ['label' => 'Help & Support', 'icon' => 'fa-question-circle', 'perms' => ['Read Help Support', 'Documentation', 'User Guide', 'Support', 'Terms of Service', 'Privacy Policy']]
         ];
 
         ?>

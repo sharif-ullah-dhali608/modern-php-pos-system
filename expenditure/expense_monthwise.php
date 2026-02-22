@@ -387,7 +387,7 @@ if(isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     <?php include('../includes/expense_monthwise_content.php'); exit; }
 ?>
 
-<link rel="stylesheet" href="/pos/assets/css/expenditureCss/expense_monthwise.css">
+<link rel="stylesheet" href="/pos/assets/css/expenditureCss/expense_monthwise.css?v=1.1">
 
 <div class="app-wrapper">
     <div class="no-print"><?php include('../includes/sidebar.php'); ?></div>

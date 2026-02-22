@@ -59,7 +59,7 @@ if(isset($_POST['fetch_permissions'])) {
         'dashboard' => ['View Dashboard', 'View Revenue Card', 'View Profit Card', 'View Recent Sales', 'View Recent Activities', 'View Best Selling Product', 'View Stock Alert Widget', 'View Monthly Goals', 'View Total Orders', 'View Total Customers', 'View Total Products', 'View POS Shortcut', 'View Sell List Shortcut', 'View Overview Shortcut', 'View Sell Rep Shortcut', 'View Purchase Shortcut', 'View Stock Shortcut', 'View Stores Shortcut'],
 
         // CORE MODULES
-        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List', 'View All Stores Data'],
+        'sell' => ['View Sell Invoice', 'View Sell List', 'Create Sell', 'Update Info', 'Delete Sell', 'Sell Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Send Sell Invoice via SMS', 'Send Sell Invoice via Email', 'Read Sell Log', 'View Profit in Sell List', 'View All Stores Data', 'Discount', 'Tax Payment', 'Shipping Charge', 'Other Charge'],
         'quotation' => ['Read Quotation List', 'Create Quotation', 'Update Quotation', 'Delete Quotation', 'Convert to Sell', 'View All Stores Data'],
         'purchase' => ['Create Invoice', 'View Invoice List', 'Update Info', 'Delete Invoice', 'Payment', 'Create Due', 'Create Return', 'View Return List', 'Update Return', 'Delete Return', 'Read Purchase Log', 'Import Stock', 'View Cost Price', 'View All Stores Data'],
 
@@ -98,7 +98,8 @@ if(isset($_POST['fetch_permissions'])) {
         'store' => ['Read Store List', 'Create Store', 'Update Store', 'Delete Store', 'Active Store', 'Upload Favicon', 'Upload Logo'],
         'sms' => ['Send SMS', 'View SMS Report', 'View SMS Setting', 'Update SMS Setting', 'Send Email'],
         'language' => ['View Language', 'Add Language', 'Edit Language Info', 'Delete Language', 'Language Translation', 'Delete Language key'],
-        'filemanager' => ['Read Filemanager']
+        'filemanager' => ['Read Filemanager'],
+        'help_support' => ['Read Help Support', 'Documentation', 'User Guide', 'Support', 'Terms of Service', 'Privacy Policy']
     ];
     
     foreach($modules as $title => $permissions) {

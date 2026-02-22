@@ -1,4 +1,4 @@
-<nav id="main-navbar" class="relative bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-[10000] shadow-sm transition-colors duration-300">
+<nav id="main-navbar" class="relative bg-[#fcfdfd]/95 backdrop-blur-lg border-b border-slate-200 top-0 z-[10000] shadow-sm transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)">
 
     <style>
     @keyframes gradient-x {
@@ -25,7 +25,7 @@
             <?php
             // --- Store Selection Modal Logic ---
             $current_store_id = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 0;
-            $curr_store_name = __('select_store');
+            $curr_store_name = 'select_store';
             
             // Get current store name quickly
             if($current_store_id) {
@@ -55,11 +55,11 @@
             // --- Comprehensive Notification System: Data Fetching ---
             $check_store_id = $_SESSION['store_id'] ?? 0;
             $notifications = [
-                'low_stock' => ['count' => 0, 'items' => [], 'icon' => 'fa-exclamation-triangle', 'color' => 'rose', 'title' => __('low_stock'), 'link' => '/pos/products/stock_alert'],
-                'cust_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-user-clock', 'color' => 'orange', 'title' => __('customer_dues'), 'link' => '/pos/reports/due-collection'],
-                'sup_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-file-invoice-dollar', 'color' => 'amber', 'title' => __('supplier_payments'), 'link' => '/pos/purchases/list'],
-                'installments' => ['count' => 0, 'items' => [], 'icon' => 'fa-calendar-alt', 'color' => 'blue', 'title' => __('upcoming_installments'), 'link' => '/pos/installment/list'],
-                'logs' => ['count' => 0, 'items' => [], 'icon' => 'fa-history', 'color' => 'slate', 'title' => __('security_logs'), 'link' => '/pos/reports/overview']
+                'low_stock' => ['count' => 0, 'items' => [], 'icon' => 'fa-exclamation-triangle', 'color' => 'rose', 'title' => 'low_stock', 'link' => '/pos/products/stock_alert'],
+                'cust_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-user-clock', 'color' => 'orange', 'title' => 'customer_dues', 'link' => '/pos/reports/due-collection'],
+                'sup_due' => ['count' => 0, 'items' => [], 'icon' => 'fa-file-invoice-dollar', 'color' => 'amber', 'title' => 'supplier_payments', 'link' => '/pos/purchases/list'],
+                'installments' => ['count' => 0, 'items' => [], 'icon' => 'fa-calendar-alt', 'color' => 'blue', 'title' => 'upcoming_installments', 'link' => '/pos/installment/list'],
+                'logs' => ['count' => 0, 'items' => [], 'icon' => 'fa-history', 'color' => 'slate', 'title' => 'security_logs', 'link' => '/pos/reports/overview']
             ];
 
             // Helper: Time Ago
@@ -333,34 +333,6 @@
             </div>
 
             <div class="flex items-center gap-4">
-            
-                <!-- Language Switcher -->
-                <div class="relative group">
-                    <button class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all focus:outline-none focus:ring-0" type="button">
-                        <i class="fas fa-language text-xl"></i>
-                    </button>
-                    <!-- Language Dropdown -->
-                    <div class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium p-1 z-[1002]">
-                        <div class="p-2 border-b border-slate-100 mb-1">
-                            <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Language</h3>
-                        </div>
-                        <a href="?lang=en" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors <?= ($_SESSION['lang']??'en') == 'en' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600' ?>">
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">EN</span>
-                                <span class="text-sm">English</span>
-                            </div>
-                            <?php if(($_SESSION['lang']??'en') == 'en'): ?><i class="fas fa-check text-teal-500 text-xs"></i><?php endif; ?>
-                        </a>
-                        <a href="?lang=bn" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors <?= ($_SESSION['lang']??'en') == 'bn' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-600' ?>">
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">BN</span>
-                                <span class="text-sm">বাংলা</span>
-                            </div>
-                            <?php if(($_SESSION['lang']??'en') == 'bn'): ?><i class="fas fa-check text-teal-500 text-xs"></i><?php endif; ?>
-                        </a>
-                    </div>
-                </div>
-                
                 <!-- Theme Switcher -->
                 <div class="relative group">
                     <button id="theme-toggle-btn" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-all focus:outline-none focus:ring-0" type="button">
@@ -395,7 +367,7 @@
                         <button onclick="setTheme('login-style')" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors text-slate-600 group/theme" data-theme-val="login-style">
                             <div class="flex items-center gap-3">
                                 <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-500 flex items-center justify-center"><i class="fas fa-magic text-xs"></i></div>
-                                <span class="text-sm font-medium group-hover/theme:text-slate-900"><?= __('gradient_theme') ?></span>
+                                <span class="text-sm font-medium group-hover/theme:text-slate-900"><?= 'gradient_theme' ?></span>
                             </div>
                             <i class="fas fa-check text-teal-500 text-xs opacity-0 theme-check"></i>
                         </button>
@@ -417,10 +389,10 @@
                     <!-- Notification Dropdown -->
                     <div class="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 dropdown-premium px-1 py-1">
                         <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-xl">
-                            <h3 class="text-sm font-bold text-slate-800"><?= __('notification_center') ?></h3>
+                            <h3 class="text-sm font-bold text-slate-800"><?= 'notification_center' ?></h3>
                             <?php if($total_notif_count > 0): ?>
                                 <span class="text-[10px] font-black bg-teal-100 text-teal-600 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                    <?= $total_notif_count ?> <?= __('total') ?>
+                                    <?= $total_notif_count ?> <?= 'total' ?>
                                 </span>
                             <?php endif; ?>
                         </div>
@@ -456,15 +428,15 @@
                                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-inner">
                                         <i class="fas fa-bell-slash text-2xl text-slate-300"></i>
                                     </div>
-                                    <p class="text-[11px] font-black uppercase tracking-widest text-slate-400"><?= __('all_clear') ?></p>
-                                    <p class="text-[10px] text-slate-400 font-medium"><?= __('no_new_alerts') ?></p>
+                                    <p class="text-[11px] font-black uppercase tracking-widest text-slate-400"><?= 'all_clear' ?></p>
+                                    <p class="text-[10px] text-slate-400 font-medium"><?= 'no_new_alerts' ?></p>
                                 </div>
                             <?php endif; ?>
                         </div>
 
                         <div class="p-2 border-t border-slate-100 bg-slate-50/50 rounded-b-xl">
                             <a href="/pos/reports/overview" class="block w-full text-center py-2.5 text-xs font-bold text-teal-600 hover:text-white hover:bg-teal-500 rounded-lg transition-all shadow-sm">
-                                View Full Dashboard
+                                View Overview Dashboard
                             </a>
                         </div>
                     </div>

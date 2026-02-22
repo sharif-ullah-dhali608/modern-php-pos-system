@@ -152,9 +152,6 @@ $list_config = [
         ['key' => 'product_code', 'label' => 'Code', 'sortable' => true],
         ['key' => 'product_name', 'label' => 'Name', 'sortable' => true],
         ['key' => 'category_name', 'label' => 'Category', 'sortable' => true],
-        ['key' => 'supplier_display', 'label' => 'Supplier', 'sortable' => true],
-        
-        ['key' => 'box_display', 'label' => 'Box/Shelf', 'sortable' => true],
         ['key' => 'formatted_stock', 'label' => 'Stock', 'sortable' => true],
         
         ['key' => 'formatted_purchase_price', 'label' => 'Purchase', 'sortable' => true],
