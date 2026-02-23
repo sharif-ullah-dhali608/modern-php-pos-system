@@ -6,7 +6,7 @@ include('../includes/permission_helper.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -95,8 +95,8 @@ $filters[] = [
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_currency_currency') ? '/pos/currency/add' : '#';
 $edit_url = check_user_permission('update_currency_currency') ? '/pos/currency/edit' : '#';
-$delete_url = check_user_permission('delete_currency_currency') ? '/pos/currency/save_currency.php' : '#';
-$status_url = check_user_permission('update_currency_currency') ? '/pos/currency/save_currency.php' : '#';
+$delete_url = check_user_permission('delete_currency_currency') ? '/pos/currency/save' : '#';
+$status_url = check_user_permission('update_currency_currency') ? '/pos/currency/save' : '#';
 
 $list_config = [
     'title' => 'Currency List',

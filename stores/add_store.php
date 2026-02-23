@@ -47,7 +47,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Store not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: store_list.php");
+        header("Location: /pos/stores/list");
         exit(0);
     }
 }
@@ -89,7 +89,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="/pos/stores/save_store.php" method="POST" id="storeForm" novalidate>
+                <form action="/pos/api/stores/save-store" method="POST" id="storeForm" novalidate>
                     
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="store_id" value="<?= $d['id']; ?>">
@@ -412,7 +412,7 @@ include('../includes/header.php');
             width: '100%',
             allowClear: true,
             ajax: {
-                url: '/pos/stores/search_currency.php',
+                url: '/pos/api/stores/search-currency',
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
@@ -433,7 +433,7 @@ include('../includes/header.php');
         // Populate initial 5 data if not editing or existing value
         <?php if(empty($d['currency_id'])): ?>
         $.ajax({
-            url: '/pos/stores/search_currency.php?limit=5',
+            url: '/pos/api/stores/search-currency?limit=5',
             dataType: 'json',
             success: function(data) {
                 if(data.results) {

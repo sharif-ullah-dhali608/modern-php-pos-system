@@ -4,7 +4,7 @@ include('../config/dbcon.php');
 include('../includes/date_filter_helper.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: ../signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -121,7 +121,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     }
     
     // Return Button
-    $row['return_btn'] = '<a href="/pos/admin/sell_return_create.php?id='.$row['invoice_id'].'" class="inline-flex items-center justify-center w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded shadow-sm transition" title="Return"><i class="fas fa-undo"></i></a>';
+    $row['return_btn'] = '<a href="/pos/sell/return/create?id='.$row['invoice_id'].'" class="inline-flex items-center justify-center w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded shadow-sm transition" title="Return"><i class="fas fa-undo"></i></a>';
     
     // Item Count formatting
     $row['item_count_formatted'] = number_format($row['item_count'] ?? 0, 0);
@@ -272,7 +272,7 @@ function openEditInvoiceModal(invoiceId) {
     modal.style.display = 'flex';
     
     // Fetch Data
-    fetch(`/pos/invoice/get_invoice_data.php?invoice_id=${invoiceId}`)
+    fetch(`/pos/api/invoices/get-data?invoice_id=${invoiceId}`)
         .then(res => res.json())
         .then(data => {
             if(data.success) {
@@ -305,7 +305,7 @@ document.getElementById('editInvoiceForm').addEventListener('submit', function(e
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
     btn.disabled = true;
     
-    fetch('/pos/admin/update_invoice_info.php', {
+    fetch('/pos/api/invoices/update', {
         method: 'POST',
         body: formData
     })
@@ -345,7 +345,7 @@ function openInvoicePaymentModal(invoiceId, dueAmount, infoId, storeId, customer
     currentCustomerId = customerId;
 
     // Fetch invoice items for order details
-    fetch(`/pos/invoice/get_invoice_items.php?invoice_id=${invoiceId}`)
+    fetch(`/pos/api/invoices/get-items?invoice_id=${invoiceId}`)
         .then(res => res.json())
         .then(data => {
             // Call shared initialization with items
@@ -395,7 +395,7 @@ function submitInvoicePayment(paymentData) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     btn.disabled = true;
 
-    fetch('/pos/pos/save_sale.php', {
+    fetch('/pos/api/pos/save-sale', {
         method: 'POST',
         body: formData
     })

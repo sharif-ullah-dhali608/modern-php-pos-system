@@ -1,6 +1,12 @@
 <?php
-include '../config/dbcon.php';
 session_start();
+include '../config/dbcon.php';
+
+// Auth Check
+if(!isset($_SESSION['auth'])){
+    header("Location: /pos/login");
+    exit(0);
+}
 
 // Helper Function: Upload Image
 function upload_image($file, $folder) {
@@ -129,8 +135,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_query($conn, "UPDATE bank_accounts SET total_deposit = total_deposit + $amount WHERE id='$account_id'");
 
             $_SESSION['message'] = "Deposit Successful";
+            $_SESSION['msg_type'] = "success";
         } else {
-            $_SESSION['message'] = "Something Went Wrong"; // simplistic error handling
+            $_SESSION['message'] = "Something Went Wrong: " . mysqli_error($conn);
+            $_SESSION['msg_type'] = "error";
         }
 
     } elseif ($action == 'withdraw') {
@@ -166,8 +174,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_query($conn, "UPDATE bank_accounts SET total_withdraw = total_withdraw + $amount WHERE id='$account_id'");
             
             $_SESSION['message'] = "Withdraw Successful";
+            $_SESSION['msg_type'] = "success";
         } else {
              $_SESSION['message'] = "Error: " . mysqli_error($conn);
+             $_SESSION['msg_type'] = "error";
         }
 
     } elseif ($action == 'transfer') {
@@ -180,7 +190,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if($from_account_id == $to_account_id) {
             $_SESSION['message'] = "Source and Target accounts cannot be same";
-            header("Location: bank_list.php");
+            $_SESSION['msg_type'] = "error";
+            header("Location: /pos/accounting/bank/list");
             exit(0);
         }
 
@@ -219,11 +230,21 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_query($conn, "UPDATE bank_accounts SET total_transfer_from_other = total_transfer_from_other + $amount WHERE id='$to_account_id'");
 
             $_SESSION['message'] = "Transfer Successful";
+            $_SESSION['msg_type'] = "success";
+        } else {
+            $_SESSION['message'] = "Transfer Failed: " . mysqli_error($conn);
+            $_SESSION['msg_type'] = "error";
         }
     }
     
-    // Redirect back to list
-    header("Location: bank_list.php");
+    // Redirect based on action
+    if($action == 'transfer') {
+        header("Location: /pos/accounting/bank/transfer-list");
+    } elseif($action == 'deposit' || $action == 'withdraw') {
+        header("Location: /pos/accounting/bank/transaction-list");
+    } else {
+        header("Location: /pos/accounting/bank/list");
+    }
     exit(0);
 }
 ?>

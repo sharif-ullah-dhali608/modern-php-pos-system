@@ -39,9 +39,8 @@ $list_config = [
     ],
     'data' => $items,
     'edit_url' => '/pos/accounting/income-source/edit',
-    'delete_url' => '/pos/Accounting/income_source_delete.php',
-    'delete_url' => '/pos/Accounting/income_source_delete.php',
-    'status_url' => '/pos/Accounting/income_source_status.php', 
+    'delete_url' => '/pos/accounting/income-source/delete',
+    'status_url' => '/pos/accounting/income-source/status', 
     'primary_key' => 'source_id',
     'name_field' => 'source_name'
 ];

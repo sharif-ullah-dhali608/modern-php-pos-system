@@ -68,7 +68,7 @@ if(isset($conn)) {
                     </button>
                 </div>
 
-                <form action="/pos/Accounting/bank_transaction_handler.php" method="POST" enctype="multipart/form-data" id="depositForm" novalidate>
+                <form action="/pos/accounting/bank/transaction" method="POST" enctype="multipart/form-data" id="depositForm" novalidate>
                     <input type="hidden" name="action" value="deposit">
                     <div class="px-6 py-6 space-y-4">
                         
@@ -171,7 +171,7 @@ if(isset($conn)) {
                     </button>
                 </div>
 
-                <form action="/pos/Accounting/bank_transaction_handler.php" method="POST" enctype="multipart/form-data" id="withdrawForm" novalidate>
+                <form action="/pos/accounting/bank/transaction" method="POST" enctype="multipart/form-data" id="withdrawForm" novalidate>
                     <input type="hidden" name="action" value="withdraw">
                     <div class="px-6 py-6 space-y-4">
                         
@@ -275,7 +275,7 @@ if(isset($conn)) {
                     </button>
                 </div>
 
-                <form action="/pos/Accounting/bank_transaction_handler.php" method="POST" id="transferForm" novalidate>
+                <form action="/pos/accounting/bank/transaction" method="POST" id="transferForm" novalidate>
                     <input type="hidden" name="action" value="transfer">
                     <div class="px-6 py-6 space-y-4">
                         

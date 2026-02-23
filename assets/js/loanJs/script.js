@@ -96,26 +96,32 @@ $(document).ready(function () {
             btn.textContent = day;
             btn.className = 'calendar-day-btn';
 
+            // Always force inline styles so dark mode can't override
+            btn.style.cssText = 'color: #475569; background: transparent; border-radius: 0.5rem; width: 2.25rem; height: 2.25rem; display:flex; align-items:center; justify-content:center; font-size:0.8125rem; font-weight:600; cursor:pointer; transition: all 0.15s;';
+
+            btn.onmouseenter = () => { if (!btn.dataset.selected) { btn.style.background = '#f0fdfa'; btn.style.color = '#0d9488'; } };
+            btn.onmouseleave = () => { if (!btn.dataset.selected) { btn.style.background = 'transparent'; btn.style.color = '#475569'; } };
+
             // Highlight Logic
             if (calendarStartDate && calendarEndDate) {
                 const start = new Date(calendarStartDate);
                 const end = new Date(calendarEndDate);
                 if (date > start && date < end) {
-                    wrapper.classList.add('bg-teal-50');
-                    btn.classList.add('text-teal-600', 'font-bold');
+                    wrapper.style.background = '#f0fdfa';
+                    btn.style.color = '#0d9488';
+                    btn.style.fontWeight = '700';
                 } else if (dateStr === calendarStartDate) {
                     wrapper.style.background = 'linear-gradient(to right, transparent 50%, #f0fdfa 50%)';
-                    btn.classList.add('bg-teal-600', 'text-white', 'font-bold', 'rounded-xl', 'shadow-lg', 'shadow-teal-500/30');
+                    btn.style.cssText = 'background:#0d9488; color:#ffffff; border-radius:0.75rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; font-size:0.8125rem; font-weight:700; cursor:pointer; box-shadow: 0 4px 6px rgba(13,148,136,0.3);';
+                    btn.dataset.selected = 'true';
                 } else if (dateStr === calendarEndDate) {
                     wrapper.style.background = 'linear-gradient(to left, transparent 50%, #f0fdfa 50%)';
-                    btn.classList.add('bg-teal-600', 'text-white', 'font-bold', 'rounded-xl', 'shadow-lg', 'shadow-teal-500/30');
-                } else {
-                    btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'rounded-xl');
+                    btn.style.cssText = 'background:#0d9488; color:#ffffff; border-radius:0.75rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; font-size:0.8125rem; font-weight:700; cursor:pointer; box-shadow: 0 4px 6px rgba(13,148,136,0.3);';
+                    btn.dataset.selected = 'true';
                 }
             } else if (calendarStartDate && dateStr === calendarStartDate) {
-                btn.classList.add('bg-teal-600', 'text-white', 'font-bold', 'rounded-xl', 'shadow-lg', 'shadow-teal-500/30');
-            } else {
-                btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'rounded-xl');
+                btn.style.cssText = 'background:#0d9488; color:#ffffff; border-radius:0.75rem; width:2.25rem; height:2.25rem; display:flex; align-items:center; justify-content:center; font-size:0.8125rem; font-weight:700; cursor:pointer; box-shadow: 0 4px 6px rgba(13,148,136,0.3);';
+                btn.dataset.selected = 'true';
             }
 
             btn.onclick = (e) => {
@@ -413,7 +419,7 @@ $(document).ready(function () {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
 
-            fetch('save_loan.php', {
+            fetch('/pos/api/loan/add-source', {
                 method: 'POST',
                 body: formData
             })

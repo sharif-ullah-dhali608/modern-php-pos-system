@@ -44,7 +44,7 @@ $filters[] = [
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_category_category') ? '/pos/categories/add' : '#';
 $edit_url = check_user_permission('update_category_category') ? '/pos/categories/edit' : '#';
-$delete_url = check_user_permission('delete_category_category') ? '/pos/categories/save_category.php' : '#';
+$delete_url = check_user_permission('delete_category_category') ? '/pos/categories/delete' : '#';
 
 $list_config = [
     'title' => 'Category List',
@@ -62,7 +62,7 @@ $list_config = [
     'data' => $items,
     'edit_url' => $edit_url,
     'delete_url' => $delete_url,
-    'status_url' => '/pos/categories/save_category.php',
+    'status_url' => '/pos/categories/save',
     'primary_key' => 'id',
     'name_field' => 'name'
 ];

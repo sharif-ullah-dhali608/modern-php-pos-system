@@ -40,8 +40,8 @@ $list_config = [
     ],
     'data' => $items,
     'edit_url' => '/pos/accounting/bank/edit',
-    'delete_url' => '/pos/Accounting/bank_delete.php',
-    'status_url' => '/pos/Accounting/bank_status.php', 
+    'delete_url' => '/pos/accounting/bank/delete',
+    'status_url' => '/pos/accounting/bank/status', 
     'primary_key' => 'id',
     'name_field' => 'account_name'
 ];

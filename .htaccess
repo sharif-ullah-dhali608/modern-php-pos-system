@@ -7,6 +7,23 @@ RewriteRule ^captcha$ config/captcha.php [L]
 
 # AJAX Pretty URLs
 RewriteRule ^api/stores/search$ users/fetch_stores_modal.php [L,QSA]
+RewriteRule ^api/pos/products$ pos/get_products.php [L,QSA]
+RewriteRule ^api/pos/save-sale$ pos/save_sale.php [L,QSA]
+RewriteRule ^api/pos/add-product$ pos/ajax_add_product.php [L,QSA]
+RewriteRule ^api/pos/stock-alert-count$ pos/get_stock_alert_count.php [L,QSA]
+RewriteRule ^api/pos/product-details$ pos/get_product_details.php [L,QSA]
+RewriteRule ^api/customers/save$ customers/save_customer.php [L,QSA]
+RewriteRule ^api/customers/by-store$ customers/fetch_customers_by_store.php [L,QSA]
+RewriteRule ^api/stores/save-store$ stores/save_store.php [L,QSA]
+RewriteRule ^api/stores/search-currency$ stores/search_currency.php [L,QSA]
+RewriteRule ^api/stores/save-settings$ stores/save_store_settings.php [L,QSA]
+RewriteRule ^api/giftcard/save$ giftcard/save_giftcard.php [L,QSA]
+RewriteRule ^api/giftcard/view/([0-9]+)$ giftcard/fetch_giftcard_modal.php?id=$1 [L,QSA]
+RewriteRule ^api/invoices/get-data$ invoice/get_invoice_data.php [L,QSA]
+RewriteRule ^api/invoices/get-items$ invoice/get_invoice_items.php [L,QSA]
+RewriteRule ^api/invoices/update$ admin/update_invoice_info.php [L,QSA]
+RewriteRule ^api/users/fetch-modal$ users/fetch_user_modal.php [L,QSA]
+RewriteRule ^api/config/switch-store$ config/switch_store.php [L,QSA]
 
 # --- Block Direct .php Access ---
 # Show Forbidden error if a user tries to access a .php file directly.
@@ -20,9 +37,15 @@ RewriteRule ^ - [F,L]
 RewriteRule ^accounting/bank/list$ Accounting/bank_list.php [L,NC]
 RewriteRule ^accounting/bank/add$ Accounting/bank_add.php [L,NC]
 RewriteRule ^accounting/bank/edit/([0-9]+)$ Accounting/bank_add.php?id=$1 [L,NC]
+RewriteRule ^accounting/bank/delete$ Accounting/bank_delete.php [L,NC,QSA]
+RewriteRule ^accounting/bank/save$ Accounting/bank_add.php [L,NC,QSA]
+RewriteRule ^accounting/bank/status$ Accounting/bank_status.php [L,NC,QSA]
 RewriteRule ^accounting/income-source/list$ Accounting/income_source_list.php [L,NC]
 RewriteRule ^accounting/income-source/add/?$ Accounting/add_income_source.php [L,NC]
 RewriteRule ^accounting/income-source/edit/([0-9]+)/?$ Accounting/add_income_source.php?id=$1 [L,NC]
+RewriteRule ^accounting/income-source/delete$ Accounting/income_source_delete.php [L,NC,QSA]
+RewriteRule ^accounting/income-source/status$ Accounting/income_source_status.php [L,NC,QSA]
+RewriteRule ^accounting/income-source/save$ Accounting/add_income_source.php [L,NC,QSA]
 RewriteRule ^accounting/bank/transaction-list/?$ Accounting/bank_transaction_list.php [L,NC]
 RewriteRule ^accounting/bank/transfer-list/?$ Accounting/bank_transfer_list.php [L,NC]
 RewriteRule ^accounting/bank/balance-sheet/?$ Accounting/bank_balance_sheet.php [L,NC]
@@ -35,6 +58,7 @@ RewriteRule ^accounting/income-monthwise/([0-9]{4})/([0-9]{2})/?$ Accounting/inc
 RewriteRule ^accounting/income-vs-expense/?$ Accounting/income_vs_expense.php [L,NC,QSA]
 RewriteRule ^accounting/profit-loss/?$ Accounting/profit_loss.php [L,NC,QSA]
 RewriteRule ^accounting/cashbook/?$ Accounting/cashbook.php [L,NC,QSA]
+RewriteRule ^accounting/bank/transaction$ Accounting/bank_transaction_handler.php [L,NC,QSA]
 
 # Remove trailing slash
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -53,22 +77,32 @@ RewriteRule ^terms$ footer_pages/terms.php [L]
 RewriteRule ^guide$ footer_pages/guide.php [L]
 RewriteRule ^support$ footer_pages/support.php [L]
 
-# Clean URLs - List pages
+# --- Dynamic Fallback for Module Pages ---
+# Maps /folder/file to /folder/file.php automatically if the clean .php file exists.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/pos/%{REQUEST_URI}.php -f
+RewriteRule ^(.+)$ $1.php [L,QSA]
+
+# Clean URLs - Explicit Mappings (Priority)
 RewriteRule ^stores/list$ stores/store_list.php [L]
 RewriteRule ^stores/add$ stores/add_store.php [L]
 RewriteRule ^stores/edit$ stores/add_store.php [L]
-RewriteRule ^stores/settings$ stores/settings.php [L]
-RewriteRule ^system/settings$ stores/settings.php [L]
+RewriteRule ^stores/settings$ stores/settings.php [L,QSA]
+RewriteRule ^system/settings$ stores/settings.php [L,QSA]
 
 RewriteRule ^currency/list$ currency/currency_list.php [L]
 RewriteRule ^currency/add$ currency/add_currency.php [L]
 RewriteRule ^currency/add/([0-9]+)$ currency/add_currency.php?id=$1 [L]
 RewriteRule ^currency/edit/([0-9]+)$ currency/add_currency.php?id=$1 [L]
+RewriteRule ^currency/save$ currency/save_currency.php [L,QSA]
+RewriteRule ^currency/delete$ currency/save_currency.php [L,QSA]
 
 RewriteRule ^payment-methods/list$ payment_methods/payment_method_list.php [L]
 RewriteRule ^payment-methods/add$ payment_methods/add_payment_method.php [L]
 RewriteRule ^payment-methods/save$ payment_methods/save_payment_method.php [L]
 RewriteRule ^payment-methods/edit/([0-9]+)$ payment_methods/add_payment_method.php?id=$1 [L]
+RewriteRule ^payment-methods/delete$ payment_methods/save_payment_method.php [L,QSA]
 
 # --- Giftcard Routes (added) ---
 RewriteRule ^giftcard/list$ giftcard/giftcard_list.php [L]
@@ -84,54 +118,70 @@ RewriteRule ^giftcard/topup/([0-9]+)$ giftcard/fetch_giftcard_modal.php?id=$1 [L
 RewriteRule ^units/list$ units/unit_list.php [L]
 RewriteRule ^units/edit/([0-9]+)$ units/add_unit.php?id=$1 [L]
 RewriteRule ^units/add/([0-9]+)$ units/add_unit.php?id=$1 [L]
-RewriteRule ^units/save$ units/save_unit.php [L]
 RewriteRule ^units/add$ units/add_unit.php [L]
+RewriteRule ^units/save$ units/save_unit.php [L,QSA]
+RewriteRule ^units/delete$ units/save_unit.php [L,QSA]
 
 
 RewriteRule ^brands/list$ brands/brand_list.php [L]
 RewriteRule ^brands/add$ brands/add_brand.php [L]
 RewriteRule ^brands/edit/([0-9]+)$ brands/add_brand.php?id=$1 [L]
+RewriteRule ^brands/save$ brands/save_brand.php [L,QSA]
+RewriteRule ^brands/delete$ brands/save_brand.php [L,QSA]
 
 RewriteRule ^taxrates/list$ taxrates/taxrate_list.php [L]
 RewriteRule ^taxrates/add$ taxrates/add_taxrate.php [L]
 RewriteRule ^taxrates/edit/([0-9]+)$ taxrates/add_taxrate.php?id=$1 [L]
-# RewriteRule ^taxrates/edit$ taxrates/add_taxrate.php [L]
+RewriteRule ^taxrates/save$ taxrates/save_taxrate.php [L,QSA]
+RewriteRule ^taxrates/delete$ taxrates/save_taxrate.php [L,QSA]
 
 
 
 # Boxes Routes
 RewriteRule ^boxes/list$ boxes/box_list.php [L]
 RewriteRule ^boxes/add$ boxes/add_box.php [L]
-RewriteRule ^boxes/save$ boxes/save_box.php [L]
+RewriteRule ^boxes/save$ boxes/save_box.php [L,QSA]
+RewriteRule ^boxes/delete$ boxes/save_box.php [L,QSA]
 RewriteRule ^boxes/edit/([0-9]+)$ boxes/add_box.php?id=$1 [L]
 
 # Categories Routes
 RewriteRule ^categories/list$ categories/category_list.php [L]
 RewriteRule ^categories/add$ categories/add_category.php [L]
-RewriteRule ^categories/save$ categories/save_category.php [L]
+RewriteRule ^categories/save$ categories/save_category.php [L,QSA]
+RewriteRule ^categories/delete$ categories/save_category.php [L,QSA]
 RewriteRule ^categories/edit/([0-9]+)$ categories/add_category.php?id=$1 [L]
 
 # --- Suppliers Routes (ADDED) ---
 RewriteRule ^suppliers/list$ suppliers/supplier_list.php [L]
 RewriteRule ^suppliers/add$ suppliers/add_supplier.php [L]
-RewriteRule ^suppliers/save$ suppliers/save_supplier.php [L]
+RewriteRule ^suppliers/save$ suppliers/save_supplier.php [L,QSA]
+RewriteRule ^suppliers/delete$ suppliers/save_supplier.php [L,QSA]
 RewriteRule ^suppliers/edit/([0-9]+)$ suppliers/add_supplier.php?id=$1 [L]
 
 # --- Products Routes (ADDED) ---
 RewriteRule ^products/list$ products/product_list.php [L]
 RewriteRule ^products/add$ products/add_product.php [L]
-RewriteRule ^products/save$ products/save_product.php [L]
+RewriteRule ^products/save$ products/save_product.php [L,QSA]
+RewriteRule ^products/delete$ products/save_product.php [L,QSA]
 RewriteRule ^products/edit/([0-9]+)$ products/add_product.php?id=$1 [L]
 RewriteRule ^products/stock_alert$ products/stock_alert.php [L]
 RewriteRule ^products/stock-alert$ products/stock_alert.php [L]
 RewriteRule ^products/barcode-print$ products/barcode_print.php [L]
+RewriteRule ^api/products/search-barcode$ products/search_products_barcode.php [L,QSA]
+RewriteRule ^api/products/update-stock$ products/update_stock_ajax.php [L,QSA]
 
 # --- Purchases Routes (ADDED) ---
 RewriteRule ^purchases/list$ purchases/purchase_list.php [L]
 RewriteRule ^purchases/add$ purchases/add_purchase.php [L]
-RewriteRule ^purchases/save$ purchases/save_purchase.php [L]
+RewriteRule ^purchases/save$ purchases/save_purchase.php [L,QSA]
+RewriteRule ^purchases/delete$ purchases/save_purchase.php [L,QSA]
 RewriteRule ^purchases/edit/([0-9]+)$ purchases/add_purchase.php?id=$1 [L]
+RewriteRule ^api/invoices/get-data$ invoice/get_invoice_data.php [L,QSA]
+RewriteRule ^api/invoices/get-items$ invoice/get_invoice_items.php [L,QSA]
+RewriteRule ^api/invoices/update$ admin/update_invoice_info.php [L,QSA]
+RewriteRule ^api/invoices/content$ admin/invoice_content.php [L,NC,QSA]
 RewriteRule ^purchases/import$ purchases/import_stock.php [L]
+RewriteRule ^api/purchases/parse-csv$ purchases/ajax_parse_purchase_csv.php [L,QSA]
 RewriteRule ^purchases/return-list$ purchases/return_list.php [L]
 RewriteRule ^purchases/purchase-logs$ purchases/purchase_logs.php [L]
 RewriteRule ^purchases/stock-import$ purchases/stock_import.php [L]
@@ -144,12 +194,16 @@ RewriteRule ^pos/save$ pos/save_sale.php [L]
 RewriteRule ^quotations/list$ quotations/quotation_list.php [L]
 RewriteRule ^quotations/add$ quotations/add_quotation.php [L]
 RewriteRule ^quotations/save_code\.php$ quotations/save_quotation.php [L]
+RewriteRule ^api/quotations/action$ quotations/save_quotation.php [L,QSA]
 RewriteRule ^quotations/edit/([0-9]+)$ quotations/add_quotation.php?id=$1 [L]
 
 # --- Sell & Invoice Routes (Admin Pages) ---
 RewriteRule ^sell/list$ admin/invoice.php [L]
 RewriteRule ^sell/return$ admin/sell_return.php [L]
+RewriteRule ^sell/return/create$ admin/sell_return_create.php [L,QSA]
+RewriteRule ^sell/return/process$ admin/process_return.php [L,QSA]
 RewriteRule ^sell/return/view/([0-9]+)$ admin/sell_return_view.php?id=$1 [L]
+RewriteRule ^sell/return/delete$ admin/sell_return_delete.php [L,QSA]
 RewriteRule ^sell/return/delete/([0-9]+)$ admin/sell_return_delete.php?id=$1 [L]
 RewriteRule ^sell/log$ admin/sell_log.php [L]
 RewriteRule ^sell/log/view/([0-9]+)$ admin/sell_log_view.php?id=$1 [L]
@@ -161,6 +215,16 @@ RewriteRule ^admin/edit/([0-9]+)$ admin/invoice_edit.php?id=$1 [L]
 RewriteRule ^admin/delete$ admin/invoice_delete.php [L]
 RewriteRule ^admin/delete/([0-9]+)$ admin/invoice_delete.php?id=$1 [L]
 
+
+# --- Stores Routes ---
+RewriteRule ^stores/list$ stores/store_list.php [L,NC]
+RewriteRule ^stores/add$ stores/add_store.php [L,NC]
+RewriteRule ^stores/save$ stores/save_store.php [L,NC,QSA]
+RewriteRule ^stores/edit/([0-9]+)$ stores/add_store.php?id=$1 [L,NC]
+RewriteRule ^stores/settings$ stores/settings.php [L,NC]
+RewriteRule ^api/stores/search-products$ stores/search_products_limit.php [L,NC,QSA]
+RewriteRule ^api/stores/save-limit$ stores/save_product_limit.php [L,NC,QSA]
+RewriteRule ^api/stores/save-settings$ stores/save_store_settings.php [L,NC,QSA]
 
 # --- Users & Groups Routes ---
 RewriteRule ^users/add$ users/add_user.php [L]
@@ -174,14 +238,19 @@ RewriteRule ^users/reset$ users/reset_password.php [L]
 
 
 # --- Customers Routes (ADDED) ---
-RewriteRule ^customers/list$ customers/customer_list.php [L]
-RewriteRule ^customers/add$ customers/add_customer.php [L]
-RewriteRule ^customers/save$ customers/save_customer.php [L]
-RewriteRule ^customers/edit/([0-9]+)$ customers/add_customer.php?id=$1 [L]
+RewriteRule ^customers/list$ customers/customer_list.php [L,NC]
+RewriteRule ^customers/add$ customers/add_customer.php [L,NC]
+RewriteRule ^customers/save$ customers/save_customer.php [L,NC,QSA]
+RewriteRule ^customers/delete$ customers/save_customer.php [L,NC,QSA]
+RewriteRule ^customers/status$ customers/save_customer.php [L,NC,QSA]
+RewriteRule ^customers/edit/([0-9]+)$ customers/add_customer.php?id=$1 [L,NC]
  
 # --- Installment Routes (ADDED) ---
 RewriteRule ^installment/list$ installment/installment_list.php [L]
-RewriteRule ^installment/view/([0-9]+)$ installment/view_installment.php?id=$1 [L]
+RewriteRule ^installment/view/([0-9]+)$ installment/view_installment.php?id=$1 [L,NC]
+RewriteRule ^installment/delete$ installment/delete_installment.php [L,NC,QSA]
+RewriteRule ^api/installment/pay$ installment/process_payment.php [L,NC,QSA]
+RewriteRule ^api/installment/details$ installment/get_installment_details.php [L,NC,QSA]
 RewriteRule ^installment/payments$ installment/payment_list.php [L]
 RewriteRule ^installment/due_today$ installment/payment_list.php?filter=today [L]
 RewriteRule ^installment/due_all$ installment/payment_list.php?filter=all [L]
@@ -193,10 +262,15 @@ RewriteRule ^transfer/stock_transfer$ transfer/stock_transfer.php [L]
 RewriteRule ^transfer/transfer_list$ transfer/transfer_list.php [L]
 RewriteRule ^transfer/receive_list$ transfer/receive_list.php [L]
 RewriteRule ^transfer/save$ transfer/save_transfer.php [L]
-RewriteRule ^transfer/receive$ transfer/receive_transfer.php [L]
-RewriteRule ^transfer/search_stock$ transfer/search_stock_transfer.php [L]
-RewriteRule ^transfer/get_transfer_details$ transfer/get_transfer_details.php [L]
-RewriteRule ^transfer/cancel_transfer$ transfer/cancel_transfer.php [L]
+# --- Transfer Routes ---
+RewriteRule ^transfer/list$ transfer/transfer_list.php [L,NC]
+RewriteRule ^transfer/add$ transfer/stock_transfer.php [L,NC]
+RewriteRule ^transfer/receive-list$ transfer/receive_list.php [L,NC]
+RewriteRule ^transfer/save$ transfer/save_transfer.php [L,NC,QSA]
+RewriteRule ^api/transfer/details$ transfer/get_transfer_details.php [L,NC,QSA]
+RewriteRule ^api/transfer/cancel$ transfer/cancel_transfer.php [L,NC,QSA]
+RewriteRule ^api/transfer/receive$ transfer/receive_transfer.php [L,NC,QSA]
+RewriteRule ^api/transfer/search-stock$ transfer/search_stock_transfer.php [L,NC,QSA]
 
 # --- Printer Routes ---
 RewriteRule ^printer/list$ printer/printer_list.php [L]
@@ -206,24 +280,42 @@ RewriteRule ^printer/edit/([0-9]+)$ printer/add_printer.php?id=$1 [L]
 RewriteRule ^printer/receipt_templates$ printer/receipt_templates.php [L]
 RewriteRule ^printer/receipt-templates$ printer/receipt_templates.php [L]
 
-# --- Expenditure Routes (ADDED) ---
+# --- Expenditure Routes ---
+RewriteRule ^expenditure/list$ expenditure/expense_list.php [L]
+RewriteRule ^expenditure/add$ expenditure/add_expense.php [L]
+RewriteRule ^expenditure/edit/([0-9]+)$ expenditure/add_expense.php?id=$1 [L]
+RewriteRule ^expenditure/save$ expenditure/save_expense.php [L,QSA]
+RewriteRule ^expenditure/delete$ expenditure/save_expense.php [L,QSA]
 RewriteRule ^expenditure/category_list$ expenditure/expense_category_list.php [L]
 RewriteRule ^expenditure/category_add$ expenditure/add_expense_category.php [L]
 RewriteRule ^expenditure/category_edit/([0-9]+)$ expenditure/add_expense_category.php?id=$1 [L]
-RewriteRule ^expenditure/save_category$ expenditure/save_category.php [L]
-RewriteRule ^expenditure/expense_list$ expenditure/expense_list.php [L]
-RewriteRule ^expenditure/expense_add$ expenditure/add_expense.php [L]
-RewriteRule ^expenditure/expense_edit/([0-9]+)$ expenditure/add_expense.php?id=$1 [L]
-RewriteRule ^expenditure/save_expense$ expenditure/save_expense.php [L]
+RewriteRule ^expenditure/category_save$ expenditure/save_category.php [L,QSA]
+RewriteRule ^expenditure/category_delete$ expenditure/save_category.php [L,QSA]
+RewriteRule ^expenditure/category_status$ expenditure/save_category.php [L,QSA]
 RewriteRule ^expenditure/monthwise$ expenditure/expense_monthwise.php [L,QSA]
 RewriteRule ^expenditure/monthwise/([0-9]{4})$ expenditure/expense_monthwise.php?year=$1 [L,QSA]
 RewriteRule ^expenditure/monthwise/([0-9]{4})/([0-9]{2})$ expenditure/expense_monthwise.php?year=$1&month=$2 [L,QSA]
 # --- Accounting Routes (MOVED TO TOP) ---
 
+# --- Dynamic Fallback for Module Pages (Handles up to 3 segments) ---
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/pos/$1.php -f
+RewriteRule ^([^/.]+)/?([^/.]*)?/?([^/.]*)?$ $1${2:+/}${2}${3:+/}${3}.php [L,QSA]
+
+# Failsafe for specific Expenditure Clean URLs
+RewriteRule ^expenditure/add$ expenditure/add_expense.php [L,QSA]
+RewriteRule ^expenditure/list$ expenditure/expense_list.php [L,QSA]
+RewriteRule ^expenditure/edit/([0-9]+)$ expenditure/add_expense.php?id=$1 [L,QSA]
+RewriteRule ^expenditure/save$ expenditure/save_expense.php [L,QSA]
+RewriteRule ^expenditure/delete$ expenditure/save_expense.php [L,QSA]
+
 # --- Loan Routes (ADDED) ---
 RewriteRule ^loan/list$ loan/loan_list.php [L,NC]
 RewriteRule ^loan/add$ loan/add_loan.php [L,NC]
 RewriteRule ^loan/save$ loan/save_loan.php [L,NC]
+RewriteRule ^api/loan/generate-ref$ loan/save_loan.php?action=generate_ref [L,NC,QSA]
+RewriteRule ^api/loan/add-source$ loan/save_loan.php [L,NC,QSA]
 RewriteRule ^loan/summary$ loan/summary_loan.php [L,NC]
 RewriteRule ^loan/edit/([0-9]+)$ loan/add_loan.php?id=$1 [L,NC]
 # --- Reports Routes ---

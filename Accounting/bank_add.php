@@ -76,6 +76,8 @@ if(isset($_POST['save_bank'])) {
     $sort_order = mysqli_real_escape_string($conn, $_POST['sort_order']);
     $stores = isset($_POST['stores']) ? $_POST['stores'] : [];
     
+    $initial_balance = mysqli_real_escape_string($conn, $_POST['initial_balance'] ?? 0);
+    
     if($mode == "add") {
         $query = "INSERT INTO bank_accounts (account_name, account_details, initial_balance, account_no, contact_person, phone_number, url, status, sort_order) 
                   VALUES ('$account_name', '$account_details', '$initial_balance', '$account_no', '$contact_person', '$phone_number', '$url', '$status', '$sort_order')";
@@ -101,6 +103,7 @@ if(isset($_POST['save_bank'])) {
         $update_query = "UPDATE bank_accounts SET 
                         account_name='$account_name', 
                         account_details='$account_details', 
+                        initial_balance='$initial_balance',
                         account_no='$account_no', 
                         contact_person='$contact_person', 
                         phone_number='$phone_number', 
@@ -178,7 +181,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="" method="POST" class="slide-in delay-100" id="bankForm" novalidate>
+                <form action="/pos/accounting/bank/save" method="POST" class="slide-in delay-100" id="bankForm" novalidate>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- Column 1: Basic Information -->
@@ -213,6 +216,14 @@ include('../includes/header.php');
                                     <textarea name="account_details" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"><?= htmlspecialchars($account_details); ?></textarea>
                                 </div>
 
+                                <!-- Initial Balance -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wide mb-2">
+                                        Initial Balance
+                                    </label>
+                                    <input type="number" step="0.01" min="0" name="initial_balance" id="initial_balance" value="<?= htmlspecialchars($initial_balance); ?>" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all">
+                                    <p class="text-xs text-slate-500 mt-1">Opening balance for this account (set once).</p>
+                                </div>
                                 <!-- Contact Person -->
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 uppercase tracking-wide mb-2">
@@ -302,7 +313,7 @@ include('../includes/header.php');
                                 <button type="submit" name="save_bank" class="w-full py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30 flex items-center justify-center text-lg mb-3">
                                     <i class="fas fa-save mr-2"></i> <?= $btn_text; ?>
                                 </button>
-                                <a href="/pos/Accounting/bank_list.php" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center">
+                                <a href="/pos/accounting/bank/list" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center">
                                     <i class="fas fa-times mr-2"></i> Cancel
                                 </a>
                             </div>

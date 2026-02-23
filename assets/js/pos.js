@@ -238,7 +238,7 @@ function handleQuickAddProduct(e) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     btn.disabled = true;
 
-    fetch('ajax_add_product.php', {
+    fetch('/pos/api/pos/add-product', {
         method: 'POST',
         body: formData
     })
@@ -381,7 +381,7 @@ function fetchPosStores(search = '') {
     const listContainer = document.getElementById('pos_modal_store_list');
     listContainer.innerHTML = '<div class="py-12 text-center"><i class="fas fa-circle-notch fa-spin text-teal-500 text-2xl"></i><p class="text-slate-400 text-xs font-bold mt-3 uppercase tracking-widest">Loading...</p></div>';
 
-    fetch(`../users/fetch_stores_modal.php?search=${encodeURIComponent(search)}`)
+    fetch(`/pos/api/stores/search?search=${encodeURIComponent(search)}`)
         .then(res => res.json())
         .then(data => {
             let storesToList = [];
@@ -618,7 +618,7 @@ function loadProducts(page) {
     // Prevent default button behavior
     if (event) event.preventDefault();
 
-    let url = `get_products.php?page=${page}&store_id=${storeId}`;
+    let url = `/pos/api/pos/products?page=${page}&store_id=${storeId}`;
     if (categoryId > 0) url += `&category_id=${categoryId}`;
     if (searchQuery) url += `&search=${searchQuery}`;
 
@@ -1181,7 +1181,7 @@ function submitPosSale(paymentData) {
         btn.disabled = true;
     }
 
-    fetch('/pos/pos/save_sale.php', {
+    fetch('/pos/api/pos/save-sale', {
         method: 'POST',
         body: formData
     })
@@ -1426,7 +1426,7 @@ function openHeldOrdersModal() {
     formData.append('store_id', storeId === 'all' ? 0 : storeId);
     formData.append('_t', Date.now()); // Cache buster
 
-    fetch('/pos/pos/save_sale.php', {
+    fetch('/pos/api/pos/save-sale', {
         method: 'POST',
         body: formData
     })
@@ -1532,7 +1532,7 @@ function resumeHeldOrder(invoiceId) {
     formData.append('action', 'resume_held_order');
     formData.append('invoice_id', invoiceId);
 
-    fetch('/pos/pos/save_sale.php', {
+    fetch('/pos/api/pos/save-sale', {
         method: 'POST',
         body: formData
     })
@@ -1596,7 +1596,7 @@ function deleteHeldOrder(invoiceId) {
             formData.append('action', 'delete_held_order');
             formData.append('invoice_id', invoiceId);
 
-            fetch('/pos/pos/save_sale.php', {
+            fetch('/pos/api/pos/save-sale', {
                 method: 'POST',
                 body: formData
             })
@@ -1739,7 +1739,7 @@ function holdOrder() {
     formData.append('other_charge', other);
     formData.append('grand_total', grandTotal);
 
-    fetch('/pos/pos/save_sale.php', {
+    fetch('/pos/api/pos/save-sale', {
         method: 'POST',
         body: formData
     })
@@ -1964,7 +1964,7 @@ function handleBarcodeSearch(barcode) {
     formData.append('category_id', 0);
     formData.append('page', 1);
 
-    fetch('/pos/pos/get_products.php', {
+    fetch('/pos/api/pos/products', {
         method: 'POST',
         body: formData
     })
@@ -2115,7 +2115,7 @@ document.getElementById('quickCustomerForm').addEventListener('submit', function
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     btn.disabled = true;
 
-    fetch('/pos/customers/save_customer.php', {
+    fetch('/pos/api/customers/save', {
         method: 'POST',
         body: formData
     })
@@ -2271,8 +2271,17 @@ function initGiftCardModal() {
                 const customerName = this.getAttribute('data-name');
                 customerSearch.value = customerName;
                 customerIdInput.value = customerId;
+                document.getElementById('modal-preview-card-holder').textContent = customerName;
                 customerDropdown.classList.add('hidden');
             });
+        });
+
+        // Add listener for manual input to clear preview if empty
+        customerSearch.addEventListener('input', function () {
+            if (!this.value) {
+                customerIdInput.value = '';
+                document.getElementById('modal-preview-card-holder').textContent = 'GiftCard';
+            }
         });
 
         // Close dropdown when clicking outside
@@ -2347,7 +2356,7 @@ document.getElementById('quickGiftcardForm')?.addEventListener('submit', functio
     btn.innerHTML = '\u003ci class="fas fa-spinner fa-spin"\u003e\u003c/i\u003e Saving...';
     btn.disabled = true;
 
-    fetch('/pos/giftcard/save', {
+    fetch('/pos/api/giftcard/save', {
         method: 'POST',
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
@@ -2372,6 +2381,7 @@ document.getElementById('quickGiftcardForm')?.addEventListener('submit', functio
                 document.getElementById('modal-preview-card-no').textContent = '••••••••••••••••';
                 document.getElementById('modal-preview-value').textContent = 'USD 0.00';
                 document.getElementById('modal-preview-expiry').textContent = 'MM/YY';
+                document.getElementById('modal-preview-card-holder').textContent = 'GiftCard';
                 document.getElementById('modal-preview-logo').innerHTML = '\u003ci class="fas fa-image" style="opacity: 0.5;"\u003e\u003c/i\u003e';
                 document.getElementById('modal-barcode-container').style.display = 'none';
             } else if (data.success || data.msg_type === 'success') {
@@ -2388,6 +2398,7 @@ document.getElementById('quickGiftcardForm')?.addEventListener('submit', functio
                 document.getElementById('modal-preview-card-no').textContent = '••••••••••••••••';
                 document.getElementById('modal-preview-value').textContent = 'USD 0.00';
                 document.getElementById('modal-preview-expiry').textContent = 'MM/YY';
+                document.getElementById('modal-preview-card-holder').textContent = 'GiftCard';
                 document.getElementById('modal-preview-logo').innerHTML = '\u003ci class="fas fa-image" style="opacity: 0.5;"\u003e\u003c/i\u003e';
                 document.getElementById('modal-barcode-container').style.display = 'none';
             } else {
@@ -2655,7 +2666,7 @@ window.confirmWelcomeStats = function () {
 window.checkStoreStockAlert = function (storeId) {
     if (storeId === 'all') return;
 
-    fetch('get_stock_alert_count.php?store_id=' + storeId)
+    fetch('/pos/api/pos/stock-alert-count?store_id=' + storeId)
         .then(res => res.json())
         .then(data => {
             if (data.count > 0) {
@@ -2891,7 +2902,7 @@ window.openProductDetails = function (productId) {
     if (nextBtn) nextBtn.style.display = 'none';
 
     const currentStoreId = document.getElementById('store_select').value;
-    fetch('get_product_details.php?id=' + productId + '&store_id=' + currentStoreId)
+    fetch('/pos/api/pos/product-details?id=' + productId + '&store_id=' + currentStoreId)
         .then(res => res.json())
         .then(resp => {
             if (resp.success) {
@@ -3390,7 +3401,7 @@ window.togglePosSetting = function (key, isChecked) {
         formData.append('store_id', storeSelect.value);
     }
 
-    fetch('/pos/stores/save_store_settings.php', {
+    fetch('/pos/api/stores/save-settings', {
         method: 'POST',
         body: formData
     })
@@ -3417,7 +3428,7 @@ function loadCustomers(storeId, search = '') {
 
     listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
-    fetch(`../customers/fetch_customers_by_store.php?store_id=${storeId}&search=${encodeURIComponent(search)}`)
+    fetch(`/pos/api/customers/by-store?store_id=${storeId}&search=${encodeURIComponent(search)}`)
         .then(res => res.json())
         .then(data => {
             if (data.success) {

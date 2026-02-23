@@ -2691,3 +2691,101 @@ html[data-theme="dark"] .dropdown-premium {
     color: #818cf8 !important;
     /* Indigo text hover for dark mode */
 }
+
+/* ========================================
+   GLOBAL DARK MODE FORM FIELDS FIX (PERMANENT)
+======================================== */
+
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="file"]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .form-control {
+    background-color: #0f172a !important;
+    /* solid slate-900 */
+    border-color: #334155 !important;
+    /* slate-700 */
+    color: #ffffff !important;
+    /* Force pure white text */
+}
+
+html[data-theme="dark"] input:-webkit-autofill,
+html[data-theme="dark"] input:-webkit-autofill:hover,
+html[data-theme="dark"] input:-webkit-autofill:focus,
+html[data-theme="dark"] input:-webkit-autofill:active,
+html[data-theme="dark"] textarea:-webkit-autofill,
+html[data-theme="dark"] textarea:-webkit-autofill:hover,
+html[data-theme="dark"] textarea:-webkit-autofill:focus,
+html[data-theme="dark"] select:-webkit-autofill,
+html[data-theme="dark"] select:-webkit-autofill:hover,
+html[data-theme="dark"] select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 10000px #0f172a inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: #94a3b8 !important;
+    /* slate-400 visible gray */
+    opacity: 1 !important;
+}
+
+/* Override text-slate-800/700/600 globally in dark mode for inputs */
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-slate-700,
+html[data-theme="dark"] .text-slate-600 {
+    color: #f8fafc !important;
+    /* slate-50 almost white */
+}
+
+/* Glass Card / bg-white fallback for dark mode */
+html[data-theme="dark"] .glass-card.bg-white,
+html[data-theme="dark"] .bg-white.shadow-sm,
+html[data-theme="dark"] .bg-white.shadow-md,
+html[data-theme="dark"] .bg-white.shadow-lg,
+html[data-theme="dark"] .bg-white.rounded-xl {
+    background-color: #1e293b !important;
+    /* slate-800 */
+    border-color: #334155 !important;
+    /* slate-700 */
+}
+
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100 {
+    background-color: #0f172a !important;
+    /* slate-900 */
+    border-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* iOS Time Picker & Select2 Fixes for Dark Mode */
+html[data-theme="dark"] .ios-time-picker {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .select2-container--default .select2-selection--single {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .select2-dropdown {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .select2-results__option {
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+html[data-theme="dark"] .select2-results__option--highlighted[aria-selected],
+html[data-theme="dark"] .select2-results__option:hover {
+    background-color: rgba(13, 148, 136, 0.4) !important;
+    color: #ffffff !important;
+}

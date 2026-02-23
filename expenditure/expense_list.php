@@ -78,11 +78,11 @@ if(!empty($category_totals)) {
 
 // Prepare Store Filters
 $stores_res = mysqli_query($conn, "SELECT id, store_name FROM stores WHERE status='1'");
-$store_opts = [['label' => 'All Stores', 'url' => '/pos/expenditure/expense_list']];
+$store_opts = [['label' => 'All Stores', 'url' => '/pos/expenditure/list']];
 while($st = mysqli_fetch_assoc($stores_res)) {
     $store_opts[] = [
         'label' => $st['store_name'], 
-        'url' => '/pos/expenditure/expense_list?store_id='.$st['id'],
+        'url' => '/pos/expenditure/list?store_id='.$st['id'],
         'active' => (isset($_GET['store_id']) && $_GET['store_id'] == $st['id'])
     ];
 }
@@ -99,9 +99,9 @@ if(isset($_GET['store_id']) && !empty($_GET['store_id'])) {
 }
 
 // Determine Action URLs based on Permissions
-$add_url = check_user_permission('create_expense_expenditure') ? '/pos/expenditure/expense_add' : '#';
-$edit_url = check_user_permission('update_expense_expenditure') ? '/pos/expenditure/expense_edit' : '#';
-$delete_url = check_user_permission('delete_expense_expenditure') ? '/pos/expenditure/save_expense' : '#';
+$add_url = check_user_permission('create_expense_expenditure') ? '/pos/expenditure/add' : '#';
+$edit_url = check_user_permission('update_expense_expenditure') ? '/pos/expenditure/edit' : '#';
+$delete_url = check_user_permission('delete_expense_expenditure') ? '/pos/expenditure/delete' : '#';
 
 $config = [
     'title' => 'Expenditures',
@@ -257,7 +257,7 @@ $(document).ready(function() {
         // Handle Change -> Redirect
         $('#store-select-list').on('select2:select', function(e) {
              var val = e.params.data.id;
-             var url = '/pos/expenditure/expense_list';
+             var url = '/pos/expenditure/list';
              if (val) {
                  url += '?store_id=' + val;
              }
@@ -265,7 +265,7 @@ $(document).ready(function() {
         });
         
         $('#store-select-list').on('select2:unselect', function(e) {
-             window.location.href = '/pos/expenditure/expense_list';
+             window.location.href = '/pos/expenditure/list';
         });
     }
 

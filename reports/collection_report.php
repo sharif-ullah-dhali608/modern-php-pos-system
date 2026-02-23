@@ -17,11 +17,26 @@ $date_filter = $_GET['date_filter'] ?? '';
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 
-// Get Store Filters (strip initial " AND " for join usage if using directly in ON logic, 
-// BUT getStoreFilterDirect returns " AND ...". So we can just append it.)
+// Set Default to Today if no filter is provided
+if(empty($start_date) && empty($date_filter)) {
+    $start_date = date('Y-m-d');
+    $end_date = date('Y-m-d');
+} elseif(!empty($date_filter)) {
+    $range = getDateRange($date_filter);
+    if($range) {
+        $start_date = $range['start'];
+        $end_date = $range['end'];
+    }
+}
+
+// Sanitize for SQL
+$start_date = mysqli_real_escape_string($conn, $start_date);
+$end_date = mysqli_real_escape_string($conn, $end_date);
+
+// Get Store Filters
 $sl_filter = getStoreFilterDirect('sl');
 $si_filter = getStoreFilterDirect('si');
-$si_ref_filter = getStoreFilterDirect('si_ref'); // For ref invoice
+$si_ref_filter = getStoreFilterDirect('si_ref'); 
 
 // Fetch Data - Aggregate by User
 $query = "SELECT u.name as user_name, u.id as user_id,

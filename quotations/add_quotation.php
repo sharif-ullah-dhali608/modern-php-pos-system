@@ -42,6 +42,7 @@ $taxes_res     = mysqli_query($conn, "SELECT id, name, taxrate as rate FROM taxr
 $taxes = mysqli_fetch_all($taxes_res, MYSQLI_ASSOC);
 
 $suppliers = mysqli_query($conn, "SELECT id, name FROM suppliers WHERE status='1'");
+$customers = mysqli_query($conn, "SELECT id, name, mobile FROM customers WHERE status='1'");
 
 include('../includes/header.php');
 ?>
@@ -152,7 +153,7 @@ include('../includes/header.php');
         <div class="navbar-fixed-top"><?php include('../includes/navbar.php'); ?></div>
         
         <div class="content-scroll-area custom-scroll flex-1 p-4 md:p-6">
-            <form action="/pos/quotations/save_quotation.php" method="POST" id="quotationForm" novalidate>
+            <form action="/pos/api/quotations/action" method="POST" id="quotationForm" novalidate>
                 
                 <?php if($is_edit): ?>
                     <input type="hidden" name="quotation_id" value="<?= $q_data['id']; ?>">
@@ -196,6 +197,11 @@ include('../includes/header.php');
                                         <option value="">Select Customer</option>
                                         <option value="1" <?= ($is_edit && $q_data['customer_id'] == 1) ? 'selected' : ''; ?>>Walk-in Customer</option>
                                         <option value="2" <?= ($is_edit && $q_data['customer_id'] == 2) ? 'selected' : ''; ?>>Regular Customer</option>
+                                        <?php foreach($customers as $c): ?>
+                                            <option value="<?= $c['id']; ?>" <?= ($is_edit && $q_data['customer_id'] == $c['id']) ? 'selected' : ''; ?>>
+                                                <?= htmlspecialchars($c['name']) . ($c['mobile'] ? ' - ' . htmlspecialchars($c['mobile']) : ''); ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
 

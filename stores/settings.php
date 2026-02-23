@@ -844,11 +844,15 @@ if(mysqli_num_rows($check_col) == 0) {
         const storeId = document.getElementById('limit_store_select').value;
         body.innerHTML = '<tr><td colspan="5" class="p-4 text-center"><i class="fas fa-spinner fa-spin text-teal-500"></i></td></tr>';
         $.ajax({
-            url: '/pos/stores/search_products_limit.php',
+            url: '/pos/api/stores/search-products',
             method: 'GET',
             data: { q: query, store_id: storeId },
             success: function(resp) {
                 body.innerHTML = resp;
+            },
+            error: function(err) {
+                console.error("Search Error:", err);
+                body.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold">Failed to search products. Please try again.</td></tr>';
             }
         });
     }
@@ -861,7 +865,7 @@ if(mysqli_num_rows($check_col) == 0) {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         
         $.ajax({
-            url: '/pos/stores/save_product_limit.php',
+            url: '/pos/api/stores/save-limit',
             method: 'POST',
             data: { product_id: id, limit: val, store_id: storeId },
             success: function(res) {
@@ -871,6 +875,10 @@ if(mysqli_num_rows($check_col) == 0) {
                     btn.innerHTML = 'Set';
                     btn.classList.remove('bg-green-500', 'text-white');
                 }, 2000);
+            },
+            error: function() {
+                btn.innerHTML = 'Set';
+                Swal.fire('Error', 'Failed to save limit.', 'error');
             }
         });
     }
@@ -880,7 +888,7 @@ if(mysqli_num_rows($check_col) == 0) {
         const formData = new FormData(form);
 
         $.ajax({
-            url: '/pos/stores/save_store_settings.php',
+            url: '/pos/api/stores/save-settings',
             method: 'POST',
             data: formData,
             processData: false,

@@ -49,7 +49,7 @@ if(isset($_GET['id'])) {
         $attachment = $row['attachment'];
     } else {
         $_SESSION['status_code'] = "error";
-        header("Location: /pos/expenditure/expense_list");
+        header("Location: /pos/expenditure/list");
         exit(0);
     }
 }
@@ -83,7 +83,7 @@ include('../includes/header.php');
                 <!-- Header -->
                 <div class="mb-6 slide-in flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <a href="/pos/expenditure/expense_list" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-200 shadow-sm transition-all">
+                        <a href="/pos/expenditure/list" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-200 shadow-sm transition-all">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                         <div>
@@ -93,7 +93,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="/pos/expenditure/save_expense" method="POST" enctype="multipart/form-data" class="slide-in delay-100" id="expenseForm" novalidate>
+                <form action="/pos/expenditure/save" method="POST" enctype="multipart/form-data" class="slide-in delay-100" id="expenseForm" novalidate>
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="expense_id" value="<?= $expense_id ?>">
                         <input type="hidden" name="old_attachment" value="<?= $attachment ?>">
@@ -277,7 +277,7 @@ include('../includes/header.php');
                                 <button type="submit" name="<?= $btn_name; ?>" class="w-full py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/30 flex items-center justify-center text-lg mb-3">
                                     <i class="fas fa-save mr-2"></i> <?= $btn_text; ?>
                                 </button>
-                                <a href="/pos/expenditure/expense_list" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center">
+                                <a href="/pos/expenditure/list" class="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center">
                                     <i class="fas fa-times mr-2"></i> Cancel
                                 </a>
                             </div>

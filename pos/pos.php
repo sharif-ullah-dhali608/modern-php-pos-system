@@ -409,9 +409,9 @@ include('../includes/header.php');
                                 // Method 1: Check products.thumbnail column
                                 if (!empty($thumbnail)) {
                                     if (strpos($thumbnail, '/pos/') === 0) {
-                                        $relative_path = '..' . $thumbnail;
+                                        $relative_path = '..' . str_replace('/pos', '', $thumbnail);
                                     } else {
-                                        $relative_path = '../' . $thumbnail;
+                                        $relative_path = '../' . ltrim($thumbnail, '/');
                                     }
                                     if (file_exists($relative_path)) {
                                         $display_image = $thumbnail;
@@ -1340,7 +1340,7 @@ include('../includes/header.php');
                         <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                             <div>
                                 <p style="font-size: 10px; opacity: 0.8;">Card Holder</p>
-                                <p style="font-weight: 600;">GiftCard</p>
+                                <p id="modal-preview-card-holder" style="font-weight: 600;">GiftCard</p>
                             </div>
                             <div style="text-align: right;">
                                 <p style="font-size: 10px; opacity: 0.8;">Expiry</p>

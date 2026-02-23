@@ -48,7 +48,7 @@ $items = [];
 
 // URL Definitions
 $base_url = '/pos/quotations';
-$process_url = '/pos/quotations/save_quotation.php'; // For Delete & Status
+$process_url = '/pos/api/quotations/action'; // For Delete & Status
 
 if($query_run) {
     while($row = mysqli_fetch_assoc($query_run)) {
@@ -81,7 +81,7 @@ if($query_run) {
         $row['status_val'] = ($db_status == 'sent' || $db_status == '1') ? 1 : 0;
 
         // --- 4. Custom Actions (Fix for Delete Modal) ---
-        $edit_url = $base_url . "/add_quotation.php?id=" . $row['id'];
+        $edit_url = $base_url . "/edit/" . $row['id'];
         $ref_no_safe = addslashes($row['ref_no']);
 
         $actions = '<div class="flex items-center gap-2">';
@@ -358,7 +358,7 @@ include('../includes/header.php');
         $('#view_ref').text('Loading...');
         
         $.ajax({
-            url: '/pos/quotations/save_quotation.php',
+            url: '/pos/api/quotations/action',
             type: 'POST',
             data: { view_quotation_btn: true, quotation_id: id },
             dataType: 'json',

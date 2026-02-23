@@ -441,7 +441,7 @@ include('../includes/header.php');
                                     </td>
                                     <td class="p-4 text-center">
                                         <?php if($can_delete): ?>
-                                        <button type="button" onclick="confirmDelete('<?= $row['invoice_id']; ?>', '<?= addslashes($row['invoice_id']); ?>', '/pos/purchases/save_purchase.php')" class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete">
+                                        <button type="button" onclick="confirmDelete('<?= $row['invoice_id']; ?>', '<?= addslashes($row['invoice_id']); ?>', '/pos/purchases/delete')" class="p-2 text-red-500 hover:bg-red-50 rounded transition" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                         <?php endif; ?>

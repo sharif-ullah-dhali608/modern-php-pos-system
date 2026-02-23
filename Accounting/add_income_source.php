@@ -149,7 +149,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="" method="POST" class="slide-in delay-100" id="incomeForm" novalidate>
+                <form action="/pos/accounting/income-source/save" method="POST" class="slide-in delay-100" id="incomeForm" novalidate>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- Column 1: Main Info (Spans 2 cols usually, but user layout might differ. Trying 2 cols here) -->

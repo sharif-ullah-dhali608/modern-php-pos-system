@@ -596,7 +596,7 @@ if (!empty($allowed_stores)) {
     function fetchSearchHints(query) {
         if(!current_store_id || current_store_id == '0') return;
         $.ajax({
-            url: '/pos/products/search_products_barcode.php',
+            url: '/pos/api/products/search-barcode',
             method: 'GET',
             data: { 
                 q: query,

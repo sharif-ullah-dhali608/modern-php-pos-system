@@ -65,7 +65,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="/pos/expenditure/save_category" method="POST" id="categoryForm" novalidate autocomplete="off" class="slide-in delay-100">
+                <form action="/pos/expenditure/category_save" method="POST" id="categoryForm" novalidate autocomplete="off" class="slide-in delay-100">
                     <?php if($mode == 'edit'): ?>
                         <input type="hidden" name="category_id" value="<?= $d['category_id'] ?>">
                         <input type="hidden" name="update_category_btn" value="true">

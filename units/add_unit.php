@@ -36,7 +36,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Unit not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: unit_list.php");
+        header("Location: /pos/units/list");
         exit(0);
     }
 }
@@ -69,7 +69,7 @@ include('../includes/header.php');
                 </div>
 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/units/save_unit.php" method="POST">
+                    <form action="/pos/units/save" method="POST">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="unit_id" value="<?= $d['id']; ?>">
                         <?php endif; ?>

@@ -40,7 +40,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Brand not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: brand_list.php");
+        header("Location: /pos/brands/list");
         exit(0);
     }
 }
@@ -73,7 +73,7 @@ include('../includes/header.php');
                 </div>
 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/brands/save_brand.php" method="POST" enctype="multipart/form-data">
+                    <form action="/pos/brands/save" method="POST" enctype="multipart/form-data">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="brand_id" value="<?= $d['id']; ?>">
                             <input type="hidden" name="old_thumbnail" value="<?= htmlspecialchars($d['thumbnail']); ?>">
@@ -145,7 +145,7 @@ include('../includes/header.php');
                                     <button type="submit" name="<?= $btn_name; ?>" 
                                         class="w-full bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-semibold py-3 rounded-lg shadow-lg transition-all transform hover:scale-[1.01]"> <?= $btn_text; ?> </button>
                                     
-                                    <a href="brand_list.php" 
+                                    <a href="/pos/brands/list" 
                                         class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all">Cancel</a>
                                 </div>
                             </div>
