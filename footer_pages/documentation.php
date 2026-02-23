@@ -259,7 +259,7 @@ include('../includes/header.php');
                         <li><strong>.htaccess:</strong> Rules for the Apache web server, handling URL routing and protecting sensitive directories.</li>
                         <li><strong>package.json:</strong> Manages modern frontend dependencies and build scripts (Node.js).</li>
                         <li><strong>tailwind.config.js:</strong> Central configuration for the Tailwind CSS design system used in this project.</li>
-                        <li><strong>logout.php:</strong> A standalone security script that safely terminates user sessions and redirects to the sign-in page.</li>
+                        <li><strong>logout:</strong> A standalone security script that safely terminates user sessions and redirects to the sign-in page.</li>
                     </ul>
 
                     <h4>4. External Dependencies (CDNs)</h4>

@@ -245,7 +245,7 @@ unset($_SESSION['captcha_error']);
                         <p class="text-slate-500 text-xs md:text-sm mt-1">Please identify yourself to proceed.</p>
                     </div>
 
-                    <form action="/pos/config/auth_user.php" method="POST" id="loginForm" class="space-y-3 md:space-y-5 w-full">
+                    <form action="/pos/config/auth_user.php" method="POST" id="loginForm" class="space-y-3 md:space-y-5 w-full" onsubmit="event.preventDefault();">
                         <div>
                             <label for="email" class="<?= $label_style; ?>">Email Address</label>
                             
@@ -304,14 +304,15 @@ unset($_SESSION['captcha_error']);
                 <p class="text-sm text-slate-500 mt-2 mb-6">Please match the captcha code below.</p>
                 
                 <div class="mb-6 flex items-center justify-center gap-4">
-                    <img src="/pos/config/captcha.php" id="captchaImage" alt="Code" class="h-16 rounded mix-blend-multiply">
+                    <img src="/pos/captcha" id="captchaImage" alt="Code" class="h-16 rounded mix-blend-multiply">
                     <button onclick="refreshCaptcha()" class="text-slate-400 hover:text-teal-600 transition p-2 rotate-0 hover:rotate-180 duration-500 text-lg" type="button">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
                 <input type="text" inputmode="numeric" id="modalCaptchaInput" 
                        class="w-full text-center text-3xl font-mono font-bold tracking-[0.5em] text-slate-800 border-b-2 border-slate-200 focus:border-teal-500 outline-none py-2 bg-transparent placeholder-slate-200 transition-colors" 
-                       placeholder="•••••" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);">
+                       placeholder="•••••" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);"
+                       onkeydown="if(event.key === 'Enter') submitFormWithCaptcha();">
                 
                 <button type="button" id="confirmBtn" onclick="submitFormWithCaptcha()" 
                     class="w-full mt-8 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 hover:to-emerald-800 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center gap-2 hover:shadow-lg transition-all">
@@ -348,6 +349,16 @@ unset($_SESSION['captcha_error']);
         
         emailInput.addEventListener('input', checkInputs);
         passwordInput.addEventListener('input', checkInputs);
+
+        // Map "Enter" on email/password to open the modal
+        [emailInput, passwordInput].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter' && !openModalBtn.disabled) {
+                    e.preventDefault();
+                    openModalBtn.click();
+                }
+            });
+        });
 
         function togglePassword() {
             const pwd = document.getElementById('password');
@@ -396,7 +407,7 @@ unset($_SESSION['captcha_error']);
         }
 
         function refreshCaptcha() {
-            document.getElementById('captchaImage').src = '/pos/config/captcha.php?' + new Date().getTime();
+            document.getElementById('captchaImage').src = '/pos/captcha?' + new Date().getTime();
             document.getElementById('modalCaptchaInput').value = '';
         }
         
@@ -426,6 +437,7 @@ unset($_SESSION['captcha_error']);
             .then(data => {
                 if (data.status === 'success') {
                     hiddenCaptchaInput.value = code;
+                    document.getElementById('loginForm').onsubmit = null;
                     realSubmitBtn.click(); 
                 } else {
                     Swal.fire({

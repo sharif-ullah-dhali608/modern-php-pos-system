@@ -2,6 +2,20 @@ Options -MultiViews
 RewriteEngine On
 RewriteBase /pos
 
+# Captcha Pretty URL
+RewriteRule ^captcha$ config/captcha.php [L]
+
+# AJAX Pretty URLs
+RewriteRule ^api/stores/search$ users/fetch_stores_modal.php [L,QSA]
+
+# --- Block Direct .php Access ---
+# Show Forbidden error if a user tries to access a .php file directly.
+# Pretty URLs still work via internal rewrites.
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteCond %{THE_REQUEST} \.php[\s?] [NC]
+RewriteRule ^ - [F,L]
+
 # --- Accounting Routes (Priority) ---
 RewriteRule ^accounting/bank/list$ Accounting/bank_list.php [L,NC]
 RewriteRule ^accounting/bank/add$ Accounting/bank_add.php [L,NC]
@@ -28,6 +42,9 @@ RewriteRule ^(.*)/$ /pos/$1 [R=301,L]
 
 # Login route
 RewriteRule ^login$ signin.php [L]
+
+# Logout route
+RewriteRule ^logout$ logout.php [L]
 
 # Footer Pages Rewrite Rules
 RewriteRule ^documentation$ footer_pages/documentation.php [L]

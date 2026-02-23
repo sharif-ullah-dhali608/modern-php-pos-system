@@ -178,7 +178,7 @@
                         <!-- Footer -->
                         <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-center items-center">
                              <!-- Logout is ONLY visible if it's a forced selection -->
-                             <a href="/pos/logout.php" id="modal_logout_btn" class="text-rose-500 text-[10px] font-bold uppercase tracking-widest hover:text-rose-700 transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-50">
+                             <a href="/pos/logout" id="modal_logout_btn" class="text-rose-500 text-[10px] font-bold uppercase tracking-widest hover:text-rose-700 transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-rose-50">
                                  <i class="fas fa-sign-out-alt"></i> Logout
                              </a>
                              
@@ -261,7 +261,7 @@
             function fetchStores(query) {
                 const container = document.getElementById('modal_store_list');
                 
-                fetch(`/pos/users/fetch_stores_modal.php?search=${encodeURIComponent(query)}`)
+                fetch(`/pos/api/stores/search?search=${encodeURIComponent(query)}`)
                     .then(r => r.json())
                     .then(data => {
                         if(data.success) {
@@ -381,7 +381,7 @@
                     
                     <?php if($total_notif_count > 0): ?>
                         <span class="absolute block bg-rose-500 text-white font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg shadow-rose-500/40 z-[1001] transition-transform group-hover:scale-110 pointer-events-none" 
-                              style="width: 21px; height: 21px; top: -5px; right: -5px; font-size: 10px; min-width: 21px;">
+                               style="width: 21px; height: 21px; top: -5px; right: -5px; font-size: 10px; min-width: 21px;">
                             <?= $total_notif_count ?>
                         </span>
                     <?php endif; ?>
@@ -495,12 +495,12 @@
                                     <i class="fas fa-user w-5 text-teal-600"></i>
                                     <span class="text-sm font-medium">My Profile</span>
                                 </a>
-                            <a href="#" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-700">
+                            <a href="/pos/system/settings" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-700">
                                 <i class="fas fa-cog w-5 text-slate-500"></i>
                                 <span class="text-sm font-medium">Settings</span>
                             </a>
                             <hr class="my-2 border-slate-200">
-                            <a href="/pos/logout.php" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors text-red-600">
+                            <a href="/pos/logout" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors text-red-600">
                                 <i class="fas fa-sign-out-alt w-5"></i>
                                 <span class="text-sm font-medium">Log Out</span>
                             </a>
