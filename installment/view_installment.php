@@ -802,7 +802,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             btn.disabled = true;
 
-            fetch('/pos/installment/process_payment.php', {
+            fetch('/pos/api/installment/pay', {
                 method: 'POST',
                 body: formData
             })
@@ -851,7 +851,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
         
         // Function to open invoice view modal
         function openInvoiceViewModal(invoiceId) {
-            fetch('/pos/admin/invoice_content.php?id=' + invoiceId)
+            fetch('/pos/api/invoices/content?id=' + invoiceId)
                 .then(res => res.text())
                 .then(html => {
                     // Create modal container if not exists
@@ -967,7 +967,7 @@ $page_title = "Installment - " . $installment['invoice_id'];
             // Get current installment order ID
             const installmentId = <?= $id; ?>;
             
-            fetch('/pos/installment/get_installment_details.php?id=' + installmentId)
+            fetch('/pos/api/installment/details?id=' + installmentId)
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {

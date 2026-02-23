@@ -74,20 +74,24 @@ include('../includes/header.php');
 <link rel="stylesheet" href="/pos/assets/css/loanCss/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
 <style>
-    /* Custom Calendar Styling (borrowed from reusable_list.php) */
+    /* Custom Calendar Styling */
     .calendar-dropdown {
         position: absolute;
         top: 100%;
         left: 0;
         z-index: 1000;
         width: 320px;
-        background: white;
+        background: #ffffff !important;
         border: 1px solid #f1f5f9;
         border-radius: 1.5rem;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         padding: 1.25rem;
         margin-top: 0.75rem;
         animation: slideDown 0.3s ease-out;
+        color: #1e293b !important;
+    }
+    .calendar-dropdown * {
+        color: inherit;
     }
     @keyframes slideDown {
         from { opacity: 0; transform: translateY(-10px); }
@@ -104,6 +108,22 @@ include('../includes/header.php');
         position: relative;
         z-index: 10;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #475569 !important; /* force slate-600 always */
+        background: transparent;
+    }
+    .calendar-day-btn:hover {
+        background: #f8fafc !important;
+        color: #0d9488 !important;
+    }
+    .calendar-day-btn.bg-teal-600 {
+        background: #0d9488 !important;
+        color: #ffffff !important;
+    }
+    .calendar-day-btn.text-white {
+        color: #ffffff !important;
+    }
+    .calendar-day-btn.text-teal-600 {
+        color: #0d9488 !important;
     }
     .calendar-day-wrapper {
         display: flex;
@@ -113,7 +133,16 @@ include('../includes/header.php');
         position: relative;
         height: 2.5rem;
     }
-    /* Input Focus Styling to match image */
+    #calendar-month-display {
+        color: #1e293b !important;
+    }
+    #calendar-selected-range {
+        color: #64748b !important;
+    }
+    #calendar-selected-range.text-teal-600 {
+        color: #0d9488 !important;
+    }
+    /* Input Focus Styling */
     #transaction_range:focus {
         border-color: #0d9488 !important;
         box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1) !important;
@@ -296,8 +325,8 @@ include('../includes/header.php');
 
     async function generateRef() {
         try {
-            const response = await fetch('/pos/loan/save_loan.php?action=generate_ref');
-            const data = await response.json();
+            const response = await fetch('/pos/api/loan/generate-ref');
+           const data = await response.json();
             if(data.status === 200) {
                 document.getElementById('ref_no').value = data.ref_no;
             }

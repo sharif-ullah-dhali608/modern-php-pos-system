@@ -5,7 +5,7 @@ include('../includes/store_filter_helper.php'); // Store filtering helper
 include('../includes/permission_helper.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -22,8 +22,8 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_taxrate_taxrate') ? '/pos/taxrates/add' : '#';
 $edit_url = check_user_permission('update_taxrate_taxrate') ? '/pos/taxrates/edit' : '#';
-$delete_url = check_user_permission('delete_taxrate_taxrate') ? '/pos/taxrates/save_taxrate.php' : '#';
-$status_url = check_user_permission('update_taxrate_taxrate') ? '/pos/taxrates/save_taxrate.php' : '#';
+$delete_url = check_user_permission('delete_taxrate_taxrate') ? '/pos/taxrates/delete' : '#';
+$status_url = check_user_permission('update_taxrate_taxrate') ? '/pos/taxrates/save' : '#';
 
 $list_config = [
     'title' => 'Taxrate List',

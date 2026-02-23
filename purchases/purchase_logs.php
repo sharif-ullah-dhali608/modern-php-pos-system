@@ -87,6 +87,8 @@ if($query_run) {
         $row['supplier_display'] = !empty($row['supplier_name']) ? $row['supplier_name'] : 'N/A';
         $row['pmethod_display'] = !empty($row['pmethod_name']) ? '<span class="uppercase font-bold text-xs">'.$row['pmethod_name'].'</span>' : '<span class="text-slate-400 text-xs">N/A</span>';
         
+        $row['custom'] = '<button onclick="viewLogDetail(\''.$row['ref_invoice_id'].'\')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition shadow-sm border border-indigo-100" title="View Detail"><i class="fas fa-eye"></i></button>';
+
         $items[] = $row;
         $total_amount += $row['amount'];
     }
@@ -148,13 +150,7 @@ $list_config = [
         ['key' => 'formatted_amount', 'label' => 'Amount', 'class' => 'font-bold'],
         ['key' => 'custom', 'label' => 'Action', 'type' => 'html']
     ],
-    'data' => $items,
-    'action_buttons' => ['custom'],
-    'custom_actions' => function($row) {
-        return '<button onclick="viewLogDetail(\''.$row['ref_invoice_id'].'\')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition shadow-sm border border-indigo-100" title="View Detail">
-                    <i class="fas fa-eye"></i>
-                </button>';
-    }
+    'data' => $items
 ];
 
 $page_title = "Purchase Activity Logs - Velocity POS";
@@ -177,29 +173,30 @@ include('../includes/header.php');
                 ?>
             </div>
             
-            <!-- View Modal -->
-            <div id="viewModal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true">
-                <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity" onclick="closeViewModal()"></div>
-                <div class="fixed inset-0 z-10 overflow-y-auto">
-                    <div class="flex min-h-full items-center justify-center p-4">
-                        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 transform transition-all">
-                            <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
-                                <h3 class="text-sm font-black uppercase tracking-widest flex items-center gap-3">
-                                    <i class="fas fa-file-invoice"></i> <span id="viewModalTitle">Activity Detail</span>
-                                </h3>
-                                <button onclick="closeViewModal()" class="w-8 h-8 rounded-full bg-indigo-500/50 flex items-center justify-center hover:bg-red-500 transition-all">
-                                    <i class="fas fa-times text-xs"></i>
-                                </button>
-                            </div>
-                            <div id="viewModalContent" class="p-8 max-h-[85vh] overflow-y-auto custom-scroll bg-white">
-                            </div>
-                        </div>
+        </div>
+        <?php include('../includes/footer.php'); ?>
+    </main>
+
+    <!-- View Modal -->
+    <div id="viewModal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity" onclick="closeViewModal()"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 transform transition-all">
+                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
+                        <h3 class="text-sm font-black uppercase tracking-widest flex items-center gap-3">
+                            <i class="fas fa-file-invoice"></i> <span id="viewModalTitle">Activity Detail</span>
+                        </h3>
+                        <button onclick="closeViewModal()" class="w-8 h-8 rounded-full bg-indigo-500/50 flex items-center justify-center hover:bg-red-500 transition-all">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                    <div id="viewModalContent" class="p-8 max-h-[85vh] overflow-y-auto custom-scroll bg-white">
                     </div>
                 </div>
             </div>
         </div>
-        <?php include('../includes/footer.php'); ?>
-    </main>
+    </div>
 </div>
 
 <script>
@@ -209,7 +206,7 @@ function viewLogDetail(invoiceId) {
     $('#viewModal').removeClass('hidden'); 
     
     $.ajax({
-        url: '/pos/purchases/save_purchase.php',
+        url: '/pos/purchases/save',
         type: 'POST',
         data: { view_purchase_btn: true, invoice_id: invoiceId },
         dataType: 'json',

@@ -3,7 +3,7 @@ session_start();
 include('../config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: ../signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     if(empty($return_items)){
         $_SESSION['message'] = "Error: No items selected for return";
-        header("Location: sell_return_create.php?id=$original_invoice_id");
+        header("Location: /pos/sell/return/create?id=$original_invoice_id");
         exit;
     }
 
@@ -150,19 +150,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         
         $_SESSION['message'] = "Return processed successfully. ID: $return_invoice_id";
         $_SESSION['msg_type'] = "success";
-        header("Location: sell_return.php");
+        header("Location: /pos/sell/return");
         exit;
 
     } catch (Exception $e) {
         mysqli_rollback($conn);
         $_SESSION['message'] = "Error: " . $e->getMessage();
         $_SESSION['msg_type'] = "error";
-        header("Location: sell_return_create.php?id=$original_invoice_id");
+        header("Location: /pos/sell/return/create?id=$original_invoice_id");
         exit;
     }
 
 } else {
-    header("Location: sell_return.php");
+    header("Location: /pos/sell/return");
     exit;
 }
 ?>

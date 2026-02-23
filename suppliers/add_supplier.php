@@ -4,7 +4,7 @@ include('../config/dbcon.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php"); 
+    header("Location: /pos/login"); 
     exit(0);
 }
 
@@ -47,7 +47,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Supplier not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: /pos/suppliers/supplier_list.php");
+        header("Location: /pos/suppliers/list");
         exit(0);
     }
 }
@@ -107,7 +107,7 @@ include('../includes/header.php');
             <div class="p-6">
                 <div class="mb-2 slide-in">
                     <div class="flex items-center gap-4 mb-2">
-                        <a href="/pos/suppliers/supplier_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+                        <a href="/pos/suppliers/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                         <div>
@@ -121,7 +121,7 @@ include('../includes/header.php');
                 </div>
                 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/suppliers/save_supplier.php" method="POST" id="supplierForm" novalidate autocomplete="off">
+                    <form action="/pos/suppliers/save" method="POST" id="supplierForm" novalidate autocomplete="off">
                         
                         <?php if(isset($_GET['id'])): ?>
                             <input type="hidden" name="supplier_id" value="<?= $d['id']; ?>">

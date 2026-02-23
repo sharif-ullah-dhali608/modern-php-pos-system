@@ -144,9 +144,9 @@ foreach($products as $product):
             if (!empty($thumbnail)) {
                 // Handle paths that start with /pos/
                 if (strpos($thumbnail, '/pos/') === 0) {
-                    $relative_path = '..' . $thumbnail;
+                    $relative_path = '..' . str_replace('/pos', '', $thumbnail);
                 } else {
-                    $relative_path = '../' . $thumbnail;
+                    $relative_path = '../' . ltrim($thumbnail, '/');
                 }
                 if (file_exists($relative_path)) {
                     $display_image = $thumbnail;

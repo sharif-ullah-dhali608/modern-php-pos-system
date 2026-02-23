@@ -4,7 +4,7 @@ include('../config/dbcon.php');
 
 // 1. SECURITY CHECK
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -91,7 +91,7 @@ include('../includes/header.php');
                 </div>
 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/categories/save_category.php" method="POST" enctype="multipart/form-data" id="categoryForm">
+                    <form action="/pos/categories/save" method="POST" enctype="multipart/form-data" id="categoryForm">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="category_id" value="<?= $d['id']; ?>">
                             <input type="hidden" name="old_thumbnail" value="<?= htmlspecialchars($d['thumbnail']); ?>">

@@ -644,7 +644,7 @@ $default_from_store = !empty($allowed_stores) ? $allowed_stores[0]['id'] : null;
         const storeId = document.getElementById('from_store_id').value;
         if (!storeId) return;
 
-        fetch(`search_stock?q=${query}&store_id=${storeId}`)
+        fetch(`/pos/api/transfer/search-stock?q=${query}&store_id=${storeId}`)
             .then(res => res.text())
             .then(html => {
                 stockListResults.innerHTML = html;
@@ -887,8 +887,8 @@ $default_from_store = !empty($allowed_stores) ? $allowed_stores[0]['id'] : null;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="btn-overlay"></div><i class="fas fa-spinner fa-spin relative z-10"></i> <span class="text-xs relative z-10">Processing...</span>';
 
-        fetch('save', {
-            method: 'POST',
+        fetch('/pos/transfer/save', {
+           method: 'POST',
             body: formData
         })
         .then(res => res.json())
@@ -900,7 +900,7 @@ $default_from_store = !empty($allowed_stores) ? $allowed_stores[0]['id'] : null;
                     text: data.message,
                     confirmButtonColor: '#0d9488'
                 }).then(() => {
-                    window.location.href = 'transfer_list';
+                    window.location.href = '/pos/transfer/list';
                 });
             } else {
                 Swal.fire('Error', data.message || 'Something went wrong', 'error');

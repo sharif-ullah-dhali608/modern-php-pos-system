@@ -318,7 +318,7 @@
                 // Post to switch_store.php
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '/pos/config/switch_store.php';
+                form.action = '/pos/api/config/switch-store';
                 
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -573,7 +573,7 @@ function viewUser(id) {
     // Fetch User Details
     $.ajax({
         type: "POST",
-        url: "/pos/users/fetch_user_modal.php",
+        url: "/pos/api/users/fetch-modal",
         data: { user_id: id },
         success: function(response) {
             $('#user_view_body').html(response);

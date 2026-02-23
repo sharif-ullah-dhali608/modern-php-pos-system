@@ -111,7 +111,7 @@ if(isset($_POST['save_quotation_btn'])) {
     if(mysqli_num_rows($check_run) > 0) {
         $_SESSION['message'] = "Reference No '$ref_no' already exists!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_quotation.php");
+        header("Location: /pos/quotations/add");
         exit(0);
     }
 
@@ -172,7 +172,7 @@ if(isset($_POST['save_quotation_btn'])) {
         mysqli_rollback($conn);
         $_SESSION['message'] = "Error: " . $e->getMessage();
         $_SESSION['msg_type'] = "error";
-        header("Location: add_quotation.php");
+        header("Location: /pos/quotations/add");
     }
     exit(0);
 }
@@ -207,7 +207,7 @@ if(isset($_POST['update_quotation_btn'])) {
     if(mysqli_num_rows($check_run) > 0) {
         $_SESSION['message'] = "Reference No '$ref_no' already used by another quotation!";
         $_SESSION['msg_type'] = "error";
-        header("Location: add_quotation.php?id=$quotation_id");
+        header("Location: /pos/quotations/edit/$quotation_id");
         exit(0);
     }
 
@@ -269,7 +269,7 @@ if(isset($_POST['update_quotation_btn'])) {
         mysqli_rollback($conn);
         $_SESSION['message'] = "Update Failed: " . $e->getMessage();
         $_SESSION['msg_type'] = "error";
-        header("Location: add_quotation.php?id=$quotation_id");
+        header("Location: /pos/quotations/edit/$quotation_id");
     }
     exit(0);
 }

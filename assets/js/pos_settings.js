@@ -16,7 +16,7 @@ function togglePosSetting(key, value) {
 
     // Save to DB
     $.ajax({
-        url: '/pos/stores/save_store_settings.php',
+        url: '/pos/api/stores/save-settings',
         method: 'POST',
         data: {
             store_id: currentStoreId,
@@ -28,6 +28,6 @@ function togglePosSetting(key, value) {
 function openSettings(e) {
     e.preventDefault();
     const currentStoreId = document.getElementById('store_select').value;
-    const url = `/pos/stores/settings.php?store_id=${currentStoreId}`;
+    const url = `/pos/stores/settings?store_id=${currentStoreId}`;
     window.location.href = url;
 }

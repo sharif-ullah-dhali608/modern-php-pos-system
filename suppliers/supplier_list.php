@@ -34,7 +34,7 @@ while($row = mysqli_fetch_assoc($query_run)) {
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_supplier_supplier') ? '/pos/suppliers/add' : '#';
 $edit_url = check_user_permission('update_supplier_supplier') ? '/pos/suppliers/edit' : '#';
-$delete_url = check_user_permission('delete_supplier_supplier') ? '/pos/suppliers/save_supplier.php' : '#';
+$delete_url = check_user_permission('delete_supplier_supplier') ? '/pos/suppliers/delete' : '#';
 
 // Prepare data for reusable list component
 $list_config = [
@@ -55,7 +55,7 @@ $list_config = [
     'data' => $suppliers,
     'edit_url' => $edit_url,
     'delete_url' => $delete_url,
-    'status_url' => '/pos/suppliers/save_supplier.php',
+    'status_url' => '/pos/suppliers/save',
     'primary_key' => 'id',
     'name_field' => 'name' // Used for delete confirmation message (e.g. "Delete Global Traders?")
 ];

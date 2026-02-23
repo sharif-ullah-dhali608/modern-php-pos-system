@@ -346,7 +346,7 @@ function submitQuickAdd() {
 
     $.ajax({
         type: "POST",
-        url: "/pos/products/update_stock_ajax.php",
+        url: "/pos/api/products/update-stock",
         data: {
             action: 'quick_add_qty',
             product_id: pid,

@@ -4,7 +4,7 @@ include('../config/dbcon.php');
 
 // Security Check
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 

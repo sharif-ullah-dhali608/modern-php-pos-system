@@ -78,9 +78,9 @@ $list_config = [
         ['key' => 'actions', 'label' => 'Actions', 'type' => 'actions']
     ],
     'data' => $items,
-    'edit_url' => $edit_url,
-    'delete_url' => $delete_url,
-    'status_url' => '/pos/brands/save_brand.php',
+    'edit_url' => '/pos/brands/edit',
+    'delete_url' => '/pos/brands/delete',
+    'status_url' => '/pos/brands/save',
     'primary_key' => 'id',
     'name_field' => 'name'
 ];

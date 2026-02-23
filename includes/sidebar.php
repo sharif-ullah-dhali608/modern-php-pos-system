@@ -350,8 +350,8 @@ $menu_items = [
         'submenu' => [
             ['title' => 'Add Category', 'link' => '/pos/expenditure/category_add', 'permission' => 'create_expense_category_expenditure'],
             ['title' => 'Category List', 'link' => '/pos/expenditure/category_list', 'permission' => 'read_expense_category_expenditure'],
-            ['title' => 'Add Expense', 'link' => '/pos/expenditure/expense_add', 'permission' => 'create_expense_expenditure'],
-            ['title' => 'Expense List', 'link' => '/pos/expenditure/expense_list', 'permission' => 'read_expense_expenditure'],
+            ['title' => 'Add Expense', 'link' => '/pos/expenditure/add', 'permission' => 'create_expense_expenditure'],
+            ['title' => 'Expense List', 'link' => '/pos/expenditure/list', 'permission' => 'read_expense_expenditure'],
             ['title' => 'Monthwise Report', 'link' => '/pos/expenditure/monthwise', 'permission' => 'expense_monthwise_expenditure'],
         ],
         'active' => (uri_has('/expenditure/', $current_uri)),

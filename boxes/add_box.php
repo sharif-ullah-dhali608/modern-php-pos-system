@@ -44,7 +44,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Box not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: box_list.php");
+        header("Location: /pos/boxes/list");
         exit(0);
     }
 }
@@ -82,7 +82,7 @@ include('../includes/header.php');
             <div class="p-6">
                 <div class="mb-2 slide-in">
                     <div class="flex items-center gap-4 mb-2">
-                        <a href="/pos/boxes/box_list.php" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
+                        <a href="/pos/boxes/list" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">
                             <i class="fas fa-arrow-left"></i>
                         </a>
                         <div>
@@ -96,7 +96,7 @@ include('../includes/header.php');
                 </div>
                 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/boxes/save_box.php" method="POST" id="boxForm">
+                    <form action="/pos/boxes/save" method="POST" id="boxForm">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="box_id" value="<?= $d['id']; ?>">
                         <?php endif; ?>
@@ -272,7 +272,7 @@ include('../includes/header.php');
                                     </button>
                                     
                                     <a 
-                                        href="/pos/boxes/box_list.php" 
+                                        href="/pos/boxes/list" 
                                         class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all"
                                     >
                                         <i class="fas fa-times mr-2"></i>

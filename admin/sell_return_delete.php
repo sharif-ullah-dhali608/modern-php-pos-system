@@ -16,7 +16,7 @@ $id = intval($_GET['id'] ?? $_POST['delete_id'] ?? $_POST['id'] ?? 0);
 if($id <= 0) {
     $_SESSION['message'] = "Invalid ID";
     $_SESSION['msg_type'] = "error";
-    header("Location: sell_return.php");
+    header("Location: /pos/sell/return");
     exit(0);
 }
 
@@ -27,7 +27,7 @@ $return = mysqli_fetch_assoc($return_query);
 if(!$return) {
     $_SESSION['message'] = "Return record not found";
     $_SESSION['msg_type'] = "error";
-    header("Location: sell_return.php");
+    header("Location: /pos/sell/return");
     exit(0);
 }
 

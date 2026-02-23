@@ -135,7 +135,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 
 // Determine Action URLs based on Permissions
-$add_url = check_user_permission('create_transfer_transfer') ? '/pos/transfer/stock_transfer' : '#';
+$add_url = check_user_permission('create_transfer_transfer') ? '/pos/transfer/add' : '#';
 
 // Config for Reusable List
 $config = [
@@ -211,7 +211,7 @@ function openViewModal(id, url) {
         didOpen: () => { Swal.showLoading(); }
     });
 
-    fetch(`get_transfer_details?id=${id}`)
+    fetch(`/pos/api/transfer/details?id=${id}`)
     .then(res => res.json())
     .then(data => {
         if(data.status === 200) {
@@ -306,7 +306,7 @@ function confirmCancel(id, ref) {
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            fetch('cancel_transfer', {
+            fetch('/pos/api/transfer/cancel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `id=${id}`

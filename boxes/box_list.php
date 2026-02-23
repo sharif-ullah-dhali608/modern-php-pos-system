@@ -35,8 +35,8 @@ while($row = mysqli_fetch_assoc($query_run)) {
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_box_box') ? '/pos/boxes/add' : '#';
 $edit_url = check_user_permission('update_box_box') ? '/pos/boxes/edit' : '#';
-$delete_url = check_user_permission('delete_box_box') ? '/pos/boxes/save_box.php' : '#';
-$status_url = check_user_permission('update_box_box') ? '/pos/boxes/save_box.php' : '#';
+$delete_url = check_user_permission('delete_box_box') ? '/pos/boxes/delete' : '#';
+$status_url = check_user_permission('update_box_box') ? '/pos/boxes/save' : '#';
 
 // Prepare data for reusable list component
 $list_config = [

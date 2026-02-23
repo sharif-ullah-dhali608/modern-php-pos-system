@@ -3,7 +3,7 @@ session_start();
 include('../config/dbcon.php');
 
 if(!isset($_SESSION['auth'])){
-    header("Location: ../signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -168,7 +168,7 @@ $page_title = "Return > " . $invoice['invoice_id'];
 
             <!-- RIGHT PANEL: Return Item Form -->
             <div class="w-7/12 p-6 overflow-y-auto relative">
-                <form id="returnForm" action="process_return.php" method="POST">
+                <form id="returnForm" action="/pos/sell/return/process" method="POST">
                     <input type="hidden" name="invoice_id" value="<?= $invoice['invoice_id']; ?>">
                     <input type="hidden" name="store_id" value="<?= $invoice['store_id']; ?>">
                     <input type="hidden" name="customer_id" value="<?= $invoice['customer_id']; ?>">

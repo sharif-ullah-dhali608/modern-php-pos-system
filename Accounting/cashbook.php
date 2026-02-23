@@ -479,7 +479,7 @@ $closing_balance = $opening_balance + $total_income_day - $today_exp_total;
                 <h3 class="text-3xl font-black text-slate-900 mb-2 tracking-tight">Opening Balance</h3>
                 <p class="text-slate-400 text-sm font-bold mb-10">Set cash amount for <span class="text-emerald-500"><?= date('M d, Y', strtotime($selected_date)) ?></span></p>
 
-                <form action="bank_transaction_handler.php" method="POST" id="opBalanceForm" autocomplete="off">
+                <form action="/pos/accounting/bank/transaction" method="POST" id="opBalanceForm" autocomplete="off">
                     <input type="hidden" name="action" value="add_opening_balance">
                     <input type="hidden" name="redirect" value="/pos/accounting/cashbook?date=<?= $selected_date ?>">
                     <input type="hidden" name="date" value="<?= $selected_date ?>">

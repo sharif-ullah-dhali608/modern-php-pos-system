@@ -83,15 +83,14 @@ if(isset($_POST['save_expense_btn'])) {
         if($success_count > 0) {
             $_SESSION['message'] = "Expense Recorded for $success_count Store(s)!";
             $_SESSION['msg_type'] = "success";
-            header("Location: /pos/expenditure/expense_list");
+            header("Location: /pos/expenditure/list");
         } else {
             $_SESSION['message'] = "Error: " . mysqli_error($conn);
             $_SESSION['msg_type'] = "error";
-            header("Location: /pos/expenditure/expense_add");
+            header("Location: /pos/expenditure/add");
         }
     } else {
-        $_SESSION['message'] = "Fill all required fields including Store!";
-        header("Location: /pos/expenditure/expense_add");
+        header("Location: /pos/expenditure/add");
     }
     exit(0);
 }
@@ -150,11 +149,11 @@ if(isset($_POST['update_expense_btn'])) {
     if(mysqli_query($conn, $update_query)) {
         $_SESSION['message'] = "Expense Updated Successfully!";
         $_SESSION['msg_type'] = "success";
-        header("Location: /pos/expenditure/expense_list");
+        header("Location: /pos/expenditure/list");
     } else {
         $_SESSION['message'] = "Error: " . mysqli_error($conn);
         $_SESSION['msg_type'] = "error";
-        header("Location: /pos/expenditure/expense_edit/$id");
+        header("Location: /pos/expenditure/edit/$id");
     }
     exit(0);
 }
@@ -170,10 +169,10 @@ if(isset($_POST['delete_btn'])) {
         $_SESSION['message'] = "Error!";
         $_SESSION['msg_type'] = "error";
     }
-    header("Location: /pos/expenditure/expense_list");
+    header("Location: /pos/expenditure/list");
     exit(0);
 }
 
-header("Location: /pos/expenditure/expense_list");
+header("Location: /pos/expenditure/list");
 exit(0);
 ?>

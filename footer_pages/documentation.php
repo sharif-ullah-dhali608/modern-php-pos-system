@@ -105,6 +105,7 @@ include('../includes/header.php');
                         ['id' => 'sales', 'title' => 'Sales & Invoices', 'icon' => 'fa-file-invoice-dollar'],
                         ['id' => 'installments', 'title' => 'Installments', 'icon' => 'fa-calendar-alt'],
                         ['id' => 'loan', 'title' => 'Loan Management', 'icon' => 'fa-hand-holding-usd'],
+                        ['id' => 'expenditure', 'title' => 'Expenditure', 'icon' => 'fa-wallet'],
                         ['id' => 'payments-gifting', 'title' => 'Payments & Cards', 'icon' => 'fa-credit-card'],
                         ['id' => 'customers', 'title' => 'Customers', 'icon' => 'fa-users'],
                         ['id' => 'accounting', 'title' => 'Accounting', 'icon' => 'fa-chart-line'],
@@ -256,10 +257,10 @@ include('../includes/header.php');
                     <h4>3. Root Configuration Files</h4>
                     <p>These files in the root directory control the system's environment and build process:</p>
                     <ul>
-                        <li><strong>.htaccess:</strong> Rules for the Apache web server, handling URL routing and protecting sensitive directories.</li>
+                        <li><strong>.htaccess:</strong> Robust routing engine for <strong>Clean URLs</strong> (e.g., <code>/expenditure/list</code> instead of <code>expense_list.php</code>), protecting sensitive directories, and handling cross-module fallbacks.</li>
                         <li><strong>package.json:</strong> Manages modern frontend dependencies and build scripts (Node.js).</li>
-                        <li><strong>tailwind.config.js:</strong> Central configuration for the Tailwind CSS design system used in this project.</li>
-                        <li><strong>logout:</strong> A standalone security script that safely terminates user sessions and redirects to the sign-in page.</li>
+                        <li><strong>tailwind.config.js:</strong> Central configuration for the Tailwind CSS design system.</li>
+                        <li><strong>logout:</strong> Security script terminating user sessions safely.</li>
                     </ul>
 
                     <h4>4. External Dependencies (CDNs)</h4>
@@ -556,7 +557,33 @@ $database = "pos_system";   // The Database Name you created
                     <h4>2. Repayment</h4>
                     <ul>
                         <li>When you pay back a loan (full or partial), record it in the system to update your liability.</li>
+                        <li><strong>Dark Mode Support:</strong> The loan interface features an intelligent theme-aware calendar system that remains highly visible regardless of your system's dark/light mode settings.</li>
                         <li><strong>Summary Report:</strong> Check <strong>Loan Summary</strong> to see your total debt and interest paid over time.</li>
+                    </ul>
+                </section>
+
+                <!-- Expenditure -->
+                <section id="expenditure">
+                    <h3>Expenditure Module</h3><hr class="notop">
+                    <p>The <strong>Expenditure Module</strong> provides a specialized workflow for managing operational costs beyond standard purchases.</p>
+                    
+                    <h4>1. Expense Categories</h4>
+                    <ul>
+                        <li>Define logical grouping for expenses (e.g., Office Rent, Utility Bills, Employee Salaries).</li>
+                        <li>Each category can be toggled to <span class="badge-blue">ACTIVE</span> or <span class="badge-red">INACTIVE</span> to control visibility in dropdowns.</li>
+                    </ul>
+
+                    <h4>2. Managing Expenses</h4>
+                    <ul>
+                        <li><strong>Store Mapping:</strong> Link specific expenses to individual stores for precise branch-wise financial tracking.</li>
+                        <li><strong>Advanced Metadata:</strong> Each expense supports Ref. Numbers, Notes, and <strong>File Attachments</strong> (Receipt scans, PDFs).</li>
+                        <li><strong>Returnable Flag:</strong> Mark expenses as returnable if you expect a reimbursement (e.g., refundable security deposits).</li>
+                    </ul>
+
+                    <h4>3. Visual Analytics</h4>
+                    <ul>
+                        <li><strong>Monthwise Chart:</strong> A graphical representation using <strong>Chart.js</strong> that visualizes expense trends across the year.</li>
+                        <li><strong>Categorized Breakdown:</strong> Compare spending habits across different categories to identify cost-saving opportunities.</li>
                     </ul>
                 </section>
                    <!-- Payments & Gifting -->
@@ -624,10 +651,10 @@ $database = "pos_system";   // The Database Name you created
                         <li><strong>Expense Tracking:</strong> Categorize your costs (Rent, Salaries, Utilities) to understand where your money is going.</li>
                     </ul>
 
-                    <h4>3. Cashbook</h4>
+                    <h4>3. Cashbook & Reconciliation</h4>
                     <ul>
                         <li>A daily automated ledger showing the opening balance, daily cash-in (sales/income), cash-out (purchases/expenses), and the final closing balance.</li>
-                        <li>Essential for daily cash reconciliation at the end of a shift.</li>
+                        <li><strong>Dr/Cr Tracking:</strong> Every transaction is categorized as Debit or Credit to ensure professional-grade accounting accuracy.</li>
                     </ul>
                 </section>
                 
@@ -655,7 +682,7 @@ $database = "pos_system";   // The Database Name you created
                     <ul>
                         <li><strong>Transfer Report:</strong> History of all stock moved between branches.</li>
                         <li><strong>Purchase Report:</strong> Log of all procurement and vendor payments.</li>
-                        <li><strong>Collection Report:</strong> Detailed view of cash/check collections from customers.</li>
+                        <li><strong>Collection Report:</strong> Detailed view of cash collections from customers. By default, it displays <strong>Today's</strong> collections to facilitate immediate end-of-day auditing.</li>
                     </ul>
                 </section>
                 
@@ -746,13 +773,18 @@ $database = "pos_system";   // The Database Name you created
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="padding: 10px; border: 1px solid #e2e8f0;">v1.2.0 (Current)</td>
+                                <td style="padding: 10px; border: 1px solid #e2e8f0;">v1.2.6 (Current)</td>
+                                <td style="padding: 10px; border: 1px solid #e2e8f0;">Feb 23, 2026</td>
+                                <td style="padding: 10px; border: 1px solid #e2e8f0;">Expenditure Module API fix, Clean URL routing, Dark mode calendar visibility, and Report optimizations.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #e2e8f0;">v1.2.0</td>
                                 <td style="padding: 10px; border: 1px solid #e2e8f0;">Feb 2026</td>
                                 <td style="padding: 10px; border: 1px solid #e2e8f0;">Enhanced Documentation & Mobile UI support.</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px; border: 1px solid #e2e8f0;">v1.1.5</td>
-                                <td style="padding: 10px; border: 1px solid #e2e8f0;">Jan 2026</td>
+                                <td style="padding: 10px; border: 10px solid #e2e8f0; text-align: left;">Jan 2026</td>
                                 <td style="padding: 10px; border: 1px solid #e2e8f0;">Multi-currency & Store assignment fixes.</td>
                             </tr>
                         </tbody>

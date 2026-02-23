@@ -195,7 +195,7 @@ include('../includes/header.php');
                     </div>
                 </div>
 
-                <form action="/pos/purchases/save_purchase.php" method="POST" id="purchaseForm" enctype="multipart/form-data">
+                <form action="/pos/purchases/save" method="POST" id="purchaseForm" enctype="multipart/form-data">
                     
                     <input type="hidden" name="invoice_id_hidden" value="<?= $edit_data['invoice_id'] ?? ''; ?>">
 
@@ -522,7 +522,7 @@ $(document).ready(function() {
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
         
         $.ajax({
-            url: 'ajax_parse_purchase_csv.php',
+            url: '/pos/api/purchases/parse-csv',
             type: 'POST',
             data: formData,
             contentType: false,

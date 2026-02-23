@@ -5,7 +5,7 @@ include('../config/dbcon.php');
 // Security Check
 if(!isset($_SESSION['auth'])){
     // Corrected signin path assumption based on previous context
-    header("Location: /pos/signin.php"); 
+    header("Location: /pos/login"); 
     exit(0);
 }
 
@@ -42,7 +42,7 @@ if(isset($_GET['id'])) {
     } else {
         $_SESSION['message'] = "Currency not found!";
         $_SESSION['msg_type'] = "error";
-        header("Location: currency_list.php");
+        header("Location: /pos/currency/list");
         exit(0);
     }
 }
@@ -93,7 +93,7 @@ include('../includes/header.php');
                 </div>
                 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/currency/save_currency.php" method="POST" id="currencyForm">
+                    <form action="/pos/currency/save" method="POST" id="currencyForm">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="currency_id" value="<?= $d['id']; ?>">
                         <?php endif; ?>
@@ -221,7 +221,7 @@ include('../includes/header.php');
                                     </button>
                                     
                                     <a 
-                                        href="currency_list.php" 
+                                        href="/pos/currency/list" 
                                         class="block w-full bg-slate-100 text-slate-700 font-semibold py-3 rounded-lg text-center hover:bg-slate-200 transition-all"
                                     >
                                         <i class="fas fa-times mr-2"></i>

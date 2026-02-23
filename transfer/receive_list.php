@@ -167,7 +167,7 @@ function receiveTransfer(id) {
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            fetch('receive', {
+            fetch('/pos/api/transfer/receive', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `id=${id}`

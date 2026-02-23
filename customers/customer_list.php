@@ -87,14 +87,14 @@ if(isset($_GET['fix_balance']) && $_GET['fix_balance'] == 1) {
             mysqli_query($conn, "UPDATE customers SET current_due = $fdue WHERE id = $fid");
         }
         
-        echo "<script>alert('Data Reconciled & Fixed! ($reconciled_count customers affected)'); window.location.href='customer_list.php';</script>";
+        echo "<script>alert('Data Reconciled & Fixed! ($reconciled_count customers affected)'); window.location.href='/pos/customers/list';</script>";
         exit;
     }
 }
 
 // Security Check
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -122,7 +122,7 @@ while($row = mysqli_fetch_assoc($query_run)) {
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_customer_customer') ? '/pos/customers/add' : '#';
 $edit_url = check_user_permission('update_customer_customer') ? '/pos/customers/edit' : '#';
-$delete_url = check_user_permission('delete_customer_customer') ? '/pos/customers/save_customer.php' : '#';
+$delete_url = check_user_permission('delete_customer_customer') ? '/pos/customers/delete' : '#';
 
 // Prepare data for reusable list component
 $list_config = [
@@ -147,7 +147,7 @@ $list_config = [
     'data' => $customers,
     'edit_url' => $edit_url,
     'delete_url' => $delete_url,
-    'status_url' => '/pos/customers/save_customer.php',
+    'status_url' => '/pos/customers/status',
     'primary_key' => 'id',
     'name_field' => 'name' // Used for delete confirmation message (e.g. "Delete John Doe?")
 ];

@@ -4,7 +4,7 @@ include('../config/dbcon.php');
 
 // 1. SECURITY CHECK: Ensure user is authenticated
 if(!isset($_SESSION['auth'])){
-    header("Location: /pos/signin.php");
+    header("Location: /pos/login");
     exit(0);
 }
 
@@ -92,7 +92,7 @@ include('../includes/header.php');
                 </div>
 
                 <div class="glass-card rounded-xl p-8 slide-in">
-                    <form action="/pos/taxrates/save_taxrate.php" method="POST" id="taxrateForm">
+                    <form action="/pos/taxrates/save" method="POST" id="taxrateForm">
                         <?php if($mode == 'edit'): ?>
                             <input type="hidden" name="taxrate_id" value="<?= $d['id']; ?>">
                         <?php endif; ?>

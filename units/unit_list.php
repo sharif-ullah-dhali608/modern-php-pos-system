@@ -16,7 +16,7 @@ while($row = mysqli_fetch_assoc($query_run)) { $items[] = $row; }
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_unit_unit') ? '/pos/units/add' : '#';
 $edit_url = check_user_permission('update_unit_unit') ? '/pos/units/edit' : '#';
-$delete_url = check_user_permission('delete_unit_unit') ? '/pos/units/save_unit.php' : '#';
+$delete_url = check_user_permission('delete_unit_unit') ? '/pos/units/delete' : '#';
 
 $list_config = [
     'title' => 'Unit List',
@@ -33,7 +33,7 @@ $list_config = [
     'data' => $items,
     'edit_url' => $edit_url,
     'delete_url' => $delete_url,
-    'status_url' => '/pos/units/save_unit.php',
+    'status_url' => '/pos/units/save',
     'primary_key' => 'id',
     'name_field' => 'unit_name'
 ];

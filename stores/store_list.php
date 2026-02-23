@@ -94,8 +94,8 @@ $page_title = "Store List - Velocity POS";
                                         </div>
                                     </div>
                                     <?php if(check_user_permission('update_store_store')): ?>
-                                    <a href="/pos/stores/edit?id=<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
-                                    <?php endif; ?>
+                                    <a href="/pos/stores/edit/<?= $row['id']; ?>" onclick="event.stopPropagation()" class="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 text-slate-500 flex items-center justify-center hover:bg-slate-200 hover:text-teal-600 transition-all shadow-sm z-10"><i class="fas fa-pen text-xs"></i></a>
+                                  <?php endif; ?>
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-4 text-xs text-slate-500 mb-5 pt-4 border-t border-slate-100 border-dashed">
@@ -115,7 +115,7 @@ $page_title = "Store List - Velocity POS";
                     <div class="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 shadow-inner">
                         <h2 class="text-xl font-bold text-slate-800">No Stores Found</h2>
                         <?php if(check_user_permission('create_store_store')): ?>
-                        <a href="add_store.php" class="mt-4 px-6 py-2.5 rounded-lg bg-teal-600 text-white font-bold hover:bg-teal-700 transition">Create First Store</a>
+                        <a href="/pos/stores/add" class="mt-4 px-6 py-2.5 rounded-lg bg-teal-600 text-white font-bold hover:bg-teal-700 transition">Create First Store</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

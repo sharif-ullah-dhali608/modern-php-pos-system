@@ -22,8 +22,8 @@ while($row = mysqli_fetch_assoc($result)) {
 // Determine Action URLs based on Permissions
 $add_url = check_user_permission('create_expense_category_expenditure') ? '/pos/expenditure/category_add' : '#';
 $edit_url = check_user_permission('update_expense_category_expenditure') ? '/pos/expenditure/category_edit' : '#';
-$delete_url = check_user_permission('delete_expense_category_expenditure') ? '/pos/expenditure/save_category' : '#';
-$status_url = check_user_permission('update_expense_category_expenditure') ? '/pos/expenditure/save_category' : '#';
+$delete_url = check_user_permission('delete_expense_category_expenditure') ? '/pos/expenditure/category_delete' : '#';
+$status_url = check_user_permission('update_expense_category_expenditure') ? '/pos/expenditure/category_status' : '#';
 
 $config = [
     'title' => 'Expense Categories',
