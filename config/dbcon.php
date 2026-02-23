@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -413,9 +413,9 @@ function ensure_core_tables(mysqli $conn) {
     $table_check = @mysqli_query($conn, "SHOW TABLES LIKE 'expense_category'");
     if($table_check && mysqli_num_rows($table_check) > 0) {
         foreach($default_expense_categories as $cat) {
-            $check = mysqli_query($conn, "SELECT category_id FROM expense_category WHERE category_slug = '$cat[1]'");
+            $check = mysqli_query($conn, "SELECT category_id FROM expense_category WHERE slug = '$cat[1]'");
             if(mysqli_num_rows($check) == 0) {
-                $sql = "INSERT INTO expense_category (category_name, category_slug, parent_id, category_details, status, is_hide, sort_order) 
+                $sql = "INSERT INTO expense_category (category_name, slug, parent_id, category_details, status, is_hide, sort_order) 
                 VALUES ('$cat[0]', '$cat[1]', '$cat[2]', '$cat[3]', '$cat[4]', '$cat[5]', '$cat[6]')";
                 mysqli_query($conn, $sql);
             }
@@ -447,19 +447,6 @@ function ensure_core_tables(mysqli $conn) {
         FOREIGN KEY (category_id) REFERENCES expense_category(category_id) ON DELETE CASCADE,
         FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-    mysqli_query($conn, $expensesSql);
-
-    // Ensure returnable column exists (Update for existing table)
-    $checkReturnable = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'returnable'");
-    if($checkReturnable && mysqli_num_rows($checkReturnable) == 0) {
-        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN returnable TINYINT(1) DEFAULT 0 AFTER amount");
-    }
-
-    // Ensure note column exists
-    $checkNote = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'note'");
-    if($checkNote && mysqli_num_rows($checkNote) == 0) {
-        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN note TEXT DEFAULT NULL AFTER details");
-    }
 
     // --- BANK MODULE TABLES ---
 
@@ -1171,7 +1158,6 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $customersSql);
     mysqli_query($conn, $holdingPriceSql);
     mysqli_query($conn, $printersSql);
-    mysqli_query($conn, $printerStoreMapSql);
     mysqli_query($conn, $loanSourcesSql);
 
     // Level 2: Tables referencing Level 1
@@ -1200,13 +1186,14 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $transferItemsSql);
 
     // Execute Queries for New Tables
-    mysqli_query($conn, $incomeSourcesSql);
     mysqli_query($conn, $bankAccountsSql);
     mysqli_query($conn, $bankAccountStoreSql);
     mysqli_query($conn, $bankTransInfoSql);
     mysqli_query($conn, $bankTransPriceSql);
      mysqli_query($conn, $loansSql);
     mysqli_query($conn, $loanPaymentsSql);
+
+    mysqli_query($conn, $expensesSql);
 
     // Level 4: Pivot / Map Tables
     mysqli_query($conn, $storeCurrencySql);
@@ -1220,6 +1207,19 @@ $userStoreMapSql = "CREATE TABLE IF NOT EXISTS user_store_map (
     mysqli_query($conn, $quotationItemsSql);
     mysqli_query($conn, $customerStoreMapSql);
     mysqli_query($conn, $userStoreMapSql);
+    mysqli_query($conn, $printerStoreMapSql);
+
+    // Ensure returnable column exists (Update for existing table)
+    $checkReturnable = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'returnable'");
+    if($checkReturnable && mysqli_num_rows($checkReturnable) == 0) {
+        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN returnable TINYINT(1) DEFAULT 0 AFTER amount");
+    }
+
+    // Ensure note column exists
+    $checkNote = @mysqli_query($conn, "SHOW COLUMNS FROM expenses LIKE 'note'");
+    if($checkNote && mysqli_num_rows($checkNote) == 0) {
+        @mysqli_query($conn, "ALTER TABLE expenses ADD COLUMN note TEXT DEFAULT NULL AFTER details");
+    }
 
     // Ensure is_installment column exists in sell_logs table
     $checkSellLogInstallment = @mysqli_query($conn, "SHOW COLUMNS FROM sell_logs LIKE 'is_installment'");
