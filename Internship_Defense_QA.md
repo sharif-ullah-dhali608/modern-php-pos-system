@@ -1117,3 +1117,504 @@ $_SESSION['auth_user'] = [
 > **প্রজেক্ট পাথ:** `/Applications/MAMP/htdocs/pos/`  
 > **ডেভেলপার:** শরীফউল্লাহ ঢালী  
 > **তারিখ:** ফেব্রুয়ারি ২০২৬
+
+
+
+
+# 🎓 ইন্টার্নশিপ ডিফেন্স — প্রশ্ন ও উত্তর
+### প্রজেক্ট: **Krelyon — Software Development Agency Website (v3)**
+> **ভাষা:** HTML5, Vanilla CSS, Vanilla JavaScript, GSAP 3, PHP  
+> **Animation:** GSAP + ScrollTrigger + Pure CSS Animations  
+> **ডেভেলপার:** শরীফউল্লাহ ঢালী  
+
+---
+
+## 📌 বিভাগ ১: প্রজেক্ট পরিচিতি ও সাধারণ প্রশ্ন
+
+---
+
+### ❓ প্রশ্ন ১: তোমার প্রজেক্টের নাম কী এবং এটি কী ধরনের?
+
+**✅ উত্তর:**  
+প্রজেক্টের নাম **Krelyon** — এটি একটি **Software Development Agency-র Corporate Website**। এই সাইটে কোম্পানির সার্ভিস, পোর্টফোলিও, প্রোডাক্ট, মাইলস্টোন, ক্যারিয়ার পেজ ও Contact Form আছে। এটি মূলত Krelyon-এর digital presence এবং ক্লায়েন্ট acquisition-এর জন্য তৈরি।
+
+---
+
+### ❓ প্রশ্ন ২: এই প্রজেক্টে কোন কোন প্রযুক্তি ব্যবহার করেছ?
+
+**✅ উত্তর:**
+
+| স্তর | প্রযুক্তি | কেন ব্যবহার |
+|------|-----------|------------|
+| **Structure** | HTML5 (Semantic) | পেজের কাঠামো তৈরি |
+| **Styling** | Vanilla CSS + CSS Variables | নিজস্ব Design System, Dark Mode |
+| **Animation** | **GSAP 3** (GreenSock) | Professional scroll animation |
+| **Scroll Trigger** | **GSAP ScrollTrigger** | স্ক্রলে animation চালু হয় |
+| **JavaScript** | Vanilla JS (ES6+) | DOM manipulation, interactive UI |
+| **Font** | **Sora + Space Grotesk** (Google Fonts) | Modern typography |
+| **Icon** | Inline SVG | Fast, scalable, CSS-controlled |
+| **Backend** | PHP (`contact.php`, `apply.php`) | Contact ও Job Apply form |
+| **Server** | Apache + MAMP | Local development |
+| **URL** | `.htaccess` mod_rewrite | Clean URL (/about/, /service) |
+
+---
+
+### ❓ প্রশ্ন ৩: এই প্রজেক্টে কতটি পেজ আছে?
+
+**✅ উত্তর:**  
+প্রজেক্টে **৭+ পেজ** আছে:
+
+| পেজ / ফোল্ডার | উদ্দেশ্য |
+|--------------|---------|
+| `index.html` | **হোম পেজ** — Hero, Projects, Services, Stats, Process, Products, FAQ |
+| `about/` | কোম্পানি পরিচিতি |
+| `service/` | সার্ভিস পেজ (Mobile App, Web Dev, AI/ML, DevOps, Cloud ইত্যাদি) |
+| `products/` | প্রোডাক্ট পোর্টফোলিও |
+| `milestone/` | কোম্পানির মাইলস্টোন |
+| `careers/` | চাকরির বিজ্ঞপ্তি |
+| `job-frontend-developer/`, `job-pm/`, `job-ui-ux/` | নির্দিষ্ট Job বিজ্ঞপ্তি |
+| `apply.php` | Job Application Form (CV upload সহ) |
+| `contact.php` | Contact Form Backend |
+
+---
+
+### ❓ প্রশ্ন ৪: কোনো Framework ব্যবহার করেছ? React/Vue কেন নেই?
+
+**✅ উত্তর:**  
+না, আমি **Pure HTML + CSS + Vanilla JS** ব্যবহার করেছি — কোনো React/Vue নেই। কারণ:
+1. Corporate Website-এর জন্য ভারী JS Framework দরকার নেই
+2. Page load অনেক দ্রুত হয় (no virtual DOM overhead)
+3. GSAP দিয়েই সব animation সম্ভব
+4. SEO-friendly — Server-side rendered static HTML
+
+---
+
+### ❓ প্রশ্ন ৫: এই প্রজেক্ট কেন তৈরি করলে?
+
+**✅ উত্তর:**  
+**Krelyon Software Agency** একটি Real Company যারা Mobile App, Web Development, UI/UX, AI/ML, DevOps সার্ভিস দেয়। তাদের digital presence এবং client acquisition-এর জন্য একটি **Professional, Animated, Mobile-Responsive Corporate Website** দরকার ছিল।
+
+---
+
+## 📌 বিভাগ ২: Animation সম্পর্কিত প্রশ্ন (সবচেয়ে গুরুত্বপূর্ণ)
+
+---
+
+### ❓ প্রশ্ন ৬: GSAP কী? কেন ব্যবহার করলে?
+
+**✅ উত্তর:**  
+GSAP (GreenSock Animation Platform) একটি Professional JavaScript Animation Library। আমি ব্যবহার করেছি কারণ:
+
+| বিষয় | CSS Animation | GSAP |
+|-------|--------------|------|
+| Timeline control | নেই | আছে (`.timeline()`) |
+| ScrollTrigger | নেই | আছে (plugin) |
+| JS দিয়ে control | সীমিত | সম্পূর্ণ |
+| Easing options | সীমিত | ১০০+ |
+| Performance | ভালো | GPU-optimized |
+
+---
+
+### ❓ প্রশ্ন ৭: প্রজেক্টে কী কী Animation আছে? বিস্তারিত বলো।
+
+**✅ উত্তর:**  
+প্রজেক্টে মোট **১৩টি Animation** আছে:
+
+#### ১. 🎬 Preloader Animation
+পেজ লোডের আগে কালো পর্দা। মাঝে একটি সবুজ বৃত্ত `scale(0) → scale(50)` হয়ে পর্দা ঢাকে, তারপর fade হয়ে মূল পেজ দেখায়।
+```javascript
+const tl = gsap.timeline();
+tl.to(preloaderCircle, { scale: 50, duration: 1.5, ease: "power3.inOut" })
+  .to(preloaderBg, { opacity: 0, duration: 1 }, "-=1.5")
+  .to(header, { opacity: 1, duration: 1 }, "-=0.5");
+```
+
+#### ২. 📝 Hero Text Slide-Up
+"TRANSFORMING IDEAS" ও "INTO SOFTWARE" লেখা নিচ থেকে উঠে আসে।
+```css
+.anim-line-inner { transform: translateY(110%); } /* parent overflow:hidden */
+```
+```javascript
+tl.to(".hero .anim-line-inner", { y: 0, stagger: 0.15, ease: "power3.out" });
+```
+
+#### ③ 🎞️ Hero Grid (ভাসন্ত Technology Logo)
+ব্যাকগ্রাউন্ডে টেকনোলজি লোগো তিনটি কলামে তিনটি গতিতে উপরে-নিচে চলে।
+```css
+.col-content { animation: hero-scroll 30s linear infinite; }
+.col-2 .col-content { animation-duration: 40s; animation-direction: reverse; }
+@keyframes hero-scroll { 100% { transform: translateY(-50%); } }
+```
+
+#### ④ ⏩ Technology Scroller
+হিরোর নিচে "Next.js, ReactJs, SpringBoot..." ডান থেকে বামে অসীমভাবে চলে।
+```css
+animation: hero-client-scroll 40s linear infinite;
+@keyframes hero-client-scroll { 100% { transform: translateX(-100%); } }
+```
+
+#### ⑤ 🔢 Stats Counter
+"160+", "40+" ইত্যাদি সংখ্যা স্ক্রল করলে ০ থেকে count করে।
+```javascript
+gsap.to(counter, { val: endValue, duration: 2,
+  scrollTrigger: { trigger: item, start: "top 90%" },
+  onUpdate: () => { stat.textContent = Math.ceil(counter.val) + suffix; }
+});
+```
+
+#### ⑥ 🎪 Marquee Banner
+"WEB DESIGN ★ DEVELOPMENT ★ UI/UX" চলমান ব্যানার — দুটি কপি `translateX(-50%)` infinite।
+```css
+.marquee-track { animation: marquee-scroll 25s linear infinite; }
+@keyframes marquee-scroll { 100% { transform: translateX(-50%); } }
+```
+
+#### ⑦ 📜 Scroll-Trigger Stagger Cards
+Project/Service/Tech Logo card গুলো স্ক্রলে একে একে `opacity: 0 → 1` হয়।
+```javascript
+gsap.to(".project-card", {
+  opacity: 1, y: 0, stagger: 0.15,
+  scrollTrigger: { trigger: ".project-grid", start: "top 85%" }
+});
+```
+
+#### ⑧ 🖼️ Product Hover Preview
+Product নামে hover করলে ডান দিকে ছবি বদলায়।
+```javascript
+item.addEventListener("mouseenter", () => targetImage.classList.add("visible"));
+```
+
+#### ⑨ 🔄 Process Tabs
+"Discover → Define → Develop → Evolve" ক্লিক করলে panel বদলায়।
+
+#### ⑩ 📱 Mobile Hamburger → X
+তিনটি line ক্লিকে X হয়; full-screen nav `translateY(20px→0)` আসে।
+
+#### ⑪ 🎥 Video Modal
+ভিডিও বাটনে ক্লিক করলে `opacity 0→1` transition-এ modal আসে, ভিডিও autoplay হয়।
+
+#### ⑫ 🖱️ Scrolled Navbar
+৫০px স্ক্রলে navbar-এ `backdrop-filter: blur(10px)` Glassmorphism effect।
+
+#### ⑬ 🌈 Body Gradient
+`background: linear-gradient(45deg, #111827, #1f2937)` CSS animation দিয়ে ধীরে ধীরে পরিবর্তন।
+
+---
+
+### ❓ প্রশ্ন ৮: Stagger মানে কী?
+
+**✅ উত্তর:**  
+Stagger মানে প্রতিটি element-এ একটু করে delay যোগ করা। উদাহরণ: `stagger: 0.15` মানে প্রথম card ০ sec-এ, দ্বিতীয় ০.১৫ sec-এ, তৃতীয় ০.৩ sec-এ আসে। এতে animation organic, wave-like দেখায়।
+
+---
+
+### ❓ প্রশ্ন ৯: ScrollTrigger কীভাবে কাজ করে?
+
+**✅ উত্তর:**  
+ScrollTrigger GSAP-এর একটি Plugin। এটি window-এর scroll position দেখে নির্দিষ্ট element screen-এর কতটুকু ভেতরে এলে animation শুরু হবে সেটি নির্ধারণ করে।
+```javascript
+scrollTrigger: {
+    trigger: ".project-grid",  // কোন element দেখলে
+    start: "top 85%",          // element-এর top, viewport-এর 85%-এ এলে
+}
+```
+
+---
+
+### ❓ প্রশ্ন ১০: GSAP load না হলে কী হবে?
+
+**✅ উত্তর:**  
+`js/home.js`-এ Fallback Logic আছে:
+```javascript
+if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
+    // সব element manually visible করো
+    document.querySelectorAll(".anim-fade-in, .stat-item, .project-card")
+        .forEach(item => { item.style.opacity = "1"; item.style.transform = "none"; });
+    // Tab, Menu, Accordion তবুও চলবে
+    initializeTabLogic();
+    initializeMobileMenu();
+    return;
+}
+```
+এই **Graceful Degradation** নিশ্চিত করে যে GSAP CDN fail হলেও site ব্যবহারযোগ্য থাকে।
+
+---
+
+## 📌 বিভাগ ৩: CSS ও Design সম্পর্কিত প্রশ্ন
+
+---
+
+### ❓ প্রশ্ন ১১: CSS Variable কী এবং কেন ব্যবহার করলে?
+
+**✅ উত্তর:**  
+CSS Custom Properties (`:root`-এ defined) দিয়ে সারা siteএর color, font একটি জায়গা থেকে control করা যায়।
+```css
+:root {
+    --bg-color: #111827;         /* Dark background */
+    --accent-color: #34d399;     /* Electric Green */
+    --text-color: #e5e7eb;       /* Soft White */
+    --text-muted: #9ca3af;       /* Gray */
+}
+/* এখন যেকোনো জায়গায়: */
+button { background-color: var(--accent-color); }
+```
+**সুবিধা:** একটি জায়গায় রঙ বদলালে পুরো site বদলে যায়।
+
+---
+
+### ❓ প্রশ্ন ১২: Dark Theme কীভাবে করলে?
+
+**✅ উত্তর:**  
+`:root`-এ dark color define করে সব element সেই variable ব্যবহার করে। `body`-এর `background-color: var(--bg-color)` এবং `color: var(--text-color)` দিয়ে পুরো Dark Mode তৈরি।
+
+---
+
+### ❓ প্রশ্ন ১৩: Glassmorphism Navbar কীভাবে করলে?
+
+**✅ উত্তর:**  
+```css
+header.scrolled-nav {
+    background-color: rgba(17, 24, 39, 0.75); /* Semi-transparent */
+    backdrop-filter: blur(10px);              /* পেছনে blur */
+    border-bottom: 1px solid #374151;
+}
+```
+`backdrop-filter: blur()` element-এর পেছনের content blur করে — এটি Glassmorphism effect।
+
+---
+
+### ❓ প্রশ্ন ১৪: দুটি Font কেন ব্যবহার করলে?
+
+**✅ উত্তর:**  
+| Font | ব্যবহার | কেন |
+|------|---------|-----|
+| **Sora** | Body text, nav | Readable, modern, clean |
+| **Space Grotesk** | H1, H2, Buttons, Logo | Bold, industrial, agency-feel |
+
+দুটি আলাদা font দিয়ে Visual Hierarchy তৈরি হয় — headings আলাদাভাবে চোখে পড়ে।
+
+---
+
+### ❓ প্রশ্ন ১৫: `overflow: hidden` h1-এ কেন দেওয়া হয়েছে?
+
+**✅ উত্তর:**  
+Hero text animation-এর কৌশল:
+1. `.anim-line-inner` শুরুতে `translateY(110%)` — parent div-এর নিচে লুকানো
+2. parent-এ `overflow: hidden` — লুকানো অংশ দেখা যায় না
+3. GSAP `y: 0` করলে text নিচ থেকে উপরে উঠে আসে
+
+এটি classic "Text Reveal" এফেক্ট।
+
+---
+
+## 📌 বিভাগ ৪: JavaScript ও ইন্টারেক্টিভিটি
+
+---
+
+### ❓ প্রশ্ন ১৬: Hamburger Menu কীভাবে কাজ করে?
+
+**✅ উত্তর:**  
+```javascript
+// Toggle button click করলে:
+document.body.classList.toggle("nav-open-no-scroll");
+document.getElementById("mobile-nav").classList.toggle("open");
+```
+```css
+body.nav-open-no-scroll .line1 { transform: translateY(9px) rotate(45deg); }
+body.nav-open-no-scroll .line2 { opacity: 0; }
+body.nav-open-no-scroll .line3 { transform: translateY(-9px) rotate(-45deg); }
+```
+তিনটি bar: প্রথম ও তৃতীয় rotate হয়ে X তৈরি করে, মেঝেরটা fade হয়।
+
+---
+
+### ❓ প্রশ্ন ১৭: Product Hover কীভাবে কাজ করে?
+
+**✅ উত্তর:**  
+প্রতিটি product item-এ `data-image` attribute দেওয়া:
+```html
+<a class="product-item" data-image="/images/restaurant.png">Restaurant System</a>
+```
+```javascript
+item.addEventListener("mouseenter", () => {
+    const targetImage = document.querySelector(`img[data-id="${targetImageId}"]`);
+    previewImages.forEach(img => img.classList.remove("visible"));
+    targetImage.classList.add("visible"); // CSS opacity transition দিয়ে দেখায়
+});
+```
+
+---
+
+### ❓ প্রশ্ন ১৮: Stats Counter কীভাবে data পায়?
+
+**✅ উত্তর:**  
+HTML-এ `data-count` attribute থেকে:
+```html
+<h3 data-count="160">0+</h3>
+```
+```javascript
+const endValue = stat.getAttribute("data-count"); // "160"
+const suffix = stat.innerText.replace(/[0-9]/g, ""); // "+"
+gsap.to(counter, { val: endValue, onUpdate: () => stat.textContent = Math.ceil(counter.val) + suffix });
+```
+
+---
+
+### ❓ প্রশ্ন ১৯: Contact Form কীভাবে কাজ করে?
+
+**✅ উত্তর:**  
+HTML Form → `contact.php` (PHP Mail function)। User তথ্য দিলে PHP `mail()` function দিয়ে email পাঠায়।
+
+Job Application Form (`apply.php`)-এ CV upload ফিচার আছে — `$_FILES` দিয়ে file handle করা হয়।
+
+---
+
+## 📌 বিভাগ ৫: সাধারণ Web প্রশ্ন
+
+---
+
+### ❓ প্রশ্ন ২০: Inline SVG vs Icon Font (Font Awesome) — কোনটি ভালো?
+
+**✅ উত্তর:**  
+| বিষয় | Inline SVG | Font Awesome |
+|-------|------------|--------------|
+| HTTP Request | নেই | আলাদা CSS file লোড |
+| CSS Control | সরাসরি stroke/fill | শুধু color/size |
+| Accessibility | `aria-label` সহজে | সীমিত |
+| Performance | দ্রুত | তুলনামূলক ধীর |
+
+আমি Inline SVG ব্যবহার করেছি কারণ বেশি fast ও flexible।
+
+---
+
+### ❓ প্রশ্ন ২১: `position: fixed` কী করে?
+
+**✅ উত্তর:**  
+Navbar-এ `position: fixed; top: 0; width: 100%` দেওয়া হয়েছে। এতে user scroll করলেও navbar সবসময় উপরে দেখা যায়।
+
+---
+
+### ❓ প্রশ্ন ২২: `z-index` কেন দরকার?
+
+**✅ উত্তর:**  
+```css
+#preloader-bg { z-index: 1001; }    /* সবার উপরে */
+#preloader-circle { z-index: 1002; } /* আরও উপরে */
+#mobile-nav { z-index: 1100; }       /* Mobile nav */
+header { z-index: 100; }             /* Header */
+```
+`z-index` নির্ধারণ করে কোন element কোনটির উপরে থাকবে।
+
+---
+
+### ❓ প্রশ্ন ২৩: `backdrop-filter` কী?
+
+**✅ উত্তর:**  
+`backdrop-filter: blur(10px)` element-এর পেছনের সবকিছু blur করে। এটি **Frosted Glass / Glassmorphism** effect তৈরি করে। শুধু modern browser-এ কাজ করে।
+
+---
+
+### ❓ প্রশ্ন ২৪: Semantic HTML কী? কেন ব্যবহার করলে?
+
+**✅ উত্তর:**  
+অর্থবহ HTML tag যা content-এর কাজ বোঝায়:
+```html
+<header> — পেজের শীর্ষাংশ
+<nav>    — Navigation
+<main>   — মূল content
+<section> — একটি বিভাগ
+<footer> — পাদচরণ
+```
+**সুবিধা:** SEO ভালো হয়, Screen Reader সহজে পড়তে পারে, কোড বোঝা সহজ।
+
+---
+
+### ❓ প্রশ্ন ২৫: `requestAnimationFrame` vs `setInterval`?
+
+**✅ উত্তর:**  
+GSAP internally `requestAnimationFrame` ব্যবহার করে — এটি browser-এর refresh rate (60fps) এর সাথে sync থাকে। `setInterval` fixed time-এ চলে, frame drop হতে পারে। তাই GSAP animation অনেক smooth।
+
+---
+
+## 📌 বিভাগ ৬: চ্যালেঞ্জ ও ভবিষ্যৎ
+
+---
+
+### ❓ প্রশ্ন ২৬: সবচেয়ে কঠিন অংশ কোনটি ছিল?
+
+**✅ উত্তর:**  
+সবচেয়ে কঠিন ছিল **GSAP Preloader Timeline**:
+- Timeline-এর প্রতিটি `.to()` call সুনির্দিষ্ট offset (যেমন `"-=1.5"`) দিয়ে overlapping করা
+- Preloader শেষ হলে Hero animations শুরু হওয়ার নিখুঁত timing ঠিক করা
+- Content `visibility: hidden` → `visible` সঠিক সময়ে করা
+
+এবং **Seamless Marquee** — দুটি কপি ব্যবহার করে `translateX(-50%)` দিয়ে perfect loop।
+
+---
+
+### ❓ প্রশ্ন ২৭: ভবিষ্যতে কী উন্নতি করবে?
+
+**✅ উত্তর:**
+1. **CMS Integration** — Admin panel থেকে Projects/Blog পরিবর্তন করা যাবে
+2. **Blog Section** — Technical articles প্রকাশ করা
+3. **Live Chat** — Client real-time support
+4. **Dark/Light Mode Toggle** — User choice
+5. **i18n (Internationalization)** — বাংলা ভার্সন
+6. **Backend CRM** — Client inquiry manage করা
+
+---
+
+### ❓ প্রশ্ন ২৮: এই ইন্টার্নশিপে তুমি কী শিখলে?
+
+**✅ উত্তর:**  
+1. **Professional Animation** — GSAP দিয়ে industry-standard animation তৈরি
+2. **CSS Architecture** — CSS Variables দিয়ে maintainable Design System
+3. **Performance Optimization** — CDN, lazy loading, GPU animation
+4. **UX Design** — Preloader patience UX, hover states, mobile nav
+5. **Graceful Degradation** — Library fail হলেও site কার্যকর রাখা
+6. **Responsive Design** — Mobile-first, Media Queries
+7. **PHP Backend** — Form handling, file upload
+
+---
+
+## 📌 বোনাস: প্যানেল থেকে হঠাৎ করা প্রশ্ন
+
+---
+
+### ❓ Flexbox আর Grid-এর পার্থক্য?
+
+**✅ উত্তর:**  
+| | Flexbox | Grid |
+|--|---------|------|
+| Direction | ১ মাত্রা (row বা column) | ২ মাত্রা (row + column) |
+| ব্যবহার | Navbar, card row | Dashboard, complex layout |
+| আমার ব্যবহার | Hero section, navbar | Stats section (4 columns), Service grid |
+
+---
+
+### ❓ CSS `transition` আর `animation`-এর পার্থক্য?
+
+**✅ উত্তর:**  
+| | `transition` | `animation` |
+|--|-------------|-------------|
+| চালু হয় | State change-এ (hover, click) | Loading বা নির্দিষ্ট সময়ে |
+| লুপ | পারে না | `infinite` দিয়ে পারে |
+| Keyframe | নেই | আছে (`@keyframes`) |
+| আমার ব্যবহার | Navbar color, button hover | Marquee, Hero Grid, Gradient BG |
+
+---
+
+### ❓ `em` আর `rem` কী?
+
+**✅ উত্তর:**  
+- `em` — parent element-এর font-size এর relative
+- `rem` — root (`html`) element-এর font-size এর relative (সাধারণত 16px)
+- `rem` বেশি predictable কারণ parent নির্ভর নয়
+
+---
+
+> 📝 **নোট:** এই ডকুমেন্টটি **Krelyon Agency Website** প্রজেক্টের ইন্টার্নশিপ ডিফেন্সের জন্য প্রস্তুত।  
+> **প্রজেক্ট পাথ:** `/Applications/MAMP/htdocs/Krelyon-v3/`  
+> **ডেভেলপার:** শরীফউল্লাহ ঢালী  
+> **তারিখ:** ফেব্রুয়ারি ২০২৬
+
