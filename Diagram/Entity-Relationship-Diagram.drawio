@@ -1,0 +1,238 @@
+<mxfile host="65bd71144e">
+    <diagram id="erd-pos-v3" name="ERD">
+        <mxGraphModel dx="876" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="5600" pageHeight="4000" math="0" shadow="1">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="ttl" value="POS System — Entity Relationship Diagram (ERD)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=32;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="20" width="2000" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lgd" value="🔑 PK = Primary Key&#xa;🔗 FK = Foreign Key&#xa;━━━ One-to-Many&#xa;════ Many-to-Many" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=22;fontStyle=1;align=left;spacingLeft=12;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="5150" y="80" width="310" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="cgd" value="🔵 Core Entities&#xa;🟡 Sales / Transactions&#xa;🟢 Finance / Loans&#xa;🟣 Lookup / Config&#xa;🟠 Pivot / Map Tables" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=22;fontStyle=1;align=left;spacingLeft=12;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="5150" y="230" width="310" height="155" as="geometry"/>
+                </mxCell>
+                <mxCell id="stores" value="🏪 STORES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;store_name&#xa;store_code (UNIQUE)&#xa;business_type&#xa;address / city / zip&#xa;email / phone&#xa;vat_number&#xa;currency_id (FK)&#xa;daily_target&#xa;open_time / close_time" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;fontStyle=0;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="90" width="290" height="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="ugroups" value="👥 USER_GROUPS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;slug (UNIQUE)&#xa;permission (JSON)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="90" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="users" value="👤 USERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 group_id (FK)&#xa;username (UNIQUE)&#xa;name / email&#xa;password&#xa;ip / address&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="90" width="290" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="currencies" value="💱 CURRENCIES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;currency_name&#xa;code (UNIQUE)&#xa;symbol_left / right&#xa;decimal_place&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="480" width="280" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="usmap" value="🔄 USER_STORE_MAP&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 user_id (FK)&lt;br&gt;🔗 store_id (FK)&lt;br&gt;currency_id&lt;br&gt;daily_target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="365" width="280" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="products" value="📦 PRODUCTS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;product_name&#xa;product_code (UNIQUE)&#xa;🔗 category_id (FK)&#xa;🔗 brand_id (FK)&#xa;🔗 unit_id (FK)&#xa;🔗 supplier_id (FK)&#xa;buying/selling/wholesale_price&#xa;stock / min_stock&#xa;tax_rate_id (FK)&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="90" width="320" height="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="cats" value="🗂️ CATEGORIES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;category_code (UNIQUE)&#xa;parent_id (self-ref)&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1440" y="90" width="270" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="brands" value="🏷️ BRANDS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;code (UNIQUE)&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1760" y="90" width="250" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="units" value="📐 UNITS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;code (UNIQUE)&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2060" y="90" width="250" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="taxrates" value="🧾 TAXRATES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;code (UNIQUE)&#xa;rate / status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2360" y="90" width="260" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="boxes" value="📫 BOXES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;box_name&#xa;code_name (UNIQUE)&#xa;barcode&#xa;shelf_number&#xa;max_capacity / status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2660" y="90" width="270" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="psmap" value="🔄 PRODUCT_STORE_MAP&lt;br&gt;─────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 product_id (FK)&lt;br&gt;🔗 store_id (FK)&lt;br&gt;currency_id / stock&lt;br&gt;per_customer_limit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="460" width="310" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="pimages" value="🖼️ PRODUCT_IMAGES&lt;br&gt;───────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 product_id (FK)&lt;br&gt;image_path&lt;br&gt;sort_order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="310" width="270" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="customers" value="🛒 CUSTOMERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name / company_name&#xa;email / mobile&#xa;address / city&#xa;membership_level&#xa;credit_balance&#xa;reward_points&#xa;fixed_discount&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2980" y="90" width="290" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="suppliers" value="🚚 SUPPLIERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name&#xa;email / phone&#xa;address / city&#xa;bank_account_num&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3340" y="90" width="290" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="pmethods" value="💳 PAYMENT_METHODS&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;name&lt;br&gt;code (UNIQUE)&lt;br&gt;status / sort_order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3680" y="90" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="pstomap" value="🔄 PAYMENT_STORE_MAP&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 pmethod_id (FK)&lt;br&gt;🔗 store_id (FK)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3690" y="300" width="300" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="sinfo" value="🧾 SELLING_INFO&#xa;─────────────────&#xa;🔑 info_id (PK)&#xa;invoice_id (UNIQUE)&#xa;🔗 customer_id (FK)&#xa;🔗 store_id (FK)&#xa;total_items / tax_amount&#xa;discount / grand_total&#xa;payment_status&#xa;n_installment&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="700" width="290" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="sitems" value="🛍️ SELLING_ITEM&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 invoice_id (FK)&#xa;🔗 item_id (FK)&#xa;item_name&#xa;qty / price_sold&#xa;discount_percent&#xa;subtotal&#xa;tax_rate (FK)&#xa;return_item" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="700" width="290" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="slogs" value="📋 SELL_LOGS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 customer_id (FK)&#xa;🔗 store_id (FK)&#xa;reference_no&#xa;trust_balance&#xa;pmethod_id (FK)&#xa;qty_sold / type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1420" y="700" width="280" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="hinfo" value="⏸️ HOLDING_INFO&#xa;─────────────────&#xa;🔑 info_id (PK)&#xa;🔗 store_id (FK)&#xa;ref_no (UNIQUE)&#xa;order_title&#xa;🔗 customer_id (FK)&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="790" width="285" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="hitems" value="⏸️ HOLDING_ITEM&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 ref_no (FK)&#xa;item_name&#xa;🔗 customer_id (FK)&#xa;item_price / qty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="790" width="280" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="quotations" value="📄 QUOTATIONS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;ref_no (UNIQUE)&#xa;🔗 customer_id (FK)&#xa;🔗 supplier_id (FK)&#xa;date / status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2990" y="440" width="280" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="qitems" value="📄 QUOTATION_ITEMS&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 quotation_id (FK)&lt;br&gt;🔗 product_id (FK)&lt;br&gt;subtotal / discount&lt;br&gt;grand_total" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#E65100;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3320" y="440" width="280" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="iorders" value="📅 INSTALLMENT_ORDERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;invoice_id&#xa;🔗 customer_id (FK)&#xa;installment_count&#xa;interest_percentage&#xa;initial_amount&#xa;payment_status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3680" y="500" width="320" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="ipayments" value="💰 INSTALLMENT_PAYMENTS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;invoice_id&#xa;ref_invoice_id&#xa;capital / interest&#xa;payable / paid / due" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="4030" y="500" width="330" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="pinfo" value="🏭 PURCHASE_INFO&#xa;─────────────────&#xa;🔑 info_id (PK)&#xa;invoice_id (UNIQUE)&#xa;🔗 supplier_id (FK)&#xa;🔗 store_id (FK)&#xa;total_item / order_tax&#xa;payment_status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2990" y="700" width="290" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="pitems" value="🏭 PURCHASE_ITEM&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;🔗 invoice_id (FK)&lt;br&gt;🔗 store_id (FK)&lt;br&gt;item_name&lt;br&gt;item_purchase_price&lt;br&gt;item_quantity&lt;br&gt;item_total / return_qty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3340" y="700" width="290" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="plogs" value="📋 PURCHASE_LOGS&lt;br&gt;────────────&lt;br&gt;🔑 id (PK)&lt;br&gt;sub_id (FK)&lt;br&gt;reference_no&lt;br&gt;amount&lt;br&gt;🔗 pmethod_id (FK)&lt;br&gt;🔗 store_id (FK)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="3690" y="780" width="290" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="baccounts" value="🏦 BANK_ACCOUNTS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name / type&#xa;account_no&#xa;total_deposit&#xa;total_withdraw&#xa;contact_person&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="4370" y="90" width="280" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="btrans" value="💳 BANK_TRANS_INFO&#xa;─────────────────&#xa;🔑 vis_id (PK)&#xa;🔗 ref_no / invoice_id (FK)&#xa;🔗 account_id (FK)&#xa;amount / type&#xa;🔗 source_id (FK)&#xa;🔗 from_account_id (FK)&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="4700" y="90" width="290" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="printers" value="🖨️ PRINTERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;name / type&#xa;profile&#xa;ip / address / port&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="4370" y="365" width="290" height="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="expenses" value="💸 EXPENSES&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 category_id (FK)&#xa;reference_no&#xa;amount&#xa;title / details&#xa;🔗 payment_method_id (FK)&#xa;returnable&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="1080" width="280" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="expcat" value="🗂️ EXPENSE_CATEGORY&#xa;─────────────────&#xa;🔑 category_id (PK)&#xa;category_name&#xa;slug (UNIQUE)&#xa;parent_id (self-ref)&#xa;status / is_hide" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="1100" width="280" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="income" value="💰 INCOME_SOURCES&#xa;─────────────────&#xa;🔑 source_id (PK)&#xa;source_no&#xa;name&#xa;slug (UNIQUE)&#xa;parent_id&#xa;title / amount&#xa;interest / payable&#xa;deadline_date&#xa;show_in_income" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="1060" width="280" height="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="loans" value="🏦 LOANS&#xa;─────────────────&#xa;🔑 loan_id (PK)&#xa;loan_no&#xa;🔗 loan_from_id (FK)&#xa;parent_id&#xa;title / amount&#xa;interest / payable&#xa;for_sell / for_loan&#xa;for_purchase_return&#xa;profitable / returnable&#xa;deadline_date" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="1040" width="280" height="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="lsources" value="📋 LOAN_SOURCES&#xa;─────────────────&#xa;🔑 source_id (PK)&#xa;name&#xa;type (Bank/Person)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="1060" width="260" height="145" as="geometry"/>
+                </mxCell>
+                <mxCell id="lpayments" value="💳 LOAN_PAYMENTS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 loan_id (FK)&#xa;ref_no&#xa;paid / note&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="1400" width="275" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="giftcards" value="🎁 GIFTCARDS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;card_no (UNIQUE)&#xa;type (Bank/Person/Others)&#xa;🔗 customer_id (FK)&#xa;value / balance&#xa;expiry_date&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1720" y="1030" width="280" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="gtopups" value="🎁 GIFTCARD_TOPUPS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 giftcard_id (FK)&#xa;barcode_id (UNIQUE)&#xa;amount / note&#xa;created_by" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2060" y="1040" width="275" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="transfers" value="🔄 TRANSFERS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;ref_no / invoice_id&#xa;🔗 from_store_id (FK)&#xa;🔗 to_store_id (FK)&#xa;total_item / total_qty&#xa;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2400" y="1040" width="280" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="titems" value="🔄 TRANSFER_ITEMS&#xa;─────────────────&#xa;🔑 id (PK)&#xa;🔗 ref_no (FK)&#xa;🔗 transfer_id (FK)&#xa;🔗 product_id (FK)&#xa;product_name&#xa;qty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#F9A825;strokeWidth=3;fontSize=22;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="2740" y="1040" width="290" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="stores" target="currencies" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ugroups" target="users" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="users" target="usmap" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="stores" target="usmap" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cats" target="products" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="brands" target="products" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1740" y="168"/>
+                            <mxPoint x="1740" y="290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="units" target="products" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1730" y="168"/>
+                            <mxPoint x="1730" y="290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="products" target="psmap" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="stores" target="psmap" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="products" target="pimages" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r11" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="sinfo" target="sitems" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="customers" target="sinfo" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="885" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#4E342E;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="pinfo" target="pitems" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r14" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#4E342E;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;entryX=0.621;entryY=0.009;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="pinfo" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="3375" y="160" as="sourcePoint"/>
+                        <mxPoint x="3170" y="690" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r15" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="loans" target="lpayments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r16" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="lsources" target="loans" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r17" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="giftcards" target="gtopups" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r18" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="transfers" target="titems" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r19" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="expcat" target="expenses" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r20" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="pmethods" target="pstomap" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r21" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="quotations" target="qitems" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r22" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="iorders" target="ipayments" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r23" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="baccounts" target="btrans" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r24" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="hinfo" target="hitems" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

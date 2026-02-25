@@ -113,10 +113,9 @@ include('../includes/header.php');
             </div>
             
             <div id="pagination_container" class="mt-8 flex flex-col md:flex-row justify-between items-center gap-4"></div>
-        </div>
-
-        </div>
-            <?php include('../includes/footer.php'); ?>
+        </div><!-- /.inner card div -->
+        </div><!-- /.content-scroll-area -->
+        <?php include('../includes/footer.php'); ?>
     </main>
 </div>
 
