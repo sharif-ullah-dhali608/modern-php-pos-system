@@ -1,0 +1,428 @@
+<mxfile host="65bd71144e">
+    <diagram id="ucd-pos-v2" name="Use Case Diagram">
+        <mxGraphModel dx="636" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="5400" pageHeight="3800" math="0" shadow="1">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="POS System — Use Case Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=34;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="30" width="1200" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="sys_boundary" value="POS System Boundary" style="points=[[0,0],[1,0],[1,1],[0,1]];shape=mxgraph.flowchart.start_2;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#1a1a2e;strokeWidth=4;fontSize=22;fontStyle=1;fontColor=#1a1a2e;verticalAlign=top;align=center;spacingTop=15;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="100" width="4200" height="3580" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin_icon" value="" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="175" y="310" width="60" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin_bg" value="👑 ADMIN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#1a1a2e;fontColor=#FFD700;fontSize=20;fontStyle=1;arcSize=30;" parent="1" vertex="1">
+                    <mxGeometry x="130" y="415" width="150" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin_sub" value="Super User" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontColor=#555555;" parent="1" vertex="1">
+                    <mxGeometry x="130" y="462" width="150" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="cashier_icon" value="" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#1565C0;" parent="1" vertex="1">
+                    <mxGeometry x="175" y="1050" width="60" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="cashier_bg" value="💳 CASHIER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#1565C0;fontColor=#ffffff;fontSize=20;fontStyle=1;arcSize=30;" parent="1" vertex="1">
+                    <mxGeometry x="128" y="1155" width="154" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="cashier_sub" value="Sales Staff" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontColor=#555555;" parent="1" vertex="1">
+                    <mxGeometry x="128" y="1202" width="154" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="mgr_icon" value="" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#2E7D32;" parent="1" vertex="1">
+                    <mxGeometry x="175" y="1920" width="60" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="mgr_bg" value="🏪 STORE MANAGER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#2E7D32;fontColor=#ffffff;fontSize=17;fontStyle=1;arcSize=30;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="2025" width="190" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="mgr_sub" value="Branch Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontColor=#555555;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="2072" width="190" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="cust_icon" value="" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#E65100;strokeColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="5075" y="1050" width="60" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="cust_bg" value="🛒 CUSTOMER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E65100;strokeColor=#E65100;fontColor=#ffffff;fontSize=20;fontStyle=1;arcSize=30;" parent="1" vertex="1">
+                    <mxGeometry x="5030" y="1155" width="154" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="cust_sub" value="End Customer" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontColor=#555555;" parent="1" vertex="1">
+                    <mxGeometry x="5030" y="1202" width="154" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="sup_icon" value="" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#6A1B9A;" parent="1" vertex="1">
+                    <mxGeometry x="5075" y="1680" width="60" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="sup_bg" value="🚚 SUPPLIER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#6A1B9A;fontColor=#ffffff;fontSize=20;fontStyle=1;arcSize=30;" parent="1" vertex="1">
+                    <mxGeometry x="5030" y="1785" width="154" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="sup_sub" value="External Vendor" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=16;fontColor=#555555;" parent="1" vertex="1">
+                    <mxGeometry x="5030" y="1832" width="154" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp1" value="🔐  Authentication &amp; User Management" style="swimlane;startSize=55;fillColor=#1a1a2e;fontColor=#FFD700;strokeColor=#1a1a2e;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="175" width="1850" height="500" as="geometry">
+                        <mxRectangle x="560" y="175" width="350" height="55" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uc1_1" value="Login / Logout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="50" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_2" value="Manage Users" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="360" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_3" value="Manage User Groups &amp; Permissions" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="670" y="80" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_4" value="Assign Users to Stores" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="1010" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_5" value="Reset Password" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="1320" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_6" value="Manage Stores" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="50" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_7" value="View Activity Logs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="360" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_8" value="Configure POS Settings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="670" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_9" value="Manage Currencies" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="1010" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1_10" value="Configure Payment Methods" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565C0;fontSize=19;fontStyle=1;" parent="grp1" vertex="1">
+                    <mxGeometry x="1320" y="230" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="grp1" source="admin_icon" target="uc1_2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="18" y="180"/>
+                            <mxPoint x="18" y="120"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="grp2" value="📦  Product &amp; Inventory Management" style="swimlane;startSize=55;fillColor=#4a148c;fontColor=#ffffff;strokeColor=#4a148c;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="2560" y="175" width="1850" height="500" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_1" value="Add / Edit Product" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="50" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_2" value="Manage Categories" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="360" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_3" value="Manage Brands &amp; Units" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="670" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_4" value="Transfer Stock Between Stores" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="990" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_5" value="View Low Stock Alerts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="1310" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_6" value="Manage Barcodes &amp; Boxes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="50" y="220" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_7" value="Set Pricing &amp; Tax Rates" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="370" y="220" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_8" value="Manage Product Images" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="690" y="220" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2_9" value="Product Store Mapping" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6A1B9A;fontSize=19;fontStyle=1;" parent="grp2" vertex="1">
+                    <mxGeometry x="1010" y="220" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp3" value="🛒  POS &amp; Sales Operations" style="swimlane;startSize=55;fillColor=#006064;fontColor=#ffffff;strokeColor=#006064;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="760" width="1850" height="570" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_1" value="Process Sale (POS)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="50" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_2" value="Apply Discounts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="360" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_3" value="Select Payment Method" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="670" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_4" value="Hold / Resume Order" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="990" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_5" value="Process Return / Refund" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="1310" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_6" value="Print / Email Receipt" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="50" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_7" value="Use Giftcard Payment" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="360" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_8" value="Create Installment Sale" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="670" y="230" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_9" value="Create Quotation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="990" y="230" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_10" value="Collect Customer Due" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="200" y="395" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3_11" value="Apply Reward Points" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#006064;fontSize=19;fontStyle=1;" parent="grp3" vertex="1">
+                    <mxGeometry x="540" y="395" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp4" value="🏭  Purchase Management" style="swimlane;startSize=55;fillColor=#4E342E;fontColor=#ffffff;strokeColor=#4E342E;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="2560" y="760" width="1850" height="500" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_1" value="Create Purchase Order" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="50" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_2" value="Manage Suppliers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="370" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_3" value="Record Supplier Payment" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="690" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_4" value="Process Purchase Return" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="1010" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_5" value="View Purchase History" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="1330" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_6" value="Attach Files / Invoices" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="50" y="230" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4_7" value="View Supplier Due" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fbe9e7;strokeColor=#4E342E;fontSize=19;fontStyle=1;" parent="grp4" vertex="1">
+                    <mxGeometry x="370" y="230" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp5" value="💰  Finance &amp; Accounting" style="swimlane;startSize=55;fillColor=#1B5E20;fontColor=#ffffff;strokeColor=#1B5E20;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="1420" width="1850" height="570" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_1" value="Record Expense" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="50" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_2" value="Manage Expense Categories" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="350" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_3" value="Manage Income Sources" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="670" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_4" value="Manage Bank Accounts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="990" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_5" value="Record Bank Transactions" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="1310" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_6" value="Manage Loans" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="50" y="230" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_7" value="Record Loan Payments" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="350" y="230" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_8" value="Collect Installment Payments" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="670" y="230" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_9" value="Manage Giftcards &amp; Topups" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="990" y="230" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_10" value="Configure Payment Methods" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="200" y="395" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5_11" value="Manage Currencies" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1B5E20;fontSize=19;fontStyle=1;" parent="grp5" vertex="1">
+                    <mxGeometry x="540" y="395" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp6" value="👥  Customer Management" style="swimlane;startSize=55;fillColor=#0D47A1;fontColor=#ffffff;strokeColor=#0D47A1;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="2560" y="1350" width="1850" height="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_1" value="Add / Edit Customer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="50" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_2" value="Assign Customer Group" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="370" y="80" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_3" value="Assign Membership Level" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="690" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_4" value="Manage Credit Limit" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="1010" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_5" value="View Customer Ledger" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="1330" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_6" value="View Reward Points" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="200" y="240" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6_7" value="View / Pay Customer Due" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#0D47A1;fontSize=19;fontStyle=1;" parent="grp6" vertex="1">
+                    <mxGeometry x="540" y="240" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp7" value="📊  Reports &amp; Analytics" style="swimlane;startSize=55;fillColor=#311B92;fontColor=#ffffff;strokeColor=#311B92;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="2090" width="1850" height="570" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_1" value="Sales Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="50" y="80" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_2" value="Purchase Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="345" y="80" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_3" value="Expense Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="640" y="80" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_4" value="Profit &amp; Loss Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="935" y="80" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_5" value="Stock / Inventory Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="1230" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_6" value="Customer Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="1540" y="80" width="250" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_7" value="Supplier Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="50" y="240" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_8" value="Daily Sales Summary" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="345" y="240" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_9" value="Tax Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="640" y="240" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_10" value="Installment Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="935" y="240" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7_11" value="Export Reports (PDF/Excel)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#311B92;fontSize=19;fontStyle=1;" parent="grp7" vertex="1">
+                    <mxGeometry x="350" y="410" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="grp8" value="⚙️  System Settings" style="swimlane;startSize=55;fillColor=#37474F;fontColor=#ffffff;strokeColor=#37474F;fontSize=22;fontStyle=1;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="2560" y="1880" width="1850" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_1" value="Configure POS Settings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="50" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_2" value="Manage Printers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="375" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_3" value="Manage Tax Rates" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="700" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_4" value="Configure Receipt Templates" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="1025" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_5" value="Store-Level Settings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="1350" y="80" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_6" value="Manage Payment Methods" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="200" y="240" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8_7" value="System Backup / Restore" style="ellipse;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#37474F;fontSize=19;fontStyle=1;" parent="grp8" vertex="1">
+                    <mxGeometry x="560" y="240" width="265" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="admin_icon" target="uc1_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="admin_icon" target="uc1_6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="admin_icon" target="uc2_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="admin_icon" target="uc5_4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="admin_icon" target="uc7_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cashier_icon" target="uc3_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cashier_icon" target="uc3_5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cashier_icon" target="uc3_6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cashier_icon" target="uc3_10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="b5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cashier_icon" target="uc1_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="mgr_icon" target="uc4_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="mgr_icon" target="uc5_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="mgr_icon" target="uc7_1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2E7D32;strokeWidth=3;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="mgr_icon" target="uc2_4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=3;dashed=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cust_icon" target="uc3_7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=3;dashed=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cust_icon" target="uc6_5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=3;dashed=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="cust_icon" target="uc6_6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=3;dashed=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="sup_icon" target="uc4_2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=3;dashed=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="sup_icon" target="uc4_7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="4800" y="2300" width="560" height="620" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_title" value="📋  LEGEND" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=22;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="4830" y="2320" width="300" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_actors" value="ACTORS:" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=19;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="4830" y="2365" width="150" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_a1" value="👑 Admin (Super User)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=17;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2395" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_a2" value="💳 Cashier (Sales Staff)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=17;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2425" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_a3" value="🏪 Store Manager" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=17;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2455" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_a4" value="🛒 Customer (External)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=17;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2485" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_a5" value="🚚 Supplier (External)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=17;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2515" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_rel" value="RELATIONS:" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=19;fontStyle=1;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="4830" y="2555" width="200" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_r1" value="━━━  Solid = Association (internal)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2585" width="320" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_r2" value="- - -  Dashed = External Actor Interaction" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2615" width="340" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_uc" value="( oval ) = Use Case (System Function)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2645" width="340" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_grp" value="[ box ] = Functional Module Group" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="4850" y="2675" width="340" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_note" value="⚠️ Dashed lines = External actors interact&#xa;with specific features only (not all)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=2;fontColor=#555;" parent="1" vertex="1">
+                    <mxGeometry x="4830" y="2720" width="490" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-Wlgp9pLBPOOO4S5zek-7" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="185" y="1935" width="40" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-Wlgp9pLBPOOO4S5zek-8" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="185" y="1065" width="40" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-Wlgp9pLBPOOO4S5zek-9" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="185" y="325" width="40" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-Wlgp9pLBPOOO4S5zek-10" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="5085" y="1065" width="40" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-Wlgp9pLBPOOO4S5zek-11" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="5085" y="1695" width="40" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

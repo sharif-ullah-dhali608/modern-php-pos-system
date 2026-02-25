@@ -1,0 +1,318 @@
+<mxfile host="65bd71144e">
+    <diagram id="dfd-pos-v3" name="Data Flow Diagram">
+        <mxGraphModel dx="636" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3400" pageHeight="2600" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="ttl" value="POS System — Data Flow Diagram (Level 1)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=28;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="20" width="2000" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="ea" value="👑 ADMIN / MANAGER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#FFD700;strokeWidth=3;fontColor=#FFD700;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="200" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ec" value="💳 CASHIER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#82B1FF;strokeWidth=3;fontColor=#ffffff;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="570" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ecu" value="🛒 CUSTOMER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E65100;strokeColor=#FFAB40;strokeWidth=3;fontColor=#ffffff;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="930" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="esu" value="🚚 SUPPLIER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6A1B9A;strokeColor=#CE93D8;strokeWidth=3;fontColor=#ffffff;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="1460" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ebk" value="🏦 BANK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#A5D6A7;strokeWidth=3;fontColor=#ffffff;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="1860" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="epr" value="🖨️ RECEIPT PRINTER" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#ffcdd2;strokeWidth=3;fontColor=#ffffff;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="3230" y="420" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1" value="P1&#xa;Authentication &amp;&#xa;Authorization" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#FFD700;fontColor=#FFD700;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="120" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2" value="P2&#xa;Product &amp; Inventory" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4a148c;strokeColor=#CE93D8;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="144" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p8" value="P8&#xa;Payment&#xa;Processing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b71c1c;strokeColor=#FFCDD2;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="1500" y="131" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p11" value="P11&#xa;Giftcard &amp; Rewards" style="ellipse;whiteSpace=wrap;html=1;fillColor=#37474F;strokeColor=#90A4AE;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="2100" y="136" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p7" value="P7&#xa;Reports &amp;&#xa;Analytics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#311B92;strokeColor=#B39DDB;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="2700" y="172" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds1" value="🗄 DS1: users / user_groups" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=18;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="370" width="310" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds2" value="🗄 DS2: products / categories / brands" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6A1B9A;fontSize=18;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="370" width="360" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds7" value="🗄 DS7: payment_methods / store_map" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;fontSize=18;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1440" y="370" width="380" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds8" value="🗄 DS8: giftcards / topups" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#37474F;fontSize=18;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="2050" y="370" width="340" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3" value="P3&#xa;&amp;nbsp; POS&amp;nbsp; &amp;nbsp;Sales&#xa;Processing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#006064;strokeColor=#80DEEA;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="510" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p6" value="P6&#xa;Customer&#xa;Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0D47A1;strokeColor=#90CAF9;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="510" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p5" value="P5&#xa;Finance &amp; Accounting" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#A5D6A7;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="510" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds14" value="🗄 DS14: holding_info / holding_item" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F57F17;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="720" width="360" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds3" value="🗄 DS3: selling_info / selling_item / sell_logs" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F57F17;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="720" width="400" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds5" value="🗄 DS5: customers / customer_stores_map" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="720" width="380" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds6" value="🗄 DS6: expenses / income_sources" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#1B5E20;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1480" y="720" width="340" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds12" value="🗄 DS12: installment_orders / payments" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1880" y="720" width="360" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds13" value="🗄 DS13: quotations / items" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="2300" y="720" width="320" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="p9" value="P9&#xa;Stock&amp;nbsp; Transfer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#004D40;strokeColor=#80CBC4;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="382" y="890" width="260" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="p4" value="P4&#xa;Purchase&#xa;Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4E342E;strokeColor=#FFCCBC;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="880" width="260" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p10" value="P10&#xa;Loan Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#5D4037;strokeColor=#FFCCBC;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="880" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds11" value="🗄 DS11: transfers / transfer_items" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#004D40;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="1090" width="380" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds4" value="🗄 DS4: purchase_info / purchase_item / logs" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#FBE9E7;strokeColor=#4E342E;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="1090" width="440" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds9" value="🗄 DS9: loans / loan_sources / loan_payments" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#EFEBE9;strokeColor=#5D4037;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1380" y="1090" width="420" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="p12" value="P12&#xa;Bank Transaction&#xa;Management" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#A5D6A7;fontColor=#ffffff;fontSize=22;fontStyle=1;strokeWidth=3;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="1430" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds10" value="🗄 DS10: bank_accounts / bank_transaction_info" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#1B5E20;fontSize=16;fontStyle=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="1455" width="450" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" value="Credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a1a2e;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ea" target="p1" edge="1">
+                    <mxGeometry x="0.0769" y="15" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2" value="R/W Users" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p1" target="ds1" edge="1">
+                    <mxGeometry x="0.1111" y="-35" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f3" value="Product Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ea" target="p2" edge="1">
+                    <mxGeometry x="0.207" y="54" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f4" value="R/W Products" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p2" target="ds2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f5" value="Sale Items &amp; Payment" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#006064;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ec" target="p3" edge="1">
+                    <mxGeometry x="-0.871" y="45" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f6" value="Purchase Request" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ecu" target="p3" edge="1">
+                    <mxGeometry x="-0.1453" y="-47" relative="1" as="geometry">
+                        <mxPoint x="-7" y="25" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f7" value="Hold Order" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F57F17;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="ds14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f8" value="Write Sale Records" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F57F17;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="ds3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f_ds2p3" value="Check Stock" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ds2" target="p3" edge="1">
+                    <mxGeometry x="0.0582" y="-27" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f10" value="Payment Request" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C62828;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="p8" edge="1">
+                    <mxGeometry x="0.0272" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f11" value="Receipt Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="epr" edge="1">
+                    <mxGeometry x="0.0036" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f12" value="Update Customer" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0D47A1;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="p6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f13" value="Giftcard Usage" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#37474F;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" edge="1">
+                    <mxGeometry x="-0.0769" y="50" relative="1" as="geometry">
+                        <mxPoint x="630" y="570" as="sourcePoint"/>
+                        <mxPoint x="2230" y="256" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="2230" y="570"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f14" value="Installment Order" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p3" target="ds12" edge="1">
+                    <mxGeometry x="0.0633" y="20" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2060" y="570"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f15" value="Save Quotation" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#F9A825;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" edge="1">
+                    <mxGeometry x="0.0707" y="30" relative="1" as="geometry">
+                        <mxPoint x="571.8602037910337" y="570" as="sourcePoint"/>
+                        <mxPoint x="2460" y="770" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="2460" y="570"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f17" value="R/W Customer Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565C0;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p6" target="ds5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f18" value="Customer Info" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ecu" target="p6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f19" value="Payment Method Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C62828;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p8" target="ds7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f20" value="Transaction Ledger" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p8" target="p5" edge="1">
+                    <mxGeometry x="-0.1509" y="124" relative="1" as="geometry">
+                        <mxPoint x="121" y="-91" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f21" value="Expense / Income Entry" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ea" target="p5" edge="1">
+                    <mxGeometry x="-0.0093" y="75" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f22" value="R/W Finance Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p5" target="ds6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f23" value="Giftcard Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#37474F;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p11" target="ds8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f24" value="Buy Giftcard" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#E65100;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ecu" target="p11" edge="1">
+                    <mxGeometry y="-15" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" value="Text" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="f24">
+                    <mxGeometry x="-0.3895" y="5" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f25" value="Sales Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#311B92;strokeWidth=2;dashed=1;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ds3" target="p7" edge="1">
+                    <mxGeometry x="0.0205" y="38" relative="1" as="geometry">
+                        <mxPoint y="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f28" value="Reports Output" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#311B92;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p7" target="ea" edge="1">
+                    <mxGeometry x="-0.0325" y="-35" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f29" value="Transfer Records" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#004D40;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p9" target="ds11" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f31" value="Transfer Request" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#004D40;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" edge="1">
+                    <mxGeometry x="-0.7081" y="-157" relative="1" as="geometry">
+                        <mxPoint x="200" y="232.77" as="sourcePoint"/>
+                        <mxPoint x="500" y="892.0007692307693" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="500" y="232.77"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f32" value="Goods Supplied" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="esu" target="p4" edge="1">
+                    <mxGeometry x="-0.1216" y="35" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f33" value="Write Purchase Records" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#4E342E;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p4" target="ds4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f34" value="Restock Products" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6A1B9A;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p4" target="ds2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f36" value="Loan Data" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5D4037;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ea" target="p10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f37" value="Loan Records" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5D4037;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p10" target="ds9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f38" value="Bank Transactions" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=3;fontSize=16;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="ebk" target="p12" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f39" value="Transaction Records" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1B5E20;strokeWidth=2;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;labelBorderColor=none;" parent="1" source="p12" target="ds10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lgbg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#555;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="2730" y="501" width="560" height="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="lgh" value="📋  LEGEND" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="2760" y="515" width="250" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg1" value="EXTERNAL ENTITIES:" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="2760" y="558" width="300" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg2" value="👑 Admin / Manager  |  💳 Cashier" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="584" width="380" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg3" value="🛒 Customer  |  🚚 Supplier  |  🏦 Bank" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="608" width="380" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg4" value="🖨️ Receipt Printer" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="632" width="300" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg5" value="PROCESSES (Ellipses = Pn):" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="2760" y="665" width="380" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg6" value="P1=Auth  P2=Products  P3=POS Sales" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="691" width="430" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg7" value="P4=Purchase  P5=Finance  P6=Customers" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="713" width="430" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg8" value="P7=Reports  P8=Payments  P9=Transfer" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="735" width="430" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg9" value="P10=Loans  P11=Giftcards  P12=Banking" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="757" width="430" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg10" value="🗄  DATA STORES (DSn = DB Tables)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=18;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="2760" y="788" width="440" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg11" value="DS1=Users DS2=Products DS3=Sales DS4=Purchase" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="814" width="490" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg12" value="DS5=Customers DS6=Finance DS7=Payments DS8=Gifts" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="836" width="490" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg13" value="DS9=Loans DS10=Bank DS11=Transfers DS12-15=Other" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2775" y="858" width="490" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg14" value="━━→ Solid = Primary Flow  |  - - → Dashed = Query/Read" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="2760" y="892" width="490" height="22" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

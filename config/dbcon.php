@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $username = "root";
-$password = "";
+$password = "root";
 $database = "pos_system";
 
 $conn = mysqli_connect($host, $username, $password, $database);
@@ -396,6 +396,44 @@ function ensure_core_tables(mysqli $conn) {
         PRIMARY KEY (category_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
     mysqli_query($conn, $expenseCategorySql);
+
+    // Ensure new columns exist in expense_category (Migration for existing tables)
+    // First safely check all existing columns
+    $existingExpCols = [];
+    $colsResult = @mysqli_query($conn, "SHOW COLUMNS FROM expense_category");
+    if ($colsResult) {
+        while ($row = mysqli_fetch_assoc($colsResult)) {
+            $existingExpCols[] = $row['Field'];
+        }
+    }
+
+    if (!empty($existingExpCols)) {
+        // Handle slug vs category_slug transition
+        if (in_array('category_slug', $existingExpCols) && !in_array('slug', $existingExpCols)) {
+            try { @mysqli_query($conn, "ALTER TABLE expense_category CHANGE COLUMN category_slug slug VARCHAR(255) NOT NULL"); } catch (\Throwable $e) {}
+        } else if (in_array('category_slug', $existingExpCols) && in_array('slug', $existingExpCols)) {
+            // Both exist (partial migration state)
+            try { @mysqli_query($conn, "UPDATE expense_category SET slug = category_slug WHERE slug = '' OR slug IS NULL"); } catch (\Throwable $e) {}
+            try { @mysqli_query($conn, "ALTER TABLE expense_category DROP COLUMN category_slug"); } catch (\Throwable $e) {}
+        } else if (!in_array('slug', $existingExpCols)) {
+            // Neither exists, create slug
+            try { @mysqli_query($conn, "ALTER TABLE expense_category ADD COLUMN slug VARCHAR(255) NOT NULL AFTER category_name"); } catch (\Throwable $e) {}
+            try { @mysqli_query($conn, "UPDATE expense_category SET slug = LOWER(REPLACE(category_name, ' ', '_'))"); } catch (\Throwable $e) {}
+        }
+        
+        // Ensure unique constraint exists on slug (ignore if already exists)
+        try { @mysqli_query($conn, "ALTER TABLE expense_category ADD UNIQUE(slug)"); } catch (\Throwable $e) {}
+
+        if (!in_array('parent_id', $existingExpCols)) {
+            try { @mysqli_query($conn, "ALTER TABLE expense_category ADD COLUMN parent_id INT(11) DEFAULT 0 AFTER slug"); } catch (\Throwable $e) {}
+        }
+        if (!in_array('is_hide', $existingExpCols)) {
+            try { @mysqli_query($conn, "ALTER TABLE expense_category ADD COLUMN is_hide TINYINT(1) DEFAULT 0 AFTER status"); } catch (\Throwable $e) {}
+        }
+        if (!in_array('sort_order', $existingExpCols)) {
+            try { @mysqli_query($conn, "ALTER TABLE expense_category ADD COLUMN sort_order INT(11) DEFAULT 0 AFTER is_hide"); } catch (\Throwable $e) {}
+        }
+    }
 
     // Seed Default Expense Categories
     $default_expense_categories = [
